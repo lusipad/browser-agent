@@ -3,12 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Claude-in-Chrome 风格的多模型浏览器智能体扩展（OpenAI / Anthropic / Gemini / OpenAI 兼容端点）",
+  "description": "Claude-in-Chrome 风格的多模型浏览器智能体扩展（任意 OpenAI 兼容端点）",
   "scripts": {
     "build": "node build.mjs",
     "watch": "node build.mjs --watch",
     "typecheck": "tsc --noEmit",
-    "icons": "node scripts/gen-icons.mjs"
+    "icons": "node scripts/gen-icons.mjs",
+    "test": "npm run typecheck && npm run test:unit && npm run test:e2e",
+    "test:unit": "node test/run-unit.mjs",
+    "test:e2e": "node --test test/e2e/collector.e2e.mjs"
   },
   "dependencies": {
     "dompurify": "^3.2.3",
@@ -22,6 +25,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "esbuild": "^0.24.2",
+    "playwright": "^1.61.1",
     "typescript": "^5.7.2"
   }
 }

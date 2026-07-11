@@ -1,8 +1,22 @@
-// 页面语义工具：read_page / find / form_input / get_page_text / scroll_to_ref / file_upload
-import { b64FromBytes, truncate } from '../../shared/util';
+// 页面语义工具：read_page / find / form_input / get_page_text / scroll_to_ref / file_upload / wait_for
+import { b64FromBytes, sleep, truncate } from '../../shared/util';
 import { getAllFramesText, runInPage } from '../inject';
 import { confirmSensitive } from '../permissions';
 import { withAutoShot, type ToolDef } from './registry';
+
+/** wait_for 条件判定（纯函数，便于单测） */
+export function conditionMet(condition: string, r: { matchCount: number; textFound: boolean }): boolean {
+  switch (condition) {
+    case 'appear':
+      return r.matchCount > 0;
+    case 'disappear':
+      return r.matchCount === 0;
+    case 'text':
+      return r.textFound;
+    default:
+      return false;
+  }
+}
 
 export const pageTools: ToolDef[] = [
   {
@@ -156,6 +170,54 @@ export const pageTools: ToolDef[] = [
         mode: input.mode ?? 'change',
       });
       return withAutoShot(ctx.session, ctx.tabId, truncate(String(r?.text ?? 'Uploaded.'), 500));
+    },
+  },
+  {
+    name: 'wait_for',
+    description:
+      'Wait until a condition holds, polling the page (across frames and shadow DOM) until satisfied or timeout. ' +
+      'condition "appear": an element matching query exists; "disappear": no element matches query (e.g. a spinner is gone); "text": the page text contains a string. ' +
+      'Use this after actions that trigger async loading instead of guessing with computer "wait". Returns a fresh screenshot when satisfied.',
+    schema: {
+      type: 'object',
+      properties: {
+        condition: { type: 'string', enum: ['appear', 'disappear', 'text'], description: 'What to wait for' },
+        query: { type: 'string', description: 'Element text/label to match (for appear/disappear)' },
+        text: { type: 'string', description: 'Substring to wait for in page text (for condition "text")' },
+        timeout_ms: { type: 'integer', description: 'Max wait in ms, default 8000, capped at 30000' },
+        tab_id: { type: 'integer' },
+      },
+      required: ['condition'],
+    },
+    needsTab: true,
+    async run(ctx, input) {
+      const condition = String(input.condition ?? '');
+      if (!['appear', 'disappear', 'text'].includes(condition)) throw new Error('wait_for: condition must be appear/disappear/text');
+      const query = input.query ? String(input.query) : '';
+      const text = input.text ? String(input.text) : '';
+      if ((condition === 'appear' || condition === 'disappear') && !query) throw new Error(`wait_for "${condition}" requires "query"`);
+      if (condition === 'text' && !text) throw new Error('wait_for "text" requires "text"');
+
+      const timeout = Math.min(30000, Math.max(500, Number(input.timeout_ms ?? 8000)));
+      const start = Date.now();
+      let polls = 0;
+      while (Date.now() - start < timeout) {
+        if (ctx.session.aborted) throw new Error('Cancelled by user.');
+        const r = await runInPage(ctx.tabId, 'probe', { query, text });
+        polls++;
+        if (conditionMet(condition, { matchCount: Number(r?.matchCount ?? 0), textFound: !!r?.textFound })) {
+          const waited = ((Date.now() - start) / 1000).toFixed(1);
+          const what = condition === 'text' ? `text "${text}"` : `"${query}"`;
+          return withAutoShot(ctx.session, ctx.tabId, `Condition met: ${condition} ${what} after ${waited}s.`);
+        }
+        await sleep(400);
+      }
+      const what = condition === 'text' ? `text "${text}"` : `"${query}"`;
+      return withAutoShot(
+        ctx.session,
+        ctx.tabId,
+        `Timed out after ${(timeout / 1000).toFixed(0)}s waiting for ${condition} ${what} (${polls} polls). The condition was not met — the current state is shown; decide how to proceed.`,
+      );
     },
   },
 ];

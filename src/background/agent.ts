@@ -353,6 +353,8 @@ function summarizeArgs(name: string, input: Record<string, any>): string {
       return String(inp.url ?? inp.action ?? '');
     case 'find':
       return `"${inp.query ?? ''}"`;
+    case 'wait_for':
+      return `${inp.condition ?? ''} ${inp.query ? `"${inp.query}"` : inp.text ? `"${truncate(String(inp.text), 24, '…')}"` : ''}`.trim();
     case 'form_input':
       return `${inp.ref} = "${truncate(String(inp.value ?? ''), 30, '…')}"`;
     case 'scroll_to_ref':

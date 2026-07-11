@@ -348,6 +348,24 @@ export function pageAgent(cmd: string, payload: any): any {
       return { elements: descs.map(serialize), meta: pageMeta() };
     }
 
+    // 轻量存在性探测（供 wait_for 轮询，避免每次全量 gather）
+    function probe(query: unknown, text: unknown): any {
+      let textFound = false;
+      const bodyText = (topDoc.body?.innerText ?? '').toLowerCase();
+      if (typeof text === 'string' && text.trim()) textFound = bodyText.includes(text.toLowerCase());
+      let matchCount = 0;
+      const q = typeof query === 'string' ? query.toLowerCase().trim() : '';
+      if (q) {
+        const toks = q.split(/\s+/).filter(Boolean);
+        const descs = gather(500);
+        matchCount = descs.filter((d) => {
+          const hay = (d.name + ' ' + d.role).toLowerCase();
+          return hay.includes(q) || (toks.length > 0 && toks.every((t) => hay.includes(t)));
+        }).length;
+      }
+      return { matchCount, textFound };
+    }
+
     function findEls(query: string): any {
       const q = String(query ?? '').toLowerCase().trim();
       if (!q) throw new Error('find: query is required');
@@ -505,6 +523,8 @@ export function pageAgent(cmd: string, payload: any): any {
         return readPage(String(payload?.filter ?? 'interactive'), Number(payload?.max_chars ?? 16000));
       case 'collect':
         return collect();
+      case 'probe':
+        return probe(payload?.query, payload?.text);
       case 'find':
         return findEls(payload?.query);
       case 'form_input':

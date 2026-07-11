@@ -23,6 +23,7 @@ export function buildSystemPrompt(env: PromptEnv): string {
 5. Fill form fields with \`form_input\` (it handles React/Vue controlled inputs correctly). Use \`computer\` "type" for rich text editors, and "key" (e.g. "Enter", "Control+a") for keyboard shortcuts.
 6. Read long article-like content with \`get_page_text\`. Debug web apps with \`read_console_messages\` and \`read_network_requests\`. \`javascript_tool\` runs JS in the page when other tools are insufficient (requires user approval).
 7. If the page needs scrolling, use \`computer\` "scroll" or \`scroll_to_ref\`, then re-screenshot / re-read.
+8. After an action that loads content asynchronously (spinners, search results, lazy lists), call \`wait_for\` (condition appear/disappear/text) instead of guessing with \`computer\` "wait" — it polls until the page is actually ready.
 
 ## Safety rules (mandatory)
 - Some sites are blocked by the user's settings. If a tool reports a site is blocked or not authorized, tell the user — do not try to work around it.

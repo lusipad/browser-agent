@@ -20,6 +20,8 @@ npm run build          # 产物输出到 dist/
 
 > 开发时用 `npm run watch` 监听 `src/`，改完在扩展页点一下刷新即可。修改 `public/` 下的文件需重新 `npm run build`。
 
+加载后建议按 [`TESTING.md`](./TESTING.md) 跑一遍验证协议（约 5–10 分钟，逐项覆盖 set-of-marks、Shadow DOM 穿透、network-idle、Planner/Validator 等）。
+
 ---
 
 ## 能力（工具集）
@@ -31,6 +33,7 @@ npm run build          # 产物输出到 dist/
 | `computer` | 截图、点击、双击 / 右键、悬停、输入、按键组合、滚动、拖拽（基于 CDP 可信事件） |
 | `read_page` / `find` | 提取可交互元素（带稳定 ref、角色、坐标）/ 按文字定位元素 |
 | `form_input` | 按 ref 填表：input/textarea（正确触发 React/Vue 事件）、select、复选/单选、contenteditable |
+| `wait_for` | 轮询等待元素出现 / 消失 / 页面文本出现，替代瞎猜的 `computer wait`（跨 frame 与 shadow DOM） |
 | `get_page_text` | 提取全文（含 iframe），支持分页 |
 | `scroll_to_ref` / `resize_window` / `screenshot` | 滚动到元素 / 调整窗口 / 主动截图 |
 | `file_upload` | 从 URL 取文件并注入 file input 或模拟拖拽上传 |

@@ -12,6 +12,14 @@ npm install && npm run build
 
 > 调试面板：`chrome://extensions` 里本扩展的「Service Worker」链接可打开后台控制台，看报错和 `console.error('[browser-agent]…')`。
 
+## 0.5 一键诊断（最快的第一步，不花 API 钱）
+
+先在浏览器里打开任意普通网页（想验证兼容性的话就打开那个页面），再到扩展**设置页 → 诊断**标签，点「▶ 诊断当前标签页」。它会对该页体检：CDP 附加、截图、元素收集（含 top / shadow / iframe 分布）、帧结构、网络状态。
+
+- 全绿 = 感知层 + CDP 全链路在这个页面上通了，可以放心进入下面的对话测试。
+- 想专门验证 Shadow DOM 穿透：打开 youtube.com 再诊断，「Shadow DOM 穿透」应显示发现若干元素。
+- 任何一项 `✕` 把该行文字贴回来即可定位。
+
 ---
 
 ## 1. 冒烟（基础链路 + 逐站授权）

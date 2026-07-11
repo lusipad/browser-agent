@@ -161,6 +161,10 @@ export function pageAgent(cmd: string, payload: any): any {
     }
 
     // ---------------- 深度遍历（穿透 Shadow DOM + 同源 iframe） ----------------
+    interface Ctx {
+      inShadow: boolean;
+      inFrame: boolean;
+    }
     interface Desc {
       el: Element;
       ref: string;
@@ -168,6 +172,7 @@ export function pageAgent(cmd: string, payload: any): any {
       name: string;
       tr: { left: number; top: number; width: number; height: number; right: number; bottom: number };
       inView: boolean;
+      src: 'top' | 'shadow' | 'iframe';
       opaqueFrame?: boolean;
     }
 
@@ -176,7 +181,7 @@ export function pageAgent(cmd: string, payload: any): any {
       const added = new Set<Element>();
       let cursorBudget = 2500;
 
-      function consider(el: Element): void {
+      function consider(el: Element, ctx: Ctx): void {
         if (out.length >= limit) return;
         const tag = el.tagName;
         if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'TEMPLATE' || tag === 'HEAD') return;
@@ -203,11 +208,12 @@ export function pageAgent(cmd: string, payload: any): any {
         }
         if (dup) return;
         const tr = topRect(el);
-        out.push({ el, ref: refFor(el), role: roleOf(el) || tag.toLowerCase(), name: accName(el), tr, inView: inTopViewport(tr) });
+        const src: Desc['src'] = ctx.inFrame ? 'iframe' : ctx.inShadow ? 'shadow' : 'top';
+        out.push({ el, ref: refFor(el), role: roleOf(el) || tag.toLowerCase(), name: accName(el), tr, inView: inTopViewport(tr), src });
         added.add(el);
       }
 
-      function visitRoot(root: Document | ShadowRoot): void {
+      function visitRoot(root: Document | ShadowRoot, ctx: Ctx): void {
         let walker: TreeWalker;
         try {
           walker = topDoc.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
@@ -217,10 +223,10 @@ export function pageAgent(cmd: string, payload: any): any {
         let node = walker.nextNode();
         while (node && out.length < limit) {
           const el = node as Element;
-          consider(el);
+          consider(el, ctx);
           // 开放 shadow root
           const sr = (el as any).shadowRoot as ShadowRoot | null;
-          if (sr) visitRoot(sr);
+          if (sr) visitRoot(sr, { inShadow: true, inFrame: ctx.inFrame });
           // 同源 iframe
           if (el.tagName === 'IFRAME' || el.tagName === 'FRAME') {
             let cd: Document | null = null;
@@ -230,12 +236,12 @@ export function pageAgent(cmd: string, payload: any): any {
               cd = null;
             }
             if (cd && cd.body) {
-              visitRoot(cd);
+              visitRoot(cd, { inShadow: ctx.inShadow, inFrame: true });
             } else if (isVisible(el)) {
               // 跨域 iframe：整体作为一个可点区域记录，提示模型内容不可读
               const tr = topRect(el);
               if (!added.has(el)) {
-                out.push({ el, ref: refFor(el), role: 'iframe', name: '(cross-origin frame)', tr, inView: inTopViewport(tr), opaqueFrame: true });
+                out.push({ el, ref: refFor(el), role: 'iframe', name: '(cross-origin frame)', tr, inView: inTopViewport(tr), src: 'top', opaqueFrame: true });
                 added.add(el);
               }
             }
@@ -245,7 +251,7 @@ export function pageAgent(cmd: string, payload: any): any {
       }
 
       const rootEl = topDoc.body ?? topDoc.documentElement;
-      if (rootEl) visitRoot(topDoc);
+      if (rootEl) visitRoot(topDoc, { inShadow: false, inFrame: false });
       return out;
     }
 
@@ -296,6 +302,7 @@ export function pageAgent(cmd: string, payload: any): any {
         cx: c.x,
         cy: c.y,
         inView: d.inView,
+        src: d.src,
       };
     }
 
@@ -408,7 +415,8 @@ export function pageAgent(cmd: string, payload: any): any {
     }
     function descFor(el: Element): string {
       const tr = topRect(el);
-      return describe({ el, ref: refFor(el), role: roleOf(el) || el.tagName.toLowerCase(), name: accName(el), tr, inView: inTopViewport(tr) });
+      const inFrame = (el.ownerDocument?.defaultView ?? null) !== topWin;
+      return describe({ el, ref: refFor(el), role: roleOf(el) || el.tagName.toLowerCase(), name: accName(el), tr, inView: inTopViewport(tr), src: inFrame ? 'iframe' : 'top' });
     }
     function formInput(ref: unknown, value: unknown): any {
       const el = getRef(ref);

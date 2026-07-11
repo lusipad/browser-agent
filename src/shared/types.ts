@@ -145,6 +145,22 @@ export interface ModelPick {
 }
 
 // ============================================================
+// 诊断（在真实标签页上一键体检感知层 + CDP 全链路）
+// ============================================================
+
+export interface DiagCheck {
+  name: string;
+  status: 'ok' | 'warn' | 'fail';
+  detail: string;
+}
+
+export interface DiagnosticsReport {
+  ok: boolean;
+  tab: { id: number; url: string; title: string } | null;
+  checks: DiagCheck[];
+}
+
+// ============================================================
 // 面板 <-> 后台 消息协议
 // ============================================================
 

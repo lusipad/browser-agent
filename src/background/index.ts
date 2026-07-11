@@ -3,6 +3,7 @@ import { loadConfig, onConfigChange, saveConfig } from '../shared/settings';
 import type { AppConfig, ModelPick, PanelToBg } from '../shared/types';
 import { runTurn } from './agent';
 import { detachAll } from './cdp';
+import { pickDiagnoseTab, runDiagnostics } from './diagnose';
 import { Session } from './session';
 import { browserTools } from './tools/browser';
 import { computerTool } from './tools/computer';
@@ -113,6 +114,26 @@ chrome.runtime.onConnect.addListener((port) => {
   port.onDisconnect.addListener(() => {
     if (bound && bound.port === port) bound.port = null;
   });
+});
+
+// 一次性诊断请求（来自设置页），不走面板长连接
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg?.type === 'diagnose') {
+    void (async () => {
+      try {
+        const tabId = typeof msg.tabId === 'number' ? msg.tabId : await pickDiagnoseTab();
+        if (tabId == null) {
+          sendResponse({ ok: false, tab: null, checks: [{ name: '目标标签页', status: 'warn', detail: '没有可诊断的 http(s) 网页。先在浏览器里打开一个普通网页，再回来点诊断。' }] });
+          return;
+        }
+        sendResponse(await runDiagnostics(tabId));
+      } catch (e) {
+        sendResponse({ ok: false, tab: null, checks: [{ name: '诊断', status: 'fail', detail: e instanceof Error ? e.message : String(e) }] });
+      }
+    })();
+    return true; // 异步 sendResponse
+  }
+  return undefined;
 });
 
 // 设置变化时向所有已连接面板广播模型列表

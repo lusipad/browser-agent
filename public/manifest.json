@@ -35,7 +35,8 @@
     "storage",
     "debugger",
     "sidePanel",
-    "downloads"
+    "downloads",
+    "webNavigation"
   ],
   "host_permissions": ["<all_urls>"]
 }

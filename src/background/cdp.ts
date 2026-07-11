@@ -24,6 +24,8 @@ interface TabDebugState {
   console: ConsoleEntry[];
   network: Map<string, NetworkEntry>;
   netOrder: string[];
+  inFlight: number;
+  lastActivity: number;
 }
 
 const states = new Map<number, TabDebugState>();
@@ -33,7 +35,7 @@ const NETWORK_CAP = 600;
 function stateFor(tabId: number): TabDebugState {
   let s = states.get(tabId);
   if (!s) {
-    s = { attached: false, console: [], network: new Map(), netOrder: [] };
+    s = { attached: false, console: [], network: new Map(), netOrder: [], inFlight: 0, lastActivity: 0 };
     states.set(tabId, s);
   }
   return s;
@@ -136,6 +138,12 @@ export function getNetwork(tabId: number, filter?: string, limit = 60): NetworkE
   return list.slice(-limit);
 }
 
+export function networkActivity(tabId: number): { inFlight: number; sinceLastMs: number } {
+  const s = states.get(tabId);
+  if (!s) return { inFlight: 0, sinceLastMs: Infinity };
+  return { inFlight: s.inFlight, sinceLastMs: s.lastActivity ? Date.now() - s.lastActivity : Infinity };
+}
+
 export async function getResponseBody(tabId: number, requestId: string): Promise<string> {
   await ensureAttached(tabId);
   const r = await send(tabId, 'Network.getResponseBody', { requestId });
@@ -208,6 +216,8 @@ chrome.debugger.onEvent.addListener((source, method, params: any) => {
         resourceType: String(params.type ?? 'Other'),
         finished: false,
       });
+      s.inFlight++;
+      s.lastActivity = Date.now();
       break;
     }
     case 'Network.responseReceived': {
@@ -224,6 +234,8 @@ chrome.debugger.onEvent.addListener((source, method, params: any) => {
         e.finished = true;
         e.encodedBytes = Math.round(params.encodedDataLength ?? 0);
       }
+      s.inFlight = Math.max(0, s.inFlight - 1);
+      s.lastActivity = Date.now();
       break;
     }
     case 'Network.loadingFailed': {
@@ -232,6 +244,8 @@ chrome.debugger.onEvent.addListener((source, method, params: any) => {
         e.finished = true;
         e.error = String(params.errorText ?? 'failed');
       }
+      s.inFlight = Math.max(0, s.inFlight - 1);
+      s.lastActivity = Date.now();
       break;
     }
     default:

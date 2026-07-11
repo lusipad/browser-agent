@@ -1,6 +1,7 @@
-// 截图：CDP 捕获（无需标签页聚焦）→ 缩放到 CSS 像素坐标空间 → JPEG 压缩
+// 截图：CDP 捕获（无需标签页聚焦）→ 缩放到 CSS 像素坐标空间 →（可选）set-of-marks 标注 → JPEG 压缩
 import { b64FromBytes, bytesFromB64 } from '../shared/util';
 import { ensureAttached, evalInPage, send } from './cdp';
+import { colorFor, layoutMarks, type BoxMark, type RawMark } from './marks';
 
 export interface Viewport {
   iw: number;
@@ -33,11 +34,12 @@ export interface Shot {
   cssH: number;
   scrollY: number;
   docH: number;
+  marks: BoxMark[]; // 实际画上去的编号框
 }
 
 export async function captureScreenshot(
   tabId: number,
-  opts: { maxWidth: number; quality: number },
+  opts: { maxWidth: number; quality: number; marks?: RawMark[] },
 ): Promise<Shot> {
   await ensureAttached(tabId);
   const vp = await getViewport(tabId);
@@ -53,6 +55,13 @@ export async function captureScreenshot(
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('OffscreenCanvas 2d context unavailable');
     ctx.drawImage(bitmap, 0, 0, targetW, targetH);
+
+    let marks: BoxMark[] = [];
+    if (opts.marks && opts.marks.length) {
+      marks = layoutMarks(opts.marks, { vpCssW: vp.iw, canvasW: targetW, canvasH: targetH });
+      drawMarks(ctx, marks);
+    }
+
     const blob = await canvas.convertToBlob({
       type: 'image/jpeg',
       quality: Math.min(1, Math.max(0.3, opts.quality / 100)),
@@ -68,10 +77,32 @@ export async function captureScreenshot(
       cssH: vp.ih,
       scrollY: vp.sy,
       docH: vp.dh,
+      marks,
     };
   } finally {
     bitmap.close();
   }
+}
+
+function drawMarks(ctx: OffscreenCanvasRenderingContext2D, marks: BoxMark[]): void {
+  ctx.lineWidth = 2;
+  ctx.font = '600 12px system-ui, -apple-system, sans-serif';
+  ctx.textBaseline = 'top';
+  marks.forEach((m, i) => {
+    const color = colorFor(i);
+    ctx.strokeStyle = color;
+    ctx.strokeRect(m.bx + 1, m.by + 1, Math.max(1, m.bw - 2), Math.max(1, m.bh - 2));
+    // 编号标签：优先框内左上角，顶部空间不足则放到框下沿
+    const text = m.ref;
+    const lw = ctx.measureText(text).width + 6;
+    const lh = 15;
+    const lx = m.bx;
+    const ly = m.by < lh ? m.by + m.bh : m.by;
+    ctx.fillStyle = color;
+    ctx.fillRect(lx, ly, lw, lh);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(text, lx + 3, ly + 1);
+  });
 }
 
 /** 模型给出的截图坐标 → 页面 CSS 坐标 */

@@ -2,7 +2,7 @@
 
 一个 **Claude in Chrome 风格**的 Chrome 扩展：在侧边栏用自然语言驱动浏览器，让 AI 自动打开标签页、点击、填表、读取页面、调试网页并汇报结果。后端接**任意 OpenAI 兼容 endpoint**（OpenAI / DeepSeek / OpenRouter / Ollama / vLLM / LM Studio…），API Key 只存在本机。
 
-行为逻辑尽量复刻官方 Claude in Chrome：`tabs_context` 优先、动作后自动截图验证、可信 CDP 输入事件、逐站授权、敏感操作确认、防循环等。
+行为逻辑尽量复刻官方 Claude in Chrome，并移植了成熟开源 agent（browser-use / Nanobrowser）的关键技术：`tabs_context` 优先、可信 CDP 输入事件、逐站授权、敏感操作确认、防循环，外加 **set-of-marks 编号框标注**、**Shadow DOM / 同源 iframe 穿透**、**Planner + Validator 双循环**、**network-idle 等待**。
 
 ---
 
@@ -67,17 +67,26 @@ src/
 
 **关键设计**
 
-- 内部消息用 Anthropic 风格的 content blocks，适配器负责与 OpenAI 格式互转（tool_use → tool_calls，截图从 tool 消息挪到随后的 user 消息）
-- 截图经 CDP 捕获后缩放到 CSS 像素空间，模型给的坐标按最近一次截图换算，避免 DPR / 缩放错位
-- 页面感知函数以 `func` 形式注入且**完全自包含**（不引用模块级标识符），ref 注册表挂在隔离世界，导航后自动失效
-- Service Worker 运行期用定时扩展 API 调用保活；被回收后可从 `chrome.storage.session` 恢复会话
+- **感知层**：注入的 DOM 收集器递归穿透**开放 Shadow DOM 与同源 iframe**；`topRect()` 沿 frame 链实时把元素坐标换算到顶层文档视口，跨 frame 点击也能落准；跨域 iframe 作为整体可点区域标记
+- **set-of-marks**：截图上给可交互元素叠加**编号框**，编号即元素 ref，模型「按编号点击」——视觉 grounding 最可靠的方式，远胜裸坐标（可在高级设置关闭）
+- **Planner + Validator**：任务开始先拆解步骤并定「成功判据」，模型停手时对照当前页面状态**自检是否真正达成**，未达成自动继续（有上限）
+- **稳定性**：动作/导航后等待 DOM complete + **网络静默（network-idle）**，适配 SPA 延迟加载
+- 内部消息用 Anthropic 风格 content blocks，适配器与 OpenAI 格式互转（tool_use ↔ tool_calls，截图从 tool 消息挪到随后的 user 消息）
+- 页面感知函数以 `func` 注入且**完全自包含**（不引用模块级标识符），ref 注册表挂在隔离世界，导航后自动失效
+- Service Worker 运行期定时调扩展 API 保活；被回收后可从 `chrome.storage.session` 恢复会话
 
 ## 权限说明（manifest）
 
 `debugger`（可信输入与截图）、`scripting`（注入感知函数）、`tabs`/`tabGroups`、`storage`、`sidePanel`、`downloads`、`<all_urls>`。`debugger` 会在被控标签页顶部显示 Chrome 的调试横幅，属正常现象。
 
-## 已知限制
+## 已知限制 / 后续可做
 
+- **跨域 iframe 内部内容**目前只作为整体可点区域，未深入提取（可后续用 `allFrames` 分帧注入 + 坐标偏移合并解决）
+- 尚无自动化**评测**（如 WebVoyager 成功率）——这是衡量「是否真能干活」的下一步
 - 无法自动化 `chrome://`、Web Store 等浏览器内置页面
 - 不会也不应绕过验证码 / 反爬
 - `computer` 的输入用 `Input.insertText`，个别强依赖逐键 keydown 的富文本编辑器可能无反应，此时优先用 `form_input`
+
+## 参考与致谢
+
+技术思路参考了这些优秀开源项目：[browser-use](https://github.com/browser-use/browser-use)（DOM 序列化 + set-of-marks）、[Nanobrowser](https://github.com/nanobrowser/nanobrowser)（Planner/Navigator/Validator 多智能体）、[BrowserBee](https://github.com/parsaghaffari/browserbee)（扩展内 CDP 驱动）。本项目未 fork 任何项目，实现独立编写。

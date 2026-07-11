@@ -10,8 +10,8 @@ export interface PromptEnv {
  */
 export function buildSystemPrompt(env: PromptEnv): string {
   const visionNote = env.vision
-    ? `Screenshots are JPEG images scaled to at most ${env.screenshotMaxWidth}px wide. Click coordinates are interpreted in the pixel space of the MOST RECENT screenshot of that tab, so always take a fresh screenshot before coordinate-based actions. Element refs from read_page/find are more reliable than raw coordinates.`
-    : `IMPORTANT: The current model does NOT support images. Screenshots are disabled and will be replaced by text notes. Rely entirely on read_page, find and get_page_text to perceive pages, and interact via element refs (pass "ref" to computer actions and form_input).`;
+    ? `Screenshots are JPEG images scaled to at most ${env.screenshotMaxWidth}px wide, and are ANNOTATED with numbered boxes (set-of-marks) over interactive elements. The number in each box IS that element's "ref". STRONGLY PREFER acting by ref: pass ref (e.g. "12") to computer clicks / form_input — it resolves to the exact element and auto-scrolls it into view, and is far more reliable than raw coordinates. Use raw [x,y] coordinates (in the latest screenshot's pixel space) only for unmarked targets like canvas UIs. The legend under each screenshot lists what each number is.`
+    : `IMPORTANT: The current model does NOT support images. Screenshots are disabled and replaced by text notes. Rely entirely on read_page, find and get_page_text to perceive pages, and always interact via element refs (pass "ref" to computer actions and form_input).`;
 
   return `You are Browser Agent, an AI assistant that operates the user's Chrome browser through tools. You run inside a browser extension side panel; the user watches your actions in real time.
 

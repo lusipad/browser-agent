@@ -85,6 +85,10 @@ export interface AdvancedSettings {
   /** 每次操作后自动附带一张新截图 */
   autoScreenshot: boolean;
   requestTimeoutMs: number;
+  /** 在截图上叠加可交互元素的编号框（set-of-marks），大幅提升视觉点击准确率 */
+  setOfMarks: boolean;
+  /** 任务开始先规划、完成时自检是否达成（Planner + Validator） */
+  planning: boolean;
 }
 
 export interface SitePermissions {
@@ -138,6 +142,22 @@ export interface ModelPick {
   label: string;
   vision: boolean;
   providerName: string;
+}
+
+// ============================================================
+// 诊断（在真实标签页上一键体检感知层 + CDP 全链路）
+// ============================================================
+
+export interface DiagCheck {
+  name: string;
+  status: 'ok' | 'warn' | 'fail';
+  detail: string;
+}
+
+export interface DiagnosticsReport {
+  ok: boolean;
+  tab: { id: number; url: string; title: string } | null;
+  checks: DiagCheck[];
 }
 
 // ============================================================

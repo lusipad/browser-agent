@@ -1,11 +1,22 @@
-// 智能体主循环：模型流式输出 → 执行工具 → 回填结果 → 迭代
+// 智能体主循环：Planner（规划）→ Navigator（模型流式输出→执行工具→迭代）→ Validator（自检）
 import { openaiStream } from '../providers';
 import { buildSystemPrompt } from '../shared/prompts';
 import { loadConfig } from '../shared/settings';
-import type { ChatMessage, ContentBlock, ImageBlock, ToolUseBlock } from '../shared/types';
+import type {
+  ChatMessage,
+  ContentBlock,
+  ImageBlock,
+  ModelConfig,
+  ProviderConfig,
+  TextBlock,
+  ToolUseBlock,
+} from '../shared/types';
 import { errText, textOfBlocks, truncate, uid } from '../shared/util';
+import { runInPage } from './inject';
 import type { Session } from './session';
-import { executeToolUse, toolSpecs } from './tools/registry';
+import { executeToolUse, shotBlocks, toolSpecs } from './tools/registry';
+
+const VALIDATOR_CAP = 2;
 
 export async function runTurn(session: Session, userText: string): Promise<void> {
   session.cfg = await loadConfig();
@@ -24,18 +35,35 @@ export async function runTurn(session: Session, userText: string): Promise<void>
     return;
   }
 
+  const adv = session.cfg.advanced;
+  const firstTurn = !session.messages.some((m) => m.role === 'assistant');
+
   session.running = true;
   session.aborted = false;
   session.controller = new AbortController();
   session.emit({ type: 'run_state', running: true });
-  // MV3 Service Worker 保活：运行期间定期调用扩展 API 重置空闲计时器
   const keepalive = setInterval(() => chrome.runtime.getPlatformInfo(() => {}), 15000);
 
   session.messages.push({ role: 'user', content: [{ type: 'text', text: userText }] });
   session.upsert({ kind: 'user', id: uid('u'), text: userText });
 
-  const adv = session.cfg.advanced;
+  const sysBase = buildSystemPrompt({
+    date: new Date().toISOString().slice(0, 10),
+    vision: model.vision,
+    screenshotMaxWidth: adv.screenshotMaxWidth,
+  });
+
+  let successCriteria = userText;
+  let validatorRounds = 0;
+
   try {
+    // ---------- Planner ----------
+    if (adv.planning && firstTurn && !session.aborted) {
+      const crit = await runPlanner(session, provider, model, sysBase, userText);
+      if (crit) successCriteria = crit;
+    }
+
+    // ---------- Navigator（含内联 Validator） ----------
     for (let iter = 0; iter < adv.maxIterations; iter++) {
       if (session.aborted) break;
 
@@ -43,32 +71,12 @@ export async function runTurn(session: Session, userText: string): Promise<void>
       let streamed = '';
       session.upsert({ kind: 'assistant', id: asstId, text: '', done: false });
 
-      const result = await openaiStream({
-        provider,
-        model,
-        system: buildSystemPrompt({
-          date: new Date().toISOString().slice(0, 10),
-          vision: model.vision,
-          screenshotMaxWidth: adv.screenshotMaxWidth,
-        }),
-        messages: prepareForApi(session.messages, model.vision, adv.maxImagesKept),
-        tools: toolSpecs(),
-        temperature: adv.temperature,
-        maxTokens: adv.maxTokens,
-        signal: session.controller.signal,
-        timeoutMs: adv.requestTimeoutMs,
-        onText: (delta) => {
-          streamed += delta;
-          session.emit({ type: 'text_delta', id: asstId, delta });
-        },
+      const result = await streamOnce(session, provider, model, sysBase, prepareForApi(session.messages, model.vision, adv.maxImagesKept), toolSpecs(), (delta) => {
+        streamed += delta;
+        session.emit({ type: 'text_delta', id: asstId, delta });
       });
 
-      if (result.usage) {
-        session.usage.input += result.usage.input;
-        session.usage.output += result.usage.output;
-        session.emit({ type: 'usage', input: session.usage.input, output: session.usage.output });
-      }
-
+      accrueUsage(session, result.usage);
       const finalText = textOfBlocks(result.blocks) || streamed;
       session.upsert({ kind: 'assistant', id: asstId, text: finalText, done: true });
       session.messages.push({
@@ -77,23 +85,39 @@ export async function runTurn(session: Session, userText: string): Promise<void>
       });
 
       const toolUses = result.blocks.filter((b): b is ToolUseBlock => b.type === 'tool_use');
+
       if (!toolUses.length) {
-        if (result.stopReason === 'length') {
-          session.info('输出达到 max_tokens 上限被截断，可在设置中调大。');
+        // 模型认为完成 → Validator 自检
+        if (adv.planning && validatorRounds < VALIDATOR_CAP && !session.aborted) {
+          const verdict = await runValidator(session, provider, model, sysBase, userText, successCriteria);
+          if (!verdict.done) {
+            validatorRounds++;
+            session.upsert({ kind: 'info', id: uid('i'), text: `🔎 自检未通过：${verdict.reason || '任务尚未达成'}${verdict.next ? `｜下一步：${verdict.next}` : ''}` });
+            session.messages.push({
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text:
+                    `A validator reviewed the current page state against the success criterion and judged the task NOT complete.\n` +
+                    `Reason: ${verdict.reason}\n${verdict.next ? `Suggested next step: ${verdict.next}\n` : ''}` +
+                    `Success criterion: ${successCriteria}\nKeep working with tools until it is met. Do not stop and claim completion prematurely.`,
+                },
+              ],
+            });
+            continue;
+          }
+          session.upsert({ kind: 'info', id: uid('i'), text: '✅ 自检通过：任务达成。' });
         }
+        if (result.stopReason === 'length') session.info('输出达到 max_tokens 上限被截断，可在设置中调大。');
         break;
       }
 
+      // 执行工具
       const resultBlocks: ContentBlock[] = [];
       for (const tu of toolUses) {
         if (session.aborted) {
-          resultBlocks.push({
-            type: 'tool_result',
-            toolUseId: tu.id,
-            toolName: tu.name,
-            content: [{ type: 'text', text: 'Cancelled by user.' }],
-            isError: true,
-          });
+          resultBlocks.push({ type: 'tool_result', toolUseId: tu.id, toolName: tu.name, content: [{ type: 'text', text: 'Cancelled by user.' }], isError: true });
           continue;
         }
         const toolItemId = uid('t');
@@ -114,29 +138,17 @@ export async function runTurn(session: Session, userText: string): Promise<void>
         });
         pruneTimelineImages(session, 6);
 
-        resultBlocks.push({
-          type: 'tool_result',
-          toolUseId: tu.id,
-          toolName: tu.name,
-          content: out.content,
-          isError: out.isError,
-        });
+        resultBlocks.push({ type: 'tool_result', toolUseId: tu.id, toolName: tu.name, content: out.content, isError: out.isError });
       }
       session.messages.push({ role: 'user', content: resultBlocks });
 
-      if (iter === adv.maxIterations - 1) {
-        session.info(`已达到单轮最大迭代次数（${adv.maxIterations}）。回复「继续」可以接着执行。`);
-      }
+      if (iter === adv.maxIterations - 1) session.info(`已达到单轮最大迭代次数（${adv.maxIterations}）。回复「继续」可以接着执行。`);
     }
     if (session.aborted) session.info('已停止。');
   } catch (e) {
-    if (session.aborted || (e instanceof DOMException && e.name === 'AbortError')) {
-      session.info('已停止。');
-    } else if (e instanceof DOMException && e.name === 'TimeoutError') {
-      session.error(`请求超时（${Math.round(adv.requestTimeoutMs / 1000)}s）。可在设置中调整超时时间。`);
-    } else {
-      session.error(errText(e));
-    }
+    if (session.aborted || (e instanceof DOMException && e.name === 'AbortError')) session.info('已停止。');
+    else if (e instanceof DOMException && e.name === 'TimeoutError') session.error(`请求超时（${Math.round(adv.requestTimeoutMs / 1000)}s）。可在设置中调整超时时间。`);
+    else session.error(errText(e));
   } finally {
     clearInterval(keepalive);
     session.running = false;
@@ -144,6 +156,139 @@ export async function runTurn(session: Session, userText: string): Promise<void>
     await session.persist();
     session.emit({ type: 'run_state', running: false });
   }
+}
+
+function streamOnce(
+  session: Session,
+  provider: ProviderConfig,
+  model: ModelConfig,
+  system: string,
+  messages: ChatMessage[],
+  tools: ReturnType<typeof toolSpecs>,
+  onText: (d: string) => void,
+) {
+  const adv = session.cfg.advanced;
+  return openaiStream({
+    provider,
+    model,
+    system,
+    messages,
+    tools,
+    temperature: adv.temperature,
+    maxTokens: adv.maxTokens,
+    signal: session.controller!.signal,
+    timeoutMs: adv.requestTimeoutMs,
+    onText,
+  });
+}
+
+function accrueUsage(session: Session, usage?: { input: number; output: number }): void {
+  if (!usage) return;
+  session.usage.input += usage.input;
+  session.usage.output += usage.output;
+  session.emit({ type: 'usage', input: session.usage.input, output: session.usage.output });
+}
+
+/** Planner：把任务拆成清单并给出可观测的成功判据（不调用工具） */
+async function runPlanner(
+  session: Session,
+  provider: ProviderConfig,
+  model: ModelConfig,
+  sysBase: string,
+  task: string,
+): Promise<string | null> {
+  const sys =
+    sysBase +
+    '\n\n## Current role: PLANNER\n' +
+    'Break the user request into a SHORT ordered checklist (max 6 steps) of browser actions. ' +
+    'Then state one explicit SUCCESS CRITERION: how to verify, by observing the page, that the task is truly done. ' +
+    'Do NOT call any tools now — just plan. Keep it concise. ' +
+    'End your reply with a line in exactly this form: "SUCCESS: <criterion>".';
+  const id = uid('a');
+  session.upsert({ kind: 'assistant', id, text: '', done: false });
+  let text = '';
+  try {
+    const res = await streamOnce(session, provider, model, sys, [{ role: 'user', content: [{ type: 'text', text: task }] }], [], (d) => {
+      text += d;
+      session.emit({ type: 'text_delta', id, delta: d });
+    });
+    accrueUsage(session, res.usage);
+    text = textOfBlocks(res.blocks) || text;
+  } catch (e) {
+    // 规划失败不致命：直接进入执行
+    session.upsert({ kind: 'assistant', id, text: text || '', done: true });
+    session.info(`（规划步骤跳过：${truncate(errText(e), 120)}）`);
+    return null;
+  }
+  session.upsert({ kind: 'assistant', id, text: text || '(无计划输出)', done: true });
+  // 计划也进入历史，让 navigator 看到自己的计划
+  session.messages.push({ role: 'assistant', content: [{ type: 'text', text: text || '(plan)' }] });
+  const m = text.match(/SUCCESS:\s*(.+)\s*$/im);
+  return m ? m[1].trim() : null;
+}
+
+interface Verdict {
+  done: boolean;
+  reason: string;
+  next: string;
+}
+
+/** Validator：对照成功判据判断当前页面状态是否达成（不调用工具） */
+async function runValidator(
+  session: Session,
+  provider: ProviderConfig,
+  model: ModelConfig,
+  sysBase: string,
+  task: string,
+  criteria: string,
+): Promise<Verdict> {
+  try {
+    const state = await currentStateBlocks(session);
+    const sys =
+      sysBase +
+      '\n\n## Current role: VALIDATOR\n' +
+      'Judge whether the task is COMPLETE based ONLY on the current page state provided. Be strict but fair. ' +
+      'Reply with ONLY a JSON object, no prose: {"done": boolean, "reason": string, "next": string}. ' +
+      '"next" = the single most useful next action if not done.';
+    const user: Array<TextBlock | ImageBlock> = [
+      { type: 'text', text: `Task: ${task}\nSuccess criterion: ${criteria}\n\nCurrent page state:` },
+      ...state,
+    ];
+    const res = await streamOnce(session, provider, model, sys, [{ role: 'user', content: user }], [], () => {});
+    accrueUsage(session, res.usage);
+    return parseVerdict(textOfBlocks(res.blocks));
+  } catch (e) {
+    // 校验失败时不阻塞收尾，视为完成
+    session.info(`（自检步骤跳过：${truncate(errText(e), 120)}）`);
+    return { done: true, reason: '', next: '' };
+  }
+}
+
+async function currentStateBlocks(session: Session): Promise<Array<TextBlock | ImageBlock>> {
+  const tabId = session.currentTabId;
+  if (tabId == null) return [{ type: 'text', text: '(no active browser tab — judge from the conversation)' }];
+  try {
+    if (session.modelVision()) return await shotBlocks(session, tabId, 'validation');
+    const r = await runInPage(tabId, 'read_page', { filter: 'interactive', max_chars: 6000 });
+    return [{ type: 'text', text: String(r?.text ?? '(empty)') }];
+  } catch (e) {
+    return [{ type: 'text', text: `(could not read page: ${errText(e)})` }];
+  }
+}
+
+function parseVerdict(text: string): Verdict {
+  const m = text.match(/\{[\s\S]*\}/);
+  if (m) {
+    try {
+      const j = JSON.parse(m[0]);
+      return { done: !!j.done, reason: String(j.reason ?? ''), next: String(j.next ?? '') };
+    } catch {
+      /* 落到启发式 */
+    }
+  }
+  const negative = /\b(not\s+(done|complete)|incomplete|未完成|没有完成|尚未)\b/i.test(text);
+  const positive = /\b(done|complete|success|完成|已完成|通过)\b/i.test(text);
+  return { done: positive && !negative, reason: truncate(text.trim(), 200), next: '' };
 }
 
 /**
@@ -158,9 +303,7 @@ function prepareForApi(messages: ChatMessage[], vision: boolean, maxImages: numb
   let remaining = vision ? Math.max(0, maxImages) : 0;
   const clone: ChatMessage[] = messages.map((m) => ({
     role: m.role,
-    content: m.content.map((b) =>
-      b.type === 'tool_result' ? { ...b, content: b.content.map((c) => ({ ...c })) } : { ...b },
-    ),
+    content: m.content.map((b) => (b.type === 'tool_result' ? { ...b, content: b.content.map((c) => ({ ...c })) } : { ...b })),
   }));
   for (let i = clone.length - 1; i >= 0; i--) {
     const content = clone[i].content;
@@ -202,11 +345,7 @@ function summarizeArgs(name: string, input: Record<string, any>): string {
   const inp = input ?? {};
   switch (name) {
     case 'computer': {
-      const loc = inp.ref
-        ? `ref=${inp.ref}`
-        : Array.isArray(inp.coordinate)
-          ? `(${inp.coordinate.join(',')})`
-          : '';
+      const loc = inp.ref ? `ref=${inp.ref}` : Array.isArray(inp.coordinate) ? `(${inp.coordinate.join(',')})` : '';
       const txt = inp.text ? ` "${truncate(String(inp.text), 30, '…')}"` : '';
       return `${inp.action ?? '?'} ${loc}${txt}`.trim();
     }
@@ -214,6 +353,8 @@ function summarizeArgs(name: string, input: Record<string, any>): string {
       return String(inp.url ?? inp.action ?? '');
     case 'find':
       return `"${inp.query ?? ''}"`;
+    case 'wait_for':
+      return `${inp.condition ?? ''} ${inp.query ? `"${inp.query}"` : inp.text ? `"${truncate(String(inp.text), 24, '…')}"` : ''}`.trim();
     case 'form_input':
       return `${inp.ref} = "${truncate(String(inp.value ?? ''), 30, '…')}"`;
     case 'scroll_to_ref':

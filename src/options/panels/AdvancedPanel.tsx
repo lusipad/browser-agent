@@ -103,6 +103,18 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
           label="每次操作后自动截图"
           hint="关闭后模型需主动调用 screenshot 才能看到结果，更省 token 但更易出错"
         />
+        <Toggle
+          checked={a.setOfMarks}
+          onChange={(v) => patch({ setOfMarks: v })}
+          label="set-of-marks 编号框标注"
+          hint="在截图上给可交互元素叠加编号框，模型按编号点击，大幅提升视觉准确率（仅视觉模型生效）"
+        />
+        <Toggle
+          checked={a.planning}
+          onChange={(v) => patch({ planning: v })}
+          label="Planner + Validator（规划与自检）"
+          hint="任务开始先拆解步骤+定成功判据，模型停手时自检是否真正达成，未达成会继续。更可靠但更耗 token"
+        />
       </div>
     </div>
   );

@@ -2,6 +2,8 @@
 import type { ToolSpec } from '../../providers';
 import type { ImageBlock, TextBlock, ToolOutput, ToolUseBlock } from '../../shared/types';
 import { errText, truncate } from '../../shared/util';
+import { runInPage } from '../inject';
+import type { RawMark } from '../marks';
 import { ensureSiteAllowed } from '../permissions';
 import { captureScreenshot } from '../screenshot';
 import type { Session } from '../session';
@@ -74,11 +76,30 @@ export async function shotBlocks(
   label?: string,
 ): Promise<Array<TextBlock | ImageBlock>> {
   const adv = session.cfg.advanced;
+  const vision = session.modelVision();
+
+  // set-of-marks：先收集可交互元素，作为编号框叠加到截图上（仅视觉模型）
+  let rawMarks: RawMark[] | undefined;
+  let elements: any[] = [];
+  if (vision && adv.setOfMarks) {
+    try {
+      const collected = await runInPage(tabId, 'collect');
+      elements = collected?.elements ?? [];
+      rawMarks = elements
+        .filter((e: any) => e.inView)
+        .map((e: any) => ({ ref: e.ref, x: e.x, y: e.y, w: e.w, h: e.h, inView: true, label: e.label }));
+    } catch {
+      /* chrome:// 等不可注入页面：退化为无标注截图 */
+    }
+  }
+
   const shot = await captureScreenshot(tabId, {
     maxWidth: adv.screenshotMaxWidth,
     quality: adv.jpegQuality,
+    marks: rawMarks,
   });
   session.recordFrame({ data: shot.data, mediaType: shot.mediaType });
+
   let tab: chrome.tabs.Tab | undefined;
   try {
     tab = await chrome.tabs.get(tabId);
@@ -86,17 +107,32 @@ export async function shotBlocks(
     /* ignore */
   }
   const scrollMax = Math.max(0, shot.docH - shot.cssH);
-  const meta =
-    `Screenshot of tab ${tabId}${label ? ` (${label})` : ''}: ${shot.w}x${shot.h} px — use THESE image pixel coordinates for clicks.\n` +
+  let meta =
+    `Screenshot of tab ${tabId}${label ? ` (${label})` : ''}: ${shot.w}x${shot.h} px.\n` +
     `Page: "${tab?.title ?? ''}" — ${tab?.url ?? ''}\n` +
     `scrollY ${shot.scrollY}/${scrollMax}${shot.scrollY < scrollMax ? ' (more content below)' : ''}`;
-  if (!session.modelVision()) {
+
+  if (!vision) {
     return [
       {
         type: 'text',
         text: meta + '\n(screenshot omitted: the current model has no vision — use read_page / find / get_page_text instead)',
       },
     ];
+  }
+
+  if (shot.marks.length) {
+    const byRef = new Map(elements.map((e: any) => [e.ref, e]));
+    const legend = shot.marks
+      .map((m) => {
+        const e = byRef.get(m.ref);
+        return `[${m.ref}] ${e?.label ?? ''}`.trim();
+      })
+      .join('\n');
+    meta +=
+      `\n\nThe screenshot is annotated with ${shot.marks.length} numbered boxes over interactive elements. ` +
+      `To act on one, pass its number as "ref" (e.g. computer left_click ref:"${shot.marks[0].ref}", or form_input ref:"${shot.marks[0].ref}"). ` +
+      `Elements not boxed (offscreen or unmarked) are still available via read_page/find.\n== Marked elements ==\n${legend}`;
   }
   return [
     { type: 'text', text: meta },

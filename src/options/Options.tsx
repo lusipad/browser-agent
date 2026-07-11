@@ -6,8 +6,9 @@ import { ModelsPanel } from './panels/ModelsPanel';
 import { SafetyPanel } from './panels/SafetyPanel';
 import { AdvancedPanel } from './panels/AdvancedPanel';
 import { SitesPanel } from './panels/SitesPanel';
+import { DiagnosticsPanel } from './panels/DiagnosticsPanel';
 
-type Tab = 'providers' | 'models' | 'safety' | 'sites' | 'advanced';
+type Tab = 'providers' | 'models' | 'safety' | 'sites' | 'advanced' | 'diagnostics';
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'providers', label: '服务商 / API Key' },
@@ -15,6 +16,7 @@ const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'safety', label: '安全与确认' },
   { id: 'sites', label: '站点权限' },
   { id: 'advanced', label: '高级' },
+  { id: 'diagnostics', label: '诊断' },
 ];
 
 export function Options() {
@@ -72,6 +74,7 @@ export function Options() {
         {tab === 'safety' && <SafetyPanel cfg={cfg} onChange={update} />}
         {tab === 'sites' && <SitesPanel cfg={cfg} onChange={update} />}
         {tab === 'advanced' && <AdvancedPanel cfg={cfg} onChange={update} />}
+        {tab === 'diagnostics' && <DiagnosticsPanel />}
       </main>
     </div>
   );

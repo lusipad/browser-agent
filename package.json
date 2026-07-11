@@ -1,0 +1,27 @@
+{
+  "name": "browser-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Claude-in-Chrome 风格的多模型浏览器智能体扩展（OpenAI / Anthropic / Gemini / OpenAI 兼容端点）",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "icons": "node scripts/gen-icons.mjs"
+  },
+  "dependencies": {
+    "dompurify": "^3.2.3",
+    "gifenc": "^1.0.3",
+    "marked": "^15.0.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.287",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "esbuild": "^0.24.2",
+    "typescript": "^5.7.2"
+  }
+}

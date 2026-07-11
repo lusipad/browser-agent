@@ -1,0 +1,106 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { BgToPanel, ModelPick, TimelineItem } from '../shared/types';
+import { BgPort } from './port';
+import { Timeline } from './components/Timeline';
+import { Composer } from './components/Composer';
+import { Header } from './components/Header';
+
+export function App() {
+  const port = useMemo(() => new BgPort(), []);
+  const [items, setItems] = useState<TimelineItem[]>([]);
+  const [running, setRunning] = useState(false);
+  const [models, setModels] = useState<ModelPick[]>([]);
+  const [modelId, setModelId] = useState('');
+  const [usage, setUsage] = useState({ input: 0, output: 0 });
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const pinnedBottom = useRef(true);
+
+  useEffect(() => {
+    const off = port.onMessage((msg: BgToPanel) => {
+      switch (msg.type) {
+        case 'snapshot':
+          setItems(msg.items);
+          setRunning(msg.running);
+          setModels(msg.models);
+          setModelId(msg.modelId);
+          break;
+        case 'item_upsert':
+          setItems((prev) => {
+            const i = prev.findIndex((x) => x.id === msg.item.id);
+            if (i >= 0) {
+              const next = prev.slice();
+              next[i] = msg.item;
+              return next;
+            }
+            return [...prev, msg.item];
+          });
+          break;
+        case 'text_delta':
+          setItems((prev) => {
+            const i = prev.findIndex((x) => x.id === msg.id);
+            if (i < 0) return prev;
+            const it = prev[i];
+            if (it.kind !== 'assistant') return prev;
+            const next = prev.slice();
+            next[i] = { ...it, text: it.text + msg.delta };
+            return next;
+          });
+          break;
+        case 'run_state':
+          setRunning(msg.running);
+          break;
+        case 'models':
+          setModels(msg.models);
+          setModelId(msg.modelId);
+          break;
+        case 'usage':
+          setUsage({ input: msg.input, output: msg.output });
+          break;
+      }
+    });
+    void port.connect();
+    return off;
+  }, [port]);
+
+  // 自动滚到底（除非用户手动上滚）
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el && pinnedBottom.current) el.scrollTop = el.scrollHeight;
+  }, [items]);
+
+  function onScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    pinnedBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  }
+
+  return (
+    <div className="app">
+      <Header
+        models={models}
+        modelId={modelId}
+        usage={usage}
+        onModel={(id) => {
+          setModelId(id);
+          port.post({ type: 'set_model', modelId: id });
+        }}
+        onNewChat={() => port.post({ type: 'new_chat' })}
+        onOptions={() => port.post({ type: 'open_options' })}
+        onDetach={() => port.post({ type: 'detach' })}
+        running={running}
+      />
+      <div className="scroll" ref={scrollRef} onScroll={onScroll}>
+        <Timeline
+          items={items}
+          onApprove={(id, decision) => port.post({ type: 'approval', id, decision })}
+        />
+      </div>
+      <Composer
+        running={running}
+        onSend={(text) => port.post({ type: 'send', text })}
+        onAbort={() => port.post({ type: 'abort' })}
+        hasModel={!!modelId}
+      />
+    </div>
+  );
+}

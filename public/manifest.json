@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Browser Agent — 多模型浏览器智能体",
+  "short_name": "Browser Agent",
+  "version": "0.1.0",
+  "description": "在侧边栏运行的 AI 浏览器智能体：支持 OpenAI / Claude / Gemini / DeepSeek / Ollama 等模型，自动完成网页操作",
+  "minimum_chrome_version": "120",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "打开 Browser Agent",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "tabs",
+    "tabGroups",
+    "scripting",
+    "storage",
+    "debugger",
+    "sidePanel",
+    "downloads"
+  ],
+  "host_permissions": ["<all_urls>"]
+}

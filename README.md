@@ -86,6 +86,18 @@ src/
 
 `debugger`（可信输入与截图）、`scripting`（注入感知函数）、`tabs`/`tabGroups`、`storage`、`sidePanel`、`downloads`、`<all_urls>`。`debugger` 会在被控标签页顶部显示 Chrome 的调试横幅，属正常现象。
 
+## 测试
+
+```bash
+npm test          # typecheck + 单元测试 + E2E
+npm run test:unit # 纯逻辑单元测试（node:test，esbuild 打包后运行）
+npm run test:e2e  # 真实 Chromium 里跑感知层（需先 npx playwright install chromium）
+```
+
+- **单元测试**（`test/unit/`）：适配器流式解析 / 工具分片累积 / 历史格式转换、set-of-marks 几何、`wait_for` 条件、站点权限匹配、配置合并、工具函数——共 30 项，纯 Node、毫秒级。
+- **E2E**（`test/e2e/`）：用 Playwright 把 `pageAgent` 注入**真实 Chromium** 页面，在带 Shadow DOM、同源 iframe、表单、视口外元素的 fixture 上验证——Shadow DOM 穿透、iframe 坐标换算、`form_input` 事件触发、`probe`。这是 jsdom（无布局）覆盖不了、也是感知层最需要真机验证的部分。
+- 全链路的浏览器行为（CDP 可信输入、侧边栏、完整 agent 循环）仍需加载扩展后按 [`TESTING.md`](./TESTING.md) 手动验证或用设置页「诊断」。
+
 ## 已知限制 / 后续可做
 
 - **跨域 iframe 内部内容**目前只作为整体可点区域，未深入提取（可后续用 `allFrames` 分帧注入 + 坐标偏移合并解决）

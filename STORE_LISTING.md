@@ -47,11 +47,12 @@ Browser Agent 让你在侧边栏用自然语言指挥浏览器：它会打开标
 ## 上架前检查清单
 
 - [ ] 提供可公开访问的隐私政策 URL（可用 GitHub 上的 `PRIVACY.md` 原始链接或 Pages）
-- [ ] 至少 1 张 1280×800 或 640×400 截图（建议展示侧边栏对话 + 逐站授权卡片 + 成本条）
-- [ ] 128×128 商店图标（`dist/icons/icon128.png` 已具备）
+- [x] 截图素材（1280×800）：`docs/screenshots/store-hero.png`（首图）、`docs/screenshots/options.png`（设置页，真机）；侧边栏对话 `docs/screenshots/sidepanel-convo.png`
+- [x] 128×128 商店图标（`dist/icons/icon128.png` 已具备）
 - [ ] 填写数据安全表单（依上"数据处理声明"）
-- [ ] `javascript_tool` 保持默认关闭（已默认关闭）
+- [x] `javascript_tool` 保持默认关闭
 - [ ] 复核 `<all_urls>` 与 `debugger` 的用途说明与实际行为一致
+- [x] 扩展加载验证：Playwright 加载 `dist/` 到 Chromium，service worker 零报错，「🤖 Agent」蓝色标签组生效
 - [ ] 打包：`npm run build` 后将 `dist/` 压缩为 zip 上传
 
 > ⚠️ 现实提醒：`debugger` 权限会显著拉长审核、提高被打回概率。个人开发者相比大厂信任度低，请预留反复沟通/补充说明的时间；同类扩展（如 Claude in Chrome）证明带 `debugger` 上架可行，但门槛高。

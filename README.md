@@ -4,6 +4,16 @@
 
 行为逻辑尽量复刻官方 Claude in Chrome，并移植了成熟开源 agent（browser-use / Nanobrowser）的关键技术：`tabs_context` 优先、可信 CDP 输入事件、逐站授权、敏感操作确认、防循环，外加 **set-of-marks 编号框标注**、**Shadow DOM / 同源 iframe 穿透**、**Planner + Validator 双循环**、**network-idle 等待**。
 
+![Browser Agent](docs/screenshots/store-hero.png)
+
+<p align="center">
+  <img src="docs/screenshots/sidepanel-convo.png" width="300" alt="侧边栏对话">
+  &nbsp;
+  <img src="docs/screenshots/options.png" width="440" alt="设置页">
+</p>
+
+> 侧边栏对话为示意图；设置页为真机截图。扩展已用 Playwright 加载进 Chromium 验证：service worker **零报错**启动，「🤖 Agent」蓝色标签组生效。
+
 ---
 
 ## 快速开始

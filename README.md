@@ -15,9 +15,9 @@
 A Chrome extension (MV3) that lets you control your browser with natural language. Type a task in the sidebar, and the AI agent opens tabs, clicks, fills forms, reads pages, and reports back — all with your own model and API key.
 
 <p align="center">
-  <img src="docs/screenshots/sidepanel-convo.png" width="260" alt="Sidebar conversation">
+  <img src="docs/screenshots/sidepanel-en.png" width="260" alt="Sidebar">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/options.png" width="400" alt="Options page">
+  <img src="docs/screenshots/options-en.png" width="400" alt="Options page">
 </p>
 
 ## Features

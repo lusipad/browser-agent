@@ -15,7 +15,7 @@
 一个 Chrome 扩展（MV3）：在侧边栏用自然语言驱动浏览器。输入任务，AI 自动打开标签页、点击、填表、读取页面并汇报结果 — 用你自己的模型和 API Key。
 
 <p align="center">
-  <img src="docs/screenshots/sidepanel-convo.png" width="260" alt="侧边栏对话">
+  <img src="docs/screenshots/sidepanel.png" width="260" alt="侧边栏">
   &nbsp;&nbsp;
   <img src="docs/screenshots/options.png" width="400" alt="设置页">
 </p>

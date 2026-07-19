@@ -3,7 +3,8 @@
 > 你在开发者控制台逐字段照抄。上传 / 填表 / 提交都由你本人完成（涉及接受开发者协议与数据安全法律申报，必须本人确认）。
 > 需要的两个文件：
 > - 扩展包：<https://github.com/lusipad/browser-agent/releases/download/v0.2.0/browser-agent-0.2.0.zip>
-> - 截图（≥1 张 1280×800）：仓库 `docs/screenshots/store-hero.png`、`options.png`
+> - 截图（1280×800，各上传）：`docs/screenshots/store-hero.png`、`docs/screenshots/options.png`
+>   （`sidepanel-convo.png` 是竖图 800×1624，**不符合商店尺寸，不要上传**）
 
 ---
 
@@ -24,7 +25,7 @@ Productivity（工作效率）
 侧边栏 AI 浏览器助手：用自然语言驱动浏览器完成网页操作，接任意 OpenAI 兼容模型，密钥只存本机，逐站授权。
 ```
 ```
-Side-panel AI browser agent: drive your browser with natural language, connect any OpenAI-compatible model, keys stay local, per-site approval.
+Side-panel AI browser agent: control your browser in natural language with any OpenAI-compatible model. Keys stay local.
 ```
 
 **详细说明 / Description**

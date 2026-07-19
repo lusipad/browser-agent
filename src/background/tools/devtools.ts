@@ -20,12 +20,15 @@ export const devtoolsTools: ToolDef[] = [
     },
     needsTab: true,
     async run(ctx, input) {
+      if (!ctx.session.cfg.advanced.enableJavascriptTool) {
+        throw new Error('javascript_tool 已被禁用（默认关闭）。如确需在页面执行任意 JS，请到设置页「高级」开启后重试；否则改用专用工具（read_page/find/extract_data/form_input 等）。');
+      }
       const code = String(input.code ?? '');
       if (!code.trim()) throw new Error('javascript_tool: "code" is required');
       await confirmSensitive(
         ctx.session,
         'javascript',
-        '代码预览：\n' + truncate(code, 600),
+        ctx.session.t('bg.confirmJsDesc') + '\n' + truncate(code, 600),
       );
       const value = await evalInPage(ctx.tabId, `(async () => {\n${code}\n})()`);
       let rendered: string;

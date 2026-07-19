@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useT } from '../../shared/i18nReact';
 
 interface Props {
   running: boolean;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function Composer(props: Props) {
+  const t = useT();
   const [text, setText] = useState('');
   const taRef = useRef<HTMLTextAreaElement>(null);
 
@@ -34,7 +36,7 @@ export function Composer(props: Props) {
         ref={taRef}
         className="input"
         value={text}
-        placeholder={props.hasModel ? '让智能体做点什么…（Enter 发送，Shift+Enter 换行）' : '请先在设置中配置模型和 API Key'}
+        placeholder={props.hasModel ? t('composer.placeholder') : t('composer.needModel')}
         onChange={(e) => {
           setText(e.target.value);
           autosize();
@@ -48,11 +50,11 @@ export function Composer(props: Props) {
         rows={1}
       />
       {props.running ? (
-        <button className="send-btn stop" onClick={props.onAbort} title="停止">
+        <button className="send-btn stop" onClick={props.onAbort} title={t('composer.stop')}>
           ■
         </button>
       ) : (
-        <button className="send-btn" onClick={submit} disabled={!text.trim() || !props.hasModel} title="发送">
+        <button className="send-btn" onClick={submit} disabled={!text.trim() || !props.hasModel} title={t('composer.send')}>
           ↑
         </button>
       )}

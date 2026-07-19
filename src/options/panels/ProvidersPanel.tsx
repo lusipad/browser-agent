@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import type { ProviderConfig } from '../../shared/types';
 import { uid } from '../../shared/util';
+import { useT } from '../../shared/i18nReact';
 import { Field, type PanelProps } from './common';
 
 export function ProvidersPanel({ cfg, onChange }: PanelProps) {
+  const t = useT();
   const [testing, setTesting] = useState<Record<string, string>>({});
 
   function patch(id: string, p: Partial<ProviderConfig>) {
@@ -13,19 +15,19 @@ export function ProvidersPanel({ cfg, onChange }: PanelProps) {
     const id = uid('prov');
     onChange({
       ...cfg,
-      providers: [...cfg.providers, { id, name: '新服务商', baseUrl: 'https://', apiKey: '' }],
+      providers: [...cfg.providers, { id, name: t('opt.providers.newName'), baseUrl: 'https://', apiKey: '' }],
     });
   }
   function remove(id: string) {
     if (cfg.models.some((m) => m.providerId === id)) {
-      alert('该服务商下还有模型，请先在「模型」页删除它们。');
+      alert(t('opt.providers.hasModels'));
       return;
     }
     onChange({ ...cfg, providers: cfg.providers.filter((x) => x.id !== id) });
   }
 
   async function test(p: ProviderConfig) {
-    setTesting((t) => ({ ...t, [p.id]: '测试中…' }));
+    setTesting((s) => ({ ...s, [p.id]: t('opt.providers.testing') }));
     try {
       const resp = await fetch(p.baseUrl.replace(/\/+$/, '') + '/models', {
         headers: p.apiKey ? { authorization: `Bearer ${p.apiKey}` } : {},
@@ -33,30 +35,33 @@ export function ProvidersPanel({ cfg, onChange }: PanelProps) {
       if (resp.ok) {
         const j = await resp.json().catch(() => null);
         const n = Array.isArray(j?.data) ? j.data.length : null;
-        setTesting((t) => ({ ...t, [p.id]: `✓ 连接成功${n != null ? `（${n} 个模型）` : ''}` }));
+        setTesting((s) => ({ ...s, [p.id]: n != null ? t('opt.providers.testOkN', [n]) : t('opt.providers.testOk') }));
       } else {
-        setTesting((t) => ({ ...t, [p.id]: `✗ HTTP ${resp.status}` }));
+        setTesting((s) => ({ ...s, [p.id]: `✗ HTTP ${resp.status}` }));
       }
     } catch (e) {
-      setTesting((t) => ({ ...t, [p.id]: `✗ ${e instanceof Error ? e.message : '连接失败'}` }));
+      setTesting((s) => ({ ...s, [p.id]: `✗ ${e instanceof Error ? e.message : t('opt.providers.testFail')}` }));
     }
   }
 
   return (
     <div className="panel">
-      <h1>服务商 / API Key</h1>
+      <h1>{t('opt.providers.title')}</h1>
       <p className="lead">
-        任何 <b>OpenAI 兼容</b> 的接口都能接入。Base URL 需包含 <code>/v1</code>。密钥仅保存在本机浏览器
-        <code>chrome.storage.local</code> 中，不会上传到任何服务器。
+        {t('opt.providers.leadA')}
+        <code>/v1</code>
+        {t('opt.providers.leadB')}
+        <code>chrome.storage.local</code>
+        {t('opt.providers.leadC')}
       </p>
 
       {cfg.providers.map((p) => (
         <div className="card" key={p.id}>
           <div className="card-row">
-            <Field label="名称">
+            <Field label={t('opt.providers.name')}>
               <input value={p.name} onChange={(e) => patch(p.id, { name: e.target.value })} />
             </Field>
-            <Field label="Base URL" hint="例如 https://api.openai.com/v1">
+            <Field label={t('opt.providers.baseUrl')} hint={t('opt.providers.baseUrlHint')}>
               <input
                 value={p.baseUrl}
                 spellCheck={false}
@@ -65,7 +70,7 @@ export function ProvidersPanel({ cfg, onChange }: PanelProps) {
               />
             </Field>
           </div>
-          <Field label="API Key" hint="本地 Ollama 等无需鉴权可随意填写（如 ollama）">
+          <Field label={t('opt.providers.apiKey')} hint={t('opt.providers.apiKeyHint')}>
             <input
               type="password"
               value={p.apiKey}
@@ -77,7 +82,7 @@ export function ProvidersPanel({ cfg, onChange }: PanelProps) {
           </Field>
           <div className="card-actions">
             <button className="btn" onClick={() => test(p)}>
-              测试连接
+              {t('opt.providers.test')}
             </button>
             {testing[p.id] && (
               <span className={'test-result' + (testing[p.id].startsWith('✓') ? ' ok' : testing[p.id].startsWith('✗') ? ' err' : '')}>
@@ -86,14 +91,14 @@ export function ProvidersPanel({ cfg, onChange }: PanelProps) {
             )}
             <span className="spacer" />
             <button className="btn danger" onClick={() => remove(p.id)}>
-              删除
+              {t('opt.common.delete')}
             </button>
           </div>
         </div>
       ))}
 
       <button className="btn add" onClick={add}>
-        + 添加服务商
+        {t('opt.providers.add')}
       </button>
     </div>
   );

@@ -54,6 +54,13 @@ export interface ProviderConfig {
   apiKey: string;
 }
 
+export interface ModelPricing {
+  /** 每 100 万输入 token 的美元价 */
+  input: number;
+  /** 每 100 万输出 token 的美元价 */
+  output: number;
+}
+
 export interface ModelConfig {
   /** `${providerId}/${model}` */
   id: string;
@@ -63,6 +70,10 @@ export interface ModelConfig {
   label: string;
   /** 是否支持图像输入；false 时自动省略截图，改用 read_page */
   vision: boolean;
+  /** 上下文窗口大小（token）；用于计算输入预算，缺省则回落到 advanced.maxContextTokens */
+  contextWindow?: number;
+  /** 计费（美元 / 100 万 token）；填写后侧边栏显示累计成本 */
+  pricing?: ModelPricing;
 }
 
 export interface SafetySettings {
@@ -78,6 +89,8 @@ export interface AdvancedSettings {
   maxIterations: number;
   /** 对话历史中保留的最近截图数量，更早的会被清理以节省 token */
   maxImagesKept: number;
+  /** 输入 token 兜底预算：模型未填 contextWindow 时，历史超过此值即从最旧开始裁剪 */
+  maxContextTokens: number;
   screenshotMaxWidth: number;
   jpegQuality: number;
   temperature: number | null;
@@ -85,10 +98,14 @@ export interface AdvancedSettings {
   /** 每次操作后自动附带一张新截图 */
   autoScreenshot: boolean;
   requestTimeoutMs: number;
+  /** 连接阶段（5xx/429/网络错误）的最大退避重试次数 */
+  maxRetries: number;
   /** 在截图上叠加可交互元素的编号框（set-of-marks），大幅提升视觉点击准确率 */
   setOfMarks: boolean;
   /** 任务开始先规划、完成时自检是否达成（Planner + Validator） */
   planning: boolean;
+  /** 是否启用 javascript_tool（在页面执行任意 JS）；出于安全默认关闭 */
+  enableJavascriptTool: boolean;
 }
 
 export interface SitePermissions {
@@ -104,6 +121,8 @@ export interface AppConfig {
   safety: SafetySettings;
   advanced: AdvancedSettings;
   sites: SitePermissions;
+  /** 界面语言：'auto' 跟随浏览器，或强制 'zh' / 'en' */
+  uiLang: 'auto' | 'zh' | 'en';
 }
 
 // ============================================================
@@ -135,13 +154,21 @@ export type TimelineItem =
       decision?: ApprovalDecision;
     }
   | { kind: 'error'; id: string; text: string }
-  | { kind: 'info'; id: string; text: string };
+  | { kind: 'info'; id: string; text: string; action?: 'continue' };
 
 export interface ModelPick {
   id: string;
   label: string;
   vision: boolean;
   providerName: string;
+}
+
+/** 会话列表项（轻量元数据，不含消息体） */
+export interface ConvMeta {
+  id: string;
+  title: string;
+  updatedAt: number;
+  msgCount: number;
 }
 
 // ============================================================
@@ -167,8 +194,11 @@ export interface DiagnosticsReport {
 export type PanelToBg =
   | { type: 'hello'; windowId: number }
   | { type: 'send'; text: string }
+  | { type: 'continue' }
   | { type: 'abort' }
   | { type: 'new_chat' }
+  | { type: 'switch_conv'; id: string }
+  | { type: 'delete_conv'; id: string }
   | { type: 'set_model'; modelId: string }
   | { type: 'approval'; id: string; decision: ApprovalDecision }
   | { type: 'detach' }
@@ -185,5 +215,16 @@ export type BgToPanel =
   | { type: 'item_upsert'; item: TimelineItem }
   | { type: 'text_delta'; id: string; delta: string }
   | { type: 'run_state'; running: boolean }
+  | { type: 'conversations'; list: ConvMeta[]; activeId: string }
   | { type: 'models'; models: ModelPick[]; modelId: string }
-  | { type: 'usage'; input: number; output: number };
+  | {
+      type: 'usage';
+      input: number;
+      output: number;
+      /** 累计成本（美元）；当前模型未配置计费时为 null */
+      cost: number | null;
+      /** 上次请求发送前估算的输入 token 占用（治理后） */
+      contextTokens?: number;
+      /** 当前输入 token 预算 */
+      contextBudget?: number;
+    };

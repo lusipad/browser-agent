@@ -212,6 +212,19 @@ nav {
 .vision-toggle {
   justify-content: flex-end;
 }
+.price-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.price-inputs input {
+  width: 100%;
+  min-width: 0;
+}
+.price-sep {
+  color: var(--text-dim);
+  flex: 0 0 auto;
+}
 
 .card-actions {
   display: flex;

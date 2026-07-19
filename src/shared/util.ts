@@ -33,6 +33,19 @@ export function hostMatches(host: string, pattern: string): boolean {
   return h === p || h.endsWith('.' + p);
 }
 
+/** 从对话历史派生一个简短标题（取最早一条用户文本） */
+export function deriveTitle(messages: { role: string; content: ContentBlock[] }[]): string {
+  for (const m of messages) {
+    if (m.role !== 'user') continue;
+    const t = m.content.find((b): b is TextBlock => b.type === 'text');
+    if (t && t.text.trim()) {
+      const s = t.text.trim().replace(/\s+/g, ' ');
+      return s.length > 30 ? s.slice(0, 30) + '…' : s;
+    }
+  }
+  return '新对话';
+}
+
 export function textOfBlocks(blocks: ContentBlock[]): string {
   return blocks
     .filter((b): b is TextBlock => b.type === 'text')

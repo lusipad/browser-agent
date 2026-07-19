@@ -1,19 +1,40 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { BgToPanel, ModelPick, TimelineItem } from '../shared/types';
+import { detectLang, makeT, resolveLang, type Lang } from '../shared/i18n';
+import { I18nProvider } from '../shared/i18nReact';
+import { loadConfig, onConfigChange } from '../shared/settings';
+import type { BgToPanel, ConvMeta, ModelPick, TimelineItem } from '../shared/types';
 import { BgPort } from './port';
 import { Timeline } from './components/Timeline';
 import { Composer } from './components/Composer';
 import { Header } from './components/Header';
+import { HistoryDrawer } from './components/HistoryDrawer';
 
 export function App() {
   const port = useMemo(() => new BgPort(), []);
+  const [lang, setLang] = useState<Lang>(detectLang());
+  const t = useMemo(() => makeT(lang), [lang]);
   const [items, setItems] = useState<TimelineItem[]>([]);
   const [running, setRunning] = useState(false);
   const [models, setModels] = useState<ModelPick[]>([]);
   const [modelId, setModelId] = useState('');
-  const [usage, setUsage] = useState({ input: 0, output: 0 });
+  const [usage, setUsage] = useState<{
+    input: number;
+    output: number;
+    cost: number | null;
+    contextTokens?: number;
+    contextBudget?: number;
+  }>({ input: 0, output: 0, cost: null });
+  const [conversations, setConversations] = useState<ConvMeta[]>([]);
+  const [activeConv, setActiveConv] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedBottom = useRef(true);
+
+  // 界面语言：加载配置 + 监听变更
+  useEffect(() => {
+    void loadConfig().then((c) => setLang(resolveLang(c.uiLang)));
+    onConfigChange((c) => setLang(resolveLang(c.uiLang)));
+  }, []);
 
   useEffect(() => {
     const off = port.onMessage((msg: BgToPanel) => {
@@ -53,8 +74,19 @@ export function App() {
           setModels(msg.models);
           setModelId(msg.modelId);
           break;
+        case 'conversations':
+          setConversations(msg.list);
+          setActiveConv(msg.activeId);
+          break;
         case 'usage':
-          setUsage({ input: msg.input, output: msg.output });
+          setUsage((prev) => ({
+            input: msg.input,
+            output: msg.output,
+            cost: msg.cost,
+            // 上下文占用仅主循环请求会带上，其余（planner/切模型）沿用上次的值
+            contextTokens: msg.contextTokens ?? prev.contextTokens,
+            contextBudget: msg.contextBudget ?? prev.contextBudget,
+          }));
           break;
       }
     });
@@ -75,24 +107,46 @@ export function App() {
   }
 
   return (
+    <I18nProvider value={t}>
     <div className="app">
       <Header
         models={models}
         modelId={modelId}
         usage={usage}
+        items={items}
         onModel={(id) => {
           setModelId(id);
           port.post({ type: 'set_model', modelId: id });
         }}
         onNewChat={() => port.post({ type: 'new_chat' })}
+        onHistory={() => setHistoryOpen((o) => !o)}
         onOptions={() => port.post({ type: 'open_options' })}
         onDetach={() => port.post({ type: 'detach' })}
         running={running}
       />
+      {historyOpen && (
+        <HistoryDrawer
+          conversations={conversations}
+          activeId={activeConv}
+          running={running}
+          onClose={() => setHistoryOpen(false)}
+          onNew={() => {
+            port.post({ type: 'new_chat' });
+            setHistoryOpen(false);
+          }}
+          onSwitch={(id) => {
+            port.post({ type: 'switch_conv', id });
+            setHistoryOpen(false);
+          }}
+          onDelete={(id) => port.post({ type: 'delete_conv', id })}
+        />
+      )}
       <div className="scroll" ref={scrollRef} onScroll={onScroll}>
         <Timeline
           items={items}
+          running={running}
           onApprove={(id, decision) => port.post({ type: 'approval', id, decision })}
+          onContinue={() => port.post({ type: 'continue' })}
         />
       </div>
       <Composer
@@ -102,5 +156,6 @@ export function App() {
         hasModel={!!modelId}
       />
     </div>
+    </I18nProvider>
   );
 }

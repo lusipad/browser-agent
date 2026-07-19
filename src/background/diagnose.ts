@@ -1,4 +1,5 @@
 // 一键诊断：对真实标签页跑一遍感知层 + CDP 全链路体检，不需要 agent、不花 API 钱
+import { makeT, type Lang } from '../shared/i18n';
 import type { DiagCheck, DiagnosticsReport } from '../shared/types';
 import { errText } from '../shared/util';
 import { ensureAttached, networkActivity } from './cdp';
@@ -14,37 +15,38 @@ function safeOrigin(url: string | undefined): string {
   }
 }
 
-export async function runDiagnostics(tabId: number): Promise<DiagnosticsReport> {
+export async function runDiagnostics(tabId: number, lang: Lang = 'zh'): Promise<DiagnosticsReport> {
+  const t = makeT(lang);
   const checks: DiagCheck[] = [];
   let tab: chrome.tabs.Tab;
   try {
     tab = await getTab(tabId);
   } catch {
-    return { ok: false, tab: null, checks: [{ name: '目标标签页', status: 'fail', detail: '找不到标签页（可能已关闭）' }] };
+    return { ok: false, tab: null, checks: [{ name: t('bg.diag.targetTab'), status: 'fail', detail: t('bg.diag.tabGone') }] };
   }
 
   const url = tab.url ?? '';
   const isHttp = /^https?:/.test(url);
-  checks.push({ name: '目标标签页', status: isHttp ? 'ok' : 'warn', detail: `${tab.title ?? ''} — ${url || '(空)'}` });
+  checks.push({ name: t('bg.diag.targetTab'), status: isHttp ? 'ok' : 'warn', detail: `${tab.title ?? ''} — ${url || t('bg.diag.empty')}` });
   if (!isHttp) {
-    checks.push({ name: '可自动化', status: 'fail', detail: '仅 http(s) 网页可自动化。请切到一个普通网页再诊断。' });
+    checks.push({ name: t('bg.diag.automatable'), status: 'fail', detail: t('bg.diag.httpOnly') });
     return { ok: false, tab: { id: tab.id ?? -1, url, title: tab.title ?? '' }, checks };
   }
 
   // CDP 附加
   try {
     await ensureAttached(tabId);
-    checks.push({ name: 'CDP 调试连接', status: 'ok', detail: '已附加（可发送可信输入/截图）' });
+    checks.push({ name: t('bg.diag.cdp'), status: 'ok', detail: t('bg.diag.cdpOk') });
   } catch (e) {
-    checks.push({ name: 'CDP 调试连接', status: 'fail', detail: errText(e) });
+    checks.push({ name: t('bg.diag.cdp'), status: 'fail', detail: errText(e) });
   }
 
   // 截图
   try {
     const s = await captureScreenshot(tabId, { maxWidth: 1366, quality: 60 });
-    checks.push({ name: '截图', status: 'ok', detail: `成功 ${s.w}×${s.h}px` });
+    checks.push({ name: t('bg.diag.screenshot'), status: 'ok', detail: t('bg.diag.shotOk', [s.w, s.h]) });
   } catch (e) {
-    checks.push({ name: '截图', status: 'fail', detail: errText(e) });
+    checks.push({ name: t('bg.diag.screenshot'), status: 'fail', detail: errText(e) });
   }
 
   // 元素收集 + 来源分布
@@ -55,22 +57,22 @@ export async function runDiagnostics(tabId: number): Promise<DiagnosticsReport> 
     for (const e of els) by[e.src] = (by[e.src] ?? 0) + 1;
     const inView = els.filter((e) => e.inView).length;
     checks.push({
-      name: '元素收集',
+      name: t('bg.diag.collect'),
       status: els.length ? 'ok' : 'warn',
-      detail: `共 ${els.length} 个可交互元素（视口内 ${inView}）｜top ${by.top} · shadow ${by.shadow} · iframe ${by.iframe}`,
+      detail: t('bg.diag.collectDetail', [els.length, inView, by.top, by.shadow, by.iframe]),
     });
     checks.push({
-      name: 'Shadow DOM 穿透',
+      name: t('bg.diag.shadow'),
       status: by.shadow > 0 ? 'ok' : 'warn',
-      detail: by.shadow > 0 ? `发现 ${by.shadow} 个 shadow DOM 内元素` : '本页未发现 shadow DOM 元素（可能本就没有 web components）',
+      detail: by.shadow > 0 ? t('bg.diag.shadowFound', [by.shadow]) : t('bg.diag.shadowNone'),
     });
     checks.push({
-      name: '同源 iframe 穿透',
+      name: t('bg.diag.iframe'),
       status: by.iframe > 0 ? 'ok' : 'warn',
-      detail: by.iframe > 0 ? `发现 ${by.iframe} 个同源 iframe 内元素` : '本页未发现同源 iframe 内元素',
+      detail: by.iframe > 0 ? t('bg.diag.iframeFound', [by.iframe]) : t('bg.diag.iframeNone'),
     });
   } catch (e) {
-    checks.push({ name: '元素收集', status: 'fail', detail: errText(e) });
+    checks.push({ name: t('bg.diag.collect'), status: 'fail', detail: errText(e) });
   }
 
   // 帧结构
@@ -80,20 +82,22 @@ export async function runDiagnostics(tabId: number): Promise<DiagnosticsReport> 
     let cross = 0;
     for (const f of frames) if (f.frameId !== 0 && safeOrigin(f.url) !== origin) cross++;
     checks.push({
-      name: '帧结构',
+      name: t('bg.diag.frames'),
       status: 'ok',
-      detail: `${frames.length} 帧｜跨域 ${cross}${cross > 0 ? '（跨域 iframe 内部细粒度元素目前不提取，可用 get_page_text 读文字）' : ''}`,
+      detail: t('bg.diag.framesDetail', [frames.length, cross, cross > 0 ? t('bg.diag.crossNote') : '']),
     });
   } catch {
-    checks.push({ name: '帧结构', status: 'warn', detail: '无法读取帧结构（可能缺 webNavigation 权限，重新加载扩展试试）' });
+    checks.push({ name: t('bg.diag.frames'), status: 'warn', detail: t('bg.diag.framesFail') });
   }
 
   // 网络状态
   const na = networkActivity(tabId);
   checks.push({
-    name: '网络',
+    name: t('bg.diag.network'),
     status: 'ok',
-    detail: `在途请求 ${na.inFlight}${Number.isFinite(na.sinceLastMs) ? `，距上次活动 ${Math.round(na.sinceLastMs)}ms` : ''}`,
+    detail: Number.isFinite(na.sinceLastMs)
+      ? t('bg.diag.networkDetail', [na.inFlight, Math.round(na.sinceLastMs)])
+      : t('bg.diag.networkBrief', [na.inFlight]),
   });
 
   const ok = !checks.some((c) => c.status === 'fail');

@@ -1,7 +1,13 @@
 // 站点级授权 + 敏感操作确认（复刻 Claude in Chrome 的权限模型）
+import { resolveLang, translate, type MsgKey } from '../shared/i18n';
 import { saveConfig } from '../shared/settings';
 import type { AppConfig, ApprovalDecision } from '../shared/types';
 import { hostMatches } from '../shared/util';
+
+/** 按 host 的界面语言翻译授权卡片文案 */
+function tr(host: ApprovalHost, key: MsgKey, params?: Array<string | number>): string {
+  return translate(resolveLang(host.cfg.uiLang), key, params);
+}
 
 /** Session 提供给权限层的最小接口（避免循环依赖） */
 export interface ApprovalHost {
@@ -48,8 +54,8 @@ export async function ensureSiteAllowed(host: ApprovalHost, url: string | undefi
     return;
   }
   const d = await host.requestApproval({
-    title: `允许在 ${h} 上操作？`,
-    description: `智能体请求${purpose}。「始终允许」会把该站点加入允许列表；「仅本次」在本对话内有效。`,
+    title: tr(host, 'bg.siteAllowTitle', [h]),
+    description: tr(host, 'bg.siteAllowDesc', [purpose]),
     siteOption: true,
   });
   if (d === 'deny') {
@@ -73,12 +79,12 @@ export async function confirmSensitive(
     (kind === 'javascript' && host.cfg.safety.confirmJavascript) ||
     (kind === 'upload' && host.cfg.safety.confirmUpload);
   if (!need) return;
-  const titles: Record<typeof kind, string> = {
-    password: '允许向密码框输入内容？',
-    javascript: '允许在页面中执行 JavaScript？',
-    upload: '允许上传文件？',
+  const titleKey: Record<typeof kind, MsgKey> = {
+    password: 'bg.confirmPasswordTitle',
+    javascript: 'bg.confirmJsTitle',
+    upload: 'bg.confirmUploadTitle',
   };
-  const d = await host.requestApproval({ title: titles[kind], description });
+  const d = await host.requestApproval({ title: tr(host, titleKey[kind]), description });
   if (d === 'deny') {
     throw new Error(`User denied the ${kind} action. Do not retry; ask the user how to proceed.`);
   }

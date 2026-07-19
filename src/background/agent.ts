@@ -1,5 +1,6 @@
 // 智能体主循环：Planner（规划）→ Navigator（模型流式输出→执行工具→迭代）→ Validator（自检）
 import { openaiStream } from '../providers';
+import { classifyProviderError } from '../providers/types';
 import { buildSystemPrompt } from '../shared/prompts';
 import { loadConfig } from '../shared/settings';
 import type {
@@ -11,6 +12,7 @@ import type {
   TextBlock,
   ToolUseBlock,
 } from '../shared/types';
+import { computeCost, governContext, inputBudgetFor } from '../shared/context';
 import { errText, textOfBlocks, truncate, uid } from '../shared/util';
 import { runInPage } from './inject';
 import type { Session } from './session';
@@ -18,20 +20,25 @@ import { executeToolUse, shotBlocks, toolSpecs } from './tools/registry';
 
 const VALIDATOR_CAP = 2;
 
-export async function runTurn(session: Session, userText: string): Promise<void> {
+export async function runTurn(
+  session: Session,
+  userText: string,
+  opts?: { continuation?: boolean },
+): Promise<void> {
+  const continuation = !!opts?.continuation;
   session.cfg = await loadConfig();
   const model = session.cfg.models.find((m) => m.id === session.modelId);
   if (!model) {
-    session.error('未找到所选模型，请到设置页配置模型后重试。');
+    session.error(session.t('bg.noModel'));
     return;
   }
   const provider = session.cfg.providers.find((p) => p.id === model.providerId);
   if (!provider) {
-    session.error(`模型 ${model.label} 引用的服务商不存在，请检查设置。`);
+    session.error(session.t('bg.providerMissing', [model.label]));
     return;
   }
   if (!provider.apiKey.trim()) {
-    session.error(`「${provider.name}」还没有配置 API Key。点击右上角 ⚙ 打开设置页填写。`);
+    session.error(session.t('bg.noApiKey', [provider.name]));
     return;
   }
 
@@ -44,8 +51,10 @@ export async function runTurn(session: Session, userText: string): Promise<void>
   session.emit({ type: 'run_state', running: true });
   const keepalive = setInterval(() => chrome.runtime.getPlatformInfo(() => {}), 15000);
 
-  session.messages.push({ role: 'user', content: [{ type: 'text', text: userText }] });
-  session.upsert({ kind: 'user', id: uid('u'), text: userText });
+  if (!continuation) {
+    session.messages.push({ role: 'user', content: [{ type: 'text', text: userText }] });
+    session.upsert({ kind: 'user', id: uid('u'), text: userText });
+  }
 
   const sysBase = buildSystemPrompt({
     date: new Date().toISOString().slice(0, 10),
@@ -53,12 +62,13 @@ export async function runTurn(session: Session, userText: string): Promise<void>
     screenshotMaxWidth: adv.screenshotMaxWidth,
   });
 
-  let successCriteria = userText;
+  // 「继续」时沿用最初的任务作为成功判据
+  let successCriteria = continuation ? firstUserText(session) || userText : userText;
   let validatorRounds = 0;
 
   try {
     // ---------- Planner ----------
-    if (adv.planning && firstTurn && !session.aborted) {
+    if (adv.planning && firstTurn && !continuation && !session.aborted) {
       const crit = await runPlanner(session, provider, model, sysBase, userText);
       if (crit) successCriteria = crit;
     }
@@ -71,12 +81,20 @@ export async function runTurn(session: Session, userText: string): Promise<void>
       let streamed = '';
       session.upsert({ kind: 'assistant', id: asstId, text: '', done: false });
 
-      const result = await streamOnce(session, provider, model, sysBase, prepareForApi(session.messages, model.vision, adv.maxImagesKept), toolSpecs(), (delta) => {
+      const budget = inputBudgetFor(model.contextWindow, adv.maxTokens, adv.maxContextTokens);
+      const governed = governContext(session.messages, {
+        vision: model.vision,
+        maxImages: adv.maxImagesKept,
+        maxInputTokens: budget,
+      });
+
+      const result = await streamOnce(session, provider, model, sysBase, governed.messages, activeToolSpecs(session), (delta) => {
         streamed += delta;
         session.emit({ type: 'text_delta', id: asstId, delta });
       });
 
       accrueUsage(session, result.usage);
+      emitUsage(session, model, { tokens: governed.estInputTokens, budget });
       const finalText = textOfBlocks(result.blocks) || streamed;
       session.upsert({ kind: 'assistant', id: asstId, text: finalText, done: true });
       session.messages.push({
@@ -92,7 +110,14 @@ export async function runTurn(session: Session, userText: string): Promise<void>
           const verdict = await runValidator(session, provider, model, sysBase, userText, successCriteria);
           if (!verdict.done) {
             validatorRounds++;
-            session.upsert({ kind: 'info', id: uid('i'), text: `🔎 自检未通过：${verdict.reason || '任务尚未达成'}${verdict.next ? `｜下一步：${verdict.next}` : ''}` });
+            session.upsert({
+              kind: 'info',
+              id: uid('i'),
+              text: session.t('bg.validatorFail', [
+                verdict.reason || session.t('bg.validatorFailReason'),
+                verdict.next ? session.t('bg.validatorNext', [verdict.next]) : '',
+              ]),
+            });
             session.messages.push({
               role: 'user',
               content: [
@@ -107,9 +132,9 @@ export async function runTurn(session: Session, userText: string): Promise<void>
             });
             continue;
           }
-          session.upsert({ kind: 'info', id: uid('i'), text: '✅ 自检通过：任务达成。' });
+          session.upsert({ kind: 'info', id: uid('i'), text: session.t('bg.validatorPass') });
         }
-        if (result.stopReason === 'length') session.info('输出达到 max_tokens 上限被截断，可在设置中调大。');
+        if (result.stopReason === 'length') session.info(session.t('bg.maxTokens'));
         break;
       }
 
@@ -142,13 +167,19 @@ export async function runTurn(session: Session, userText: string): Promise<void>
       }
       session.messages.push({ role: 'user', content: resultBlocks });
 
-      if (iter === adv.maxIterations - 1) session.info(`已达到单轮最大迭代次数（${adv.maxIterations}）。回复「继续」可以接着执行。`);
+      if (iter === adv.maxIterations - 1)
+        session.upsert({
+          kind: 'info',
+          id: uid('i'),
+          text: session.t('bg.maxIter', [adv.maxIterations]),
+          action: 'continue',
+        });
     }
-    if (session.aborted) session.info('已停止。');
+    if (session.aborted) session.info(session.t('bg.stopped'));
   } catch (e) {
-    if (session.aborted || (e instanceof DOMException && e.name === 'AbortError')) session.info('已停止。');
-    else if (e instanceof DOMException && e.name === 'TimeoutError') session.error(`请求超时（${Math.round(adv.requestTimeoutMs / 1000)}s）。可在设置中调整超时时间。`);
-    else session.error(errText(e));
+    if (session.aborted || (e instanceof DOMException && e.name === 'AbortError')) session.info(session.t('bg.stopped'));
+    else if (e instanceof DOMException && e.name === 'TimeoutError') session.error(session.t('bg.timeout', [Math.round(adv.requestTimeoutMs / 1000)]));
+    else session.error(classifyProviderError(e) || errText(e));
   } finally {
     clearInterval(keepalive);
     session.running = false;
@@ -178,6 +209,7 @@ function streamOnce(
     maxTokens: adv.maxTokens,
     signal: session.controller!.signal,
     timeoutMs: adv.requestTimeoutMs,
+    retries: adv.maxRetries,
     onText,
   });
 }
@@ -186,7 +218,18 @@ function accrueUsage(session: Session, usage?: { input: number; output: number }
   if (!usage) return;
   session.usage.input += usage.input;
   session.usage.output += usage.output;
-  session.emit({ type: 'usage', input: session.usage.input, output: session.usage.output });
+}
+
+/** 向面板推送累计 token / 成本 / 上下文占用（成本按当前模型计费换算） */
+function emitUsage(session: Session, model: ModelConfig, context?: { tokens: number; budget: number }): void {
+  session.emit({
+    type: 'usage',
+    input: session.usage.input,
+    output: session.usage.output,
+    cost: computeCost(session.usage, model.pricing),
+    contextTokens: context?.tokens,
+    contextBudget: context?.budget,
+  });
 }
 
 /** Planner：把任务拆成清单并给出可观测的成功判据（不调用工具） */
@@ -213,11 +256,12 @@ async function runPlanner(
       session.emit({ type: 'text_delta', id, delta: d });
     });
     accrueUsage(session, res.usage);
+    emitUsage(session, model);
     text = textOfBlocks(res.blocks) || text;
   } catch (e) {
     // 规划失败不致命：直接进入执行
     session.upsert({ kind: 'assistant', id, text: text || '', done: true });
-    session.info(`（规划步骤跳过：${truncate(errText(e), 120)}）`);
+    session.info(session.t('bg.planSkipped', [truncate(errText(e), 120)]));
     return null;
   }
   session.upsert({ kind: 'assistant', id, text: text || '(无计划输出)', done: true });
@@ -256,10 +300,11 @@ async function runValidator(
     ];
     const res = await streamOnce(session, provider, model, sys, [{ role: 'user', content: user }], [], () => {});
     accrueUsage(session, res.usage);
+    emitUsage(session, model);
     return parseVerdict(textOfBlocks(res.blocks));
   } catch (e) {
     // 校验失败时不阻塞收尾，视为完成
-    session.info(`（自检步骤跳过：${truncate(errText(e), 120)}）`);
+    session.info(session.t('bg.validateSkipped', [truncate(errText(e), 120)]));
     return { done: true, reason: '', next: '' };
   }
 }
@@ -291,38 +336,21 @@ function parseVerdict(text: string): Verdict {
   return { done: positive && !negative, reason: truncate(text.trim(), 200), next: '' };
 }
 
-/**
- * 发给 API 前的历史整理（不改动原始历史）：
- * - 只保留最近 maxImages 张截图，更早的替换为占位文本
- * - 无视觉模型：移除全部图片
- */
-function prepareForApi(messages: ChatMessage[], vision: boolean, maxImages: number): ChatMessage[] {
-  const placeholder = vision
-    ? '[older screenshot removed to save context — take a fresh one if needed]'
-    : '[screenshot omitted: current model has no vision — use read_page / get_page_text instead]';
-  let remaining = vision ? Math.max(0, maxImages) : 0;
-  const clone: ChatMessage[] = messages.map((m) => ({
-    role: m.role,
-    content: m.content.map((b) => (b.type === 'tool_result' ? { ...b, content: b.content.map((c) => ({ ...c })) } : { ...b })),
-  }));
-  for (let i = clone.length - 1; i >= 0; i--) {
-    const content = clone[i].content;
-    for (let j = content.length - 1; j >= 0; j--) {
-      const b = content[j];
-      if (b.type === 'image') {
-        if (remaining > 0) remaining--;
-        else content[j] = { type: 'text', text: placeholder };
-      } else if (b.type === 'tool_result') {
-        for (let k = b.content.length - 1; k >= 0; k--) {
-          if (b.content[k].type === 'image') {
-            if (remaining > 0) remaining--;
-            else b.content[k] = { type: 'text', text: placeholder };
-          }
-        }
-      }
-    }
+/** 按会话配置过滤工具清单：javascript_tool 默认关闭时不暴露给模型 */
+function activeToolSpecs(session: Session): ReturnType<typeof toolSpecs> {
+  const specs = toolSpecs();
+  if (session.cfg.advanced.enableJavascriptTool) return specs;
+  return specs.filter((s) => s.name !== 'javascript_tool');
+}
+
+/** 取历史里最早的一条用户文本（作为「继续」时的成功判据） */
+function firstUserText(session: Session): string {
+  for (const m of session.messages) {
+    if (m.role !== 'user') continue;
+    const t = m.content.find((b): b is TextBlock => b.type === 'text');
+    if (t) return t.text;
   }
-  return clone;
+  return '';
 }
 
 /** 时间线里最多保留最近 keep 张截图（UI 内存控制） */
@@ -353,6 +381,8 @@ function summarizeArgs(name: string, input: Record<string, any>): string {
       return String(inp.url ?? inp.action ?? '');
     case 'find':
       return `"${inp.query ?? ''}"`;
+    case 'extract_data':
+      return inp.selector ? `${inp.mode ?? 'selector'} ${inp.selector}` : String(inp.mode ?? 'tables');
     case 'wait_for':
       return `${inp.condition ?? ''} ${inp.query ? `"${inp.query}"` : inp.text ? `"${truncate(String(inp.text), 24, '…')}"` : ''}`.trim();
     case 'form_input':

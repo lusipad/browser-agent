@@ -51,11 +51,12 @@ export const browserTools: ToolDef[] = [
     async run(ctx, input) {
       const url = input.url ? normalizeUrl(input.url) : 'about:blank';
       if (url !== 'about:blank') {
-        await ensureSiteAllowed(ctx.session, url, `打开新标签页访问 ${url.slice(0, 120)}`);
+        await ensureSiteAllowed(ctx.session, url, ctx.session.t('bg.purposeOpen', [url.slice(0, 120)]));
       }
       const tab = await chrome.tabs.create({ url, windowId: ctx.session.windowId, active: true });
       if (tab.id == null) throw new Error('Failed to create tab');
       await addToAgentGroup(tab.windowId, tab.id);
+      ctx.session.groupedTabs.add(tab.id);
       ctx.session.currentTabId = tab.id;
       if (url !== 'about:blank') await waitForLoad(tab.id);
       const fresh = await getTab(tab.id);
@@ -82,6 +83,7 @@ export const browserTools: ToolDef[] = [
       const id = Number(input.tab_id);
       await getTab(id);
       await chrome.tabs.remove(id);
+      ctx.session.groupedTabs.delete(id);
       if (ctx.session.currentTabId === id) ctx.session.currentTabId = null;
       return { content: [{ type: 'text', text: `Closed tab ${id}.` }] };
     },
@@ -104,7 +106,7 @@ export const browserTools: ToolDef[] = [
       if (action === 'url') {
         if (!input.url) throw new Error('navigate: "url" is required (or set action to back/forward/reload)');
         const url = normalizeUrl(String(input.url));
-        await ensureSiteAllowed(ctx.session, url, `跳转到 ${url.slice(0, 120)}`);
+        await ensureSiteAllowed(ctx.session, url, ctx.session.t('bg.purposeNavigate', [url.slice(0, 120)]));
         await chrome.tabs.update(ctx.tabId, { url });
       } else if (action === 'back') {
         await chrome.tabs.goBack(ctx.tabId).catch(() => {

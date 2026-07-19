@@ -6,6 +6,7 @@ const ICONS: Record<string, string> = {
   screenshot: '📸',
   computer: '🖱',
   read_page: '📄',
+  extract_data: '🧾',
   find: '🔎',
   form_input: '⌨',
   scroll_to_ref: '⇕',
@@ -27,6 +28,7 @@ const LABELS: Record<string, string> = {
   screenshot: '截图',
   computer: '操作',
   read_page: '读取页面',
+  extract_data: '抽取数据',
   find: '查找元素',
   form_input: '填写',
   scroll_to_ref: '滚动到',
@@ -40,10 +42,18 @@ const LABELS: Record<string, string> = {
   gif_creator: '生成 GIF',
 };
 
+import type { MsgKey, TFn } from '../../shared/i18n';
+
 export function toolIcon(name: string): string {
   return ICONS[name] ?? '🔧';
 }
 
-export function toolLabel(name: string): string {
+/** 工具中文/英文标签：传入 t 时按当前界面语言，否则回落中文（供导出等无 t 处复用） */
+export function toolLabel(name: string, t?: TFn): string {
+  if (t) {
+    const key = ('tool.' + name) as MsgKey;
+    const r = t(key);
+    if (r !== key) return r; // translate 缺失时返回 key 本身
+  }
   return LABELS[name] ?? name;
 }

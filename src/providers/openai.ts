@@ -3,7 +3,7 @@
 import type { ContentBlock, ImageBlock, TextBlock } from '../shared/types';
 import { textOfBlocks, uid } from '../shared/util';
 import { sseData } from './sse';
-import { combinedSignal, readErrorBody, mergeConsecutive, type ProviderImpl } from './types';
+import { fetchWithRetry, mergeConsecutive, type ProviderImpl } from './types';
 
 /** o 系列 / gpt-5 系列：不接受 temperature，须用 max_completion_tokens */
 function isReasoningModel(model: string): boolean {
@@ -31,18 +31,18 @@ export const openaiStream: ProviderImpl = async (p) => {
     if (p.temperature != null) body.temperature = p.temperature;
   }
 
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${p.provider.apiKey}`,
+  const resp = await fetchWithRetry(
+    url,
+    {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${p.provider.apiKey}`,
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-    signal: combinedSignal(p.signal, p.timeoutMs),
-  });
-  if (!resp.ok) {
-    throw new Error(`${p.provider.name} HTTP ${resp.status}: ${await readErrorBody(resp)}`);
-  }
+    { provider: p.provider, signal: p.signal, timeoutMs: p.timeoutMs, retries: p.retries },
+  );
 
   let text = '';
   const calls = new Map<number, { id: string; name: string; args: string }>();

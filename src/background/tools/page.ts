@@ -44,6 +44,41 @@ export const pageTools: ToolDef[] = [
     },
   },
   {
+    name: 'extract_data',
+    description:
+      'Extract STRUCTURED data from the page (across shadow DOM and same-origin iframes) as JSON — cheaper and more precise than reading the whole page text, and easier to summarise. ' +
+      'Modes: "tables" = every <table> as {caption, headers, rows}; "links" = all links as {text, href}; ' +
+      '"selector" = provide a CSS "selector" and each matching element becomes one record — its trimmed text by default, or if "fields" is given, an object whose values are sub-selectors relative to the match. ' +
+      'A field value may be "subSelector@attr" or just "@attr" to read an attribute (e.g. "@href", "img@src", "a.title@href").',
+    schema: {
+      type: 'object',
+      properties: {
+        mode: { type: 'string', enum: ['tables', 'links', 'selector'], description: 'Extraction mode, default "tables" (or "selector" if a selector is given)' },
+        selector: { type: 'string', description: 'CSS selector for the repeating record container (selector mode), e.g. "li.product", ".search-result"' },
+        fields: {
+          type: 'object',
+          description: 'Map fieldName -> sub-selector (optionally "sel@attr" or "@attr"). Omit to return each match\'s text.',
+          additionalProperties: { type: 'string' },
+        },
+        max_chars: { type: 'integer', description: 'Max JSON characters returned, default 12000' },
+        tab_id: { type: 'integer' },
+      },
+    },
+    needsTab: true,
+    async run(ctx, input) {
+      const r = await runInPage(ctx.tabId, 'extract', {
+        mode: input.mode,
+        selector: input.selector,
+        fields: input.fields,
+      });
+      ctx.session.currentTabId = ctx.tabId;
+      const max = Math.min(40000, Math.max(1000, Number(input.max_chars ?? 12000)));
+      const json = JSON.stringify(r ?? {}, null, 0);
+      const text = json.length > max ? json.slice(0, max) + `\n…(truncated; ${json.length - max} more chars — narrow the selector or use max_chars/offset)` : json;
+      return { content: [{ type: 'text', text }] };
+    },
+  },
+  {
     name: 'find',
     description:
       'Search the page for interactive elements matching a text query (matches name/label/href/role). Returns up to 12 elements with refs and coordinates. Faster and cheaper than read_page when you know what you are looking for.',
@@ -78,7 +113,7 @@ export const pageTools: ToolDef[] = [
     async run(ctx, input) {
       const info = await runInPage(ctx.tabId, 'element_info', { ref: input.ref });
       if (info.isPassword) {
-        await confirmSensitive(ctx.session, 'password', `智能体想向密码输入框写入内容（${String(input.value ?? '').length} 个字符）。`);
+        await confirmSensitive(ctx.session, 'password', ctx.session.t('bg.confirmPasswordDesc', [String(input.value ?? '').length]));
       }
       const r = await runInPage(ctx.tabId, 'form_input', { ref: input.ref, value: input.value });
       return { content: [{ type: 'text', text: String(r?.text ?? 'ok') }] };
@@ -154,7 +189,7 @@ export const pageTools: ToolDef[] = [
       await confirmSensitive(
         ctx.session,
         'upload',
-        `智能体想把文件 ${String(input.filename ?? url.slice(0, 80))} 上传到当前页面。`,
+        ctx.session.t('bg.confirmUploadDesc', [String(input.filename ?? url.slice(0, 80))]),
       );
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(`Failed to fetch file: HTTP ${resp.status}`);

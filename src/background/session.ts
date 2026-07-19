@@ -27,6 +27,8 @@ export class Session implements ApprovalHost {
   controller: AbortController | null = null;
   currentTabId: number | null = null;
   tempAllowedHosts = new Set<string>();
+  /** 已归入 Agent 标签组的标签（避免重复分组；不持久化） */
+  groupedTabs = new Set<number>();
   gifFrames: GifFrame[] = [];
   usage = { input: 0, output: 0 };
   port: chrome.runtime.Port | null = null;
@@ -144,6 +146,7 @@ export class Session implements ApprovalHost {
     if (this.cfg.models.find((m) => m.id === conv.modelId)) this.modelId = conv.modelId;
     this.gifFrames = [];
     this.tempAllowedHosts.clear();
+    this.groupedTabs.clear();
     this.currentTabId = null;
     this.aborted = false;
     void this.persist();
@@ -155,6 +158,7 @@ export class Session implements ApprovalHost {
     this.timeline = [];
     this.gifFrames = [];
     this.tempAllowedHosts.clear();
+    this.groupedTabs.clear();
     this.usage = { input: 0, output: 0 };
     this.currentTabId = null;
     this.aborted = false;

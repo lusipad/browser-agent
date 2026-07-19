@@ -88,17 +88,41 @@ export async function waitForLoad(tabId: number, timeoutMs = 12000): Promise<voi
   await sleep(200); // 渲染余量
 }
 
-/** 把智能体创建的标签页归入 “Agent” 标签组（复刻 Claude in Chrome 行为） */
+/**
+ * 把智能体正在操作的标签页归入 “🤖 Agent” 标签组（蓝色），
+ * 让用户一眼看到哪些标签正被 AI 控制（复刻 Claude in Chrome 的透明标识）。
+ */
 export async function addToAgentGroup(windowId: number, tabId: number): Promise<void> {
   try {
-    const groups = await chrome.tabGroups.query({ windowId, title: 'Agent' });
+    const groups = await chrome.tabGroups.query({ windowId, title: AGENT_GROUP_TITLE });
     if (groups.length) {
       await chrome.tabs.group({ tabIds: tabId, groupId: groups[0].id });
     } else {
       const gid = await chrome.tabs.group({ tabIds: tabId, createProperties: { windowId } });
-      await chrome.tabGroups.update(gid, { title: 'Agent', color: 'blue' });
+      await chrome.tabGroups.update(gid, { title: AGENT_GROUP_TITLE, color: 'blue' });
     }
   } catch {
     /* 标签组不可用（如某些窗口类型）时静默忽略 */
+  }
+}
+
+const AGENT_GROUP_TITLE = '🤖 Agent';
+
+/** 释放控制时撤销 Agent 分组，清除视觉标识（标签页本身保留） */
+export async function ungroupAgentTabs(windowId: number): Promise<number> {
+  try {
+    const groups = await chrome.tabGroups.query({ windowId, title: AGENT_GROUP_TITLE });
+    let n = 0;
+    for (const g of groups) {
+      const tabs = await chrome.tabs.query({ groupId: g.id });
+      const ids = tabs.map((t) => t.id).filter((id): id is number => id != null);
+      if (ids.length) {
+        await chrome.tabs.ungroup(ids);
+        n += ids.length;
+      }
+    }
+    return n;
+  } catch {
+    return 0;
   }
 }

@@ -56,6 +56,7 @@ export const browserTools: ToolDef[] = [
       const tab = await chrome.tabs.create({ url, windowId: ctx.session.windowId, active: true });
       if (tab.id == null) throw new Error('Failed to create tab');
       await addToAgentGroup(tab.windowId, tab.id);
+      ctx.session.groupedTabs.add(tab.id);
       ctx.session.currentTabId = tab.id;
       if (url !== 'about:blank') await waitForLoad(tab.id);
       const fresh = await getTab(tab.id);
@@ -82,6 +83,7 @@ export const browserTools: ToolDef[] = [
       const id = Number(input.tab_id);
       await getTab(id);
       await chrome.tabs.remove(id);
+      ctx.session.groupedTabs.delete(id);
       if (ctx.session.currentTabId === id) ctx.session.currentTabId = null;
       return { content: [{ type: 'text', text: `Closed tab ${id}.` }] };
     },

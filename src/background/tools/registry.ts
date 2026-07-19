@@ -7,7 +7,7 @@ import type { RawMark } from '../marks';
 import { ensureSiteAllowed } from '../permissions';
 import { captureScreenshot } from '../screenshot';
 import type { Session } from '../session';
-import { activeTabIn, getTab } from '../tabs';
+import { activeTabIn, addToAgentGroup, getTab } from '../tabs';
 
 export interface ToolCtx {
   session: Session;
@@ -45,6 +45,11 @@ export async function executeToolUse(session: Session, tu: ToolUseBlock): Promis
       tabId = await resolveTab(session, input.tab_id);
       const tab = await getTab(tabId);
       await ensureSiteAllowed(session, tab.url || tab.pendingUrl, `在当前页面执行 ${tu.name}`);
+      // 透明标识：凡 agent 操作过的（已授权）标签，都归入 Agent 标签组，每标签仅一次
+      if (!session.groupedTabs.has(tabId) && /^https?:/.test(tab.url ?? '')) {
+        session.groupedTabs.add(tabId);
+        await addToAgentGroup(tab.windowId, tabId);
+      }
     }
     return await def.run({ session, tabId }, input);
   } catch (e) {

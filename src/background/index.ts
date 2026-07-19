@@ -7,6 +7,7 @@ import { detachAll } from './cdp';
 import { pickDiagnoseTab, runDiagnostics } from './diagnose';
 import { deleteConversation, listConversations, loadConversation, saveConversation } from './history';
 import { Session } from './session';
+import { ungroupAgentTabs } from './tabs';
 import { browserTools } from './tools/browser';
 import { computerTool } from './tools/computer';
 import { devtoolsTools } from './tools/devtools';
@@ -156,7 +157,12 @@ chrome.runtime.onConnect.addListener((port) => {
             break;
           case 'detach': {
             const n = await detachAll();
-            bound?.info(`已释放浏览器控制（断开了 ${n} 个标签页的调试连接）。`);
+            let ungrouped = 0;
+            if (bound) {
+              ungrouped = await ungroupAgentTabs(bound.windowId);
+              bound.groupedTabs.clear();
+            }
+            bound?.info(`已释放浏览器控制（断开 ${n} 个标签页的调试连接，撤销 ${ungrouped} 个标签的 Agent 分组）。`);
             break;
           }
           case 'open_options':

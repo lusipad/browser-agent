@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { BgToPanel, ModelPick, TimelineItem } from '../shared/types';
+import type { BgToPanel, ConvMeta, ModelPick, TimelineItem } from '../shared/types';
 import { BgPort } from './port';
 import { Timeline } from './components/Timeline';
 import { Composer } from './components/Composer';
 import { Header } from './components/Header';
+import { HistoryDrawer } from './components/HistoryDrawer';
 
 export function App() {
   const port = useMemo(() => new BgPort(), []);
@@ -18,6 +19,9 @@ export function App() {
     contextTokens?: number;
     contextBudget?: number;
   }>({ input: 0, output: 0, cost: null });
+  const [conversations, setConversations] = useState<ConvMeta[]>([]);
+  const [activeConv, setActiveConv] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedBottom = useRef(true);
 
@@ -59,6 +63,10 @@ export function App() {
           setModels(msg.models);
           setModelId(msg.modelId);
           break;
+        case 'conversations':
+          setConversations(msg.list);
+          setActiveConv(msg.activeId);
+          break;
         case 'usage':
           setUsage((prev) => ({
             input: msg.input,
@@ -93,19 +101,40 @@ export function App() {
         models={models}
         modelId={modelId}
         usage={usage}
+        items={items}
         onModel={(id) => {
           setModelId(id);
           port.post({ type: 'set_model', modelId: id });
         }}
         onNewChat={() => port.post({ type: 'new_chat' })}
+        onHistory={() => setHistoryOpen((o) => !o)}
         onOptions={() => port.post({ type: 'open_options' })}
         onDetach={() => port.post({ type: 'detach' })}
         running={running}
       />
+      {historyOpen && (
+        <HistoryDrawer
+          conversations={conversations}
+          activeId={activeConv}
+          running={running}
+          onClose={() => setHistoryOpen(false)}
+          onNew={() => {
+            port.post({ type: 'new_chat' });
+            setHistoryOpen(false);
+          }}
+          onSwitch={(id) => {
+            port.post({ type: 'switch_conv', id });
+            setHistoryOpen(false);
+          }}
+          onDelete={(id) => port.post({ type: 'delete_conv', id })}
+        />
+      )}
       <div className="scroll" ref={scrollRef} onScroll={onScroll}>
         <Timeline
           items={items}
+          running={running}
           onApprove={(id, decision) => port.post({ type: 'approval', id, decision })}
+          onContinue={() => port.post({ type: 'continue' })}
         />
       </div>
       <Composer

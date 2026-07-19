@@ -5,15 +5,25 @@ import { toolIcon, toolLabel } from './toolMeta';
 
 interface Props {
   items: TimelineItem[];
+  running: boolean;
   onApprove: (id: string, decision: ApprovalDecision) => void;
+  onContinue: () => void;
 }
 
-export function Timeline({ items, onApprove }: Props) {
+export function Timeline({ items, running, onApprove, onContinue }: Props) {
   if (!items.length) return <Welcome />;
+  // 只有最后一条「继续」提示可点，避免历史里多个按钮
+  const lastContinueId = [...items].reverse().find((it) => it.kind === 'info' && it.action === 'continue')?.id;
   return (
     <div className="timeline">
       {items.map((it) => (
-        <Row key={it.id} item={it} onApprove={onApprove} />
+        <Row
+          key={it.id}
+          item={it}
+          onApprove={onApprove}
+          onContinue={onContinue}
+          canContinue={!running && it.id === lastContinueId}
+        />
       ))}
     </div>
   );
@@ -42,7 +52,17 @@ function Welcome() {
   );
 }
 
-function Row({ item, onApprove }: { item: TimelineItem; onApprove: Props['onApprove'] }) {
+function Row({
+  item,
+  onApprove,
+  onContinue,
+  canContinue,
+}: {
+  item: TimelineItem;
+  onApprove: Props['onApprove'];
+  onContinue: Props['onContinue'];
+  canContinue: boolean;
+}) {
   switch (item.kind) {
     case 'user':
       return (
@@ -72,7 +92,14 @@ function Row({ item, onApprove }: { item: TimelineItem; onApprove: Props['onAppr
     case 'info':
       return (
         <div className="row">
-          <div className="notice info">{item.text}</div>
+          <div className="notice info">
+            {item.text}
+            {item.action === 'continue' && canContinue && (
+              <button className="btn primary continue-btn" onClick={onContinue}>
+                继续执行 ↵
+              </button>
+            )}
+          </div>
         </div>
       );
   }

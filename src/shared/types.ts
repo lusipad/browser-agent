@@ -98,6 +98,8 @@ export interface AdvancedSettings {
   /** 每次操作后自动附带一张新截图 */
   autoScreenshot: boolean;
   requestTimeoutMs: number;
+  /** 连接阶段（5xx/429/网络错误）的最大退避重试次数 */
+  maxRetries: number;
   /** 在截图上叠加可交互元素的编号框（set-of-marks），大幅提升视觉点击准确率 */
   setOfMarks: boolean;
   /** 任务开始先规划、完成时自检是否达成（Planner + Validator） */
@@ -148,13 +150,21 @@ export type TimelineItem =
       decision?: ApprovalDecision;
     }
   | { kind: 'error'; id: string; text: string }
-  | { kind: 'info'; id: string; text: string };
+  | { kind: 'info'; id: string; text: string; action?: 'continue' };
 
 export interface ModelPick {
   id: string;
   label: string;
   vision: boolean;
   providerName: string;
+}
+
+/** 会话列表项（轻量元数据，不含消息体） */
+export interface ConvMeta {
+  id: string;
+  title: string;
+  updatedAt: number;
+  msgCount: number;
 }
 
 // ============================================================
@@ -180,8 +190,11 @@ export interface DiagnosticsReport {
 export type PanelToBg =
   | { type: 'hello'; windowId: number }
   | { type: 'send'; text: string }
+  | { type: 'continue' }
   | { type: 'abort' }
   | { type: 'new_chat' }
+  | { type: 'switch_conv'; id: string }
+  | { type: 'delete_conv'; id: string }
   | { type: 'set_model'; modelId: string }
   | { type: 'approval'; id: string; decision: ApprovalDecision }
   | { type: 'detach' }
@@ -198,6 +211,7 @@ export type BgToPanel =
   | { type: 'item_upsert'; item: TimelineItem }
   | { type: 'text_delta'; id: string; delta: string }
   | { type: 'run_state'; running: boolean }
+  | { type: 'conversations'; list: ConvMeta[]; activeId: string }
   | { type: 'models'; models: ModelPick[]; modelId: string }
   | {
       type: 'usage';

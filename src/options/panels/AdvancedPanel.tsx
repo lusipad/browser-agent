@@ -94,16 +94,27 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
             />
           </Field>
         </div>
-        <Field label="请求超时 (秒)">
-          <input
-            type="number"
-            value={Math.round(a.requestTimeoutMs / 1000)}
-            min={30}
-            max={600}
-            step={10}
-            onChange={(e) => patch({ requestTimeoutMs: num(e.target.value, 30, 600, 180) * 1000 })}
-          />
-        </Field>
+        <div className="card-row">
+          <Field label="请求超时 (秒)">
+            <input
+              type="number"
+              value={Math.round(a.requestTimeoutMs / 1000)}
+              min={30}
+              max={600}
+              step={10}
+              onChange={(e) => patch({ requestTimeoutMs: num(e.target.value, 30, 600, 180) * 1000 })}
+            />
+          </Field>
+          <Field label="失败重试次数" hint="遇到 5xx / 429 / 网络错误时的指数退避重试上限">
+            <input
+              type="number"
+              value={a.maxRetries}
+              min={0}
+              max={6}
+              onChange={(e) => patch({ maxRetries: num(e.target.value, 0, 6, 2) })}
+            />
+          </Field>
+        </div>
       </div>
 
       <div className="card toggles">

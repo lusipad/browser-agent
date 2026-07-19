@@ -5,6 +5,7 @@ import type { AppConfig, ModelPick, PanelToBg } from '../shared/types';
 import { runTurn } from './agent';
 import { detachAll } from './cdp';
 import { pickDiagnoseTab, runDiagnostics } from './diagnose';
+import { deleteConversation, listConversations, loadConversation, saveConversation } from './history';
 import { Session } from './session';
 import { browserTools } from './tools/browser';
 import { computerTool } from './tools/computer';
@@ -56,6 +57,20 @@ function pushUsage(s: Session): void {
   s.emit({ type: 'usage', input: s.usage.input, output: s.usage.output, cost: computeCost(s.usage, model?.pricing) });
 }
 
+/** 推送会话列表（把尚未落盘的当前会话也并入，保证它可见并高亮） */
+async function pushConversations(s: Session): Promise<void> {
+  const list = await listConversations();
+  if (s.messages.length && !list.some((c) => c.id === s.conversationId)) {
+    list.unshift({ id: s.conversationId, title: s.title(), updatedAt: Date.now(), msgCount: s.messages.length });
+  }
+  s.emit({ type: 'conversations', list, activeId: s.conversationId });
+}
+
+/** 把当前会话归档（有内容才存） */
+async function archiveCurrent(s: Session): Promise<void> {
+  if (s.messages.length) await saveConversation(s.toArchived());
+}
+
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== 'panel') return;
   let bound: Session | null = null;
@@ -72,11 +87,21 @@ chrome.runtime.onConnect.addListener((port) => {
             if (!s.cfg.models.find((m) => m.id === s.modelId)) s.modelId = s.cfg.defaultModelId;
             port.postMessage(s.snapshot(modelPicks(s.cfg)));
             pushUsage(s);
+            await pushConversations(s);
             break;
           }
           case 'send': {
             if (bound && !bound.running && msg.text.trim()) {
-              void runTurn(bound, msg.text.trim());
+              const s = bound;
+              void runTurn(s, msg.text.trim()).then(() => pushConversations(s));
+            }
+            break;
+          }
+          case 'continue': {
+            // 不追加新用户消息，直接接着已有历史继续执行
+            if (bound && !bound.running && bound.messages.some((m) => m.role === 'assistant')) {
+              const s = bound;
+              void runTurn(s, '', { continuation: true }).then(() => pushConversations(s));
             }
             break;
           }
@@ -85,8 +110,36 @@ chrome.runtime.onConnect.addListener((port) => {
             break;
           case 'new_chat': {
             if (bound && !bound.running) {
+              await archiveCurrent(bound);
               bound.reset();
               port.postMessage(bound.snapshot(modelPicks(bound.cfg)));
+              pushUsage(bound);
+              await pushConversations(bound);
+            }
+            break;
+          }
+          case 'switch_conv': {
+            if (bound && !bound.running && msg.id !== bound.conversationId) {
+              const conv = await loadConversation(msg.id);
+              if (conv) {
+                await archiveCurrent(bound);
+                bound.loadFrom(conv);
+                port.postMessage(bound.snapshot(modelPicks(bound.cfg)));
+                pushUsage(bound);
+                await pushConversations(bound);
+              }
+            }
+            break;
+          }
+          case 'delete_conv': {
+            if (bound) {
+              await deleteConversation(msg.id);
+              if (msg.id === bound.conversationId && !bound.running) {
+                bound.reset();
+                port.postMessage(bound.snapshot(modelPicks(bound.cfg)));
+                pushUsage(bound);
+              }
+              await pushConversations(bound);
             }
             break;
           }
@@ -158,6 +211,7 @@ chrome.windows.onRemoved.addListener((windowId) => {
   if (s) {
     s.abort();
     sessions.delete(windowId);
+    void archiveCurrent(s); // 关窗前尽力归档
     void chrome.storage.session.remove('session:' + windowId);
   }
 });

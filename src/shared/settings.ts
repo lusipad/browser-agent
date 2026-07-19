@@ -36,6 +36,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     maxTokens: 4096,
     autoScreenshot: true,
     requestTimeoutMs: 180000,
+    maxRetries: 2,
     setOfMarks: true,
     planning: true,
   },

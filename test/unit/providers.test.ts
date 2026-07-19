@@ -1,9 +1,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { mergeConsecutive } from '../../src/providers/types';
+import {
+  classifyProviderError,
+  fetchWithRetry,
+  HttpError,
+  isRetryableStatus,
+  mergeConsecutive,
+} from '../../src/providers/types';
 import { openaiStream } from '../../src/providers/openai';
 import type { ChatMessage } from '../../src/shared/types';
+
+const PROV = { id: 'p', name: 'Mock', baseUrl: 'http://x/v1', apiKey: 'k' };
+
+function listenOn(server: http.Server): Promise<number> {
+  return new Promise((r) => server.listen(0, () => r((server.address() as any).port)));
+}
 
 test('mergeConsecutive: 合并相邻同角色', () => {
   const msgs: ChatMessage[] = [
@@ -57,6 +69,7 @@ test('openaiStream: 流式解析 + 工具分片累积 + usage', async () => {
     maxTokens: 1024,
     signal: new AbortController().signal,
     timeoutMs: 10000,
+    retries: 0,
     onText: (d) => (streamed += d),
   });
   srv.close();
@@ -87,6 +100,7 @@ test('openaiStream: tool 结果转 tool 消息 + 截图挪到 user', async () =>
     maxTokens: 512,
     signal: new AbortController().signal,
     timeoutMs: 10000,
+    retries: 0,
     onText: () => {},
   });
   srv.close();
@@ -118,9 +132,100 @@ test('openaiStream: HTTP 错误抛出含状态码', async () => {
         maxTokens: 100,
         signal: new AbortController().signal,
         timeoutMs: 5000,
+        retries: 0,
         onText: () => {},
       }),
     /401/,
   );
   server.close();
+});
+
+// ---------- 退避重试 ----------
+
+test('isRetryableStatus: 5xx/429/408 可重试，4xx 不可', () => {
+  assert.equal(isRetryableStatus(500), true);
+  assert.equal(isRetryableStatus(503), true);
+  assert.equal(isRetryableStatus(429), true);
+  assert.equal(isRetryableStatus(408), true);
+  assert.equal(isRetryableStatus(401), false);
+  assert.equal(isRetryableStatus(404), false);
+  assert.equal(isRetryableStatus(200), false);
+});
+
+test('fetchWithRetry: 5xx 重试后成功', async () => {
+  let hits = 0;
+  const server = http.createServer((_req, res) => {
+    hits++;
+    if (hits < 3) {
+      res.writeHead(503);
+      res.end('busy');
+    } else {
+      res.writeHead(200);
+      res.end('ok');
+    }
+  });
+  const port = await listenOn(server);
+  const resp = await fetchWithRetry(
+    `http://127.0.0.1:${port}/`,
+    { method: 'GET' },
+    { provider: { ...PROV }, signal: new AbortController().signal, timeoutMs: 5000, retries: 3 },
+  );
+  assert.equal(resp.status, 200);
+  assert.equal(hits, 3, '前两次 503 各重试一次');
+  server.close();
+});
+
+test('fetchWithRetry: 4xx 立即抛 HttpError 不重试', async () => {
+  let hits = 0;
+  const server = http.createServer((_req, res) => {
+    hits++;
+    res.writeHead(401);
+    res.end('bad key');
+  });
+  const port = await listenOn(server);
+  await assert.rejects(
+    () =>
+      fetchWithRetry(
+        `http://127.0.0.1:${port}/`,
+        { method: 'GET' },
+        { provider: { ...PROV }, signal: new AbortController().signal, timeoutMs: 5000, retries: 3 },
+      ),
+    (e: unknown) => e instanceof HttpError && e.status === 401,
+  );
+  assert.equal(hits, 1, '4xx 不重试');
+  server.close();
+});
+
+test('fetchWithRetry: 耗尽重试后抛最后一次错误', async () => {
+  const server = http.createServer((_req, res) => {
+    res.writeHead(500);
+    res.end('down');
+  });
+  const port = await listenOn(server);
+  await assert.rejects(
+    () =>
+      fetchWithRetry(
+        `http://127.0.0.1:${port}/`,
+        { method: 'GET' },
+        { provider: { ...PROV }, signal: new AbortController().signal, timeoutMs: 5000, retries: 1 },
+      ),
+    (e: unknown) => e instanceof HttpError && e.status === 500,
+  );
+  server.close();
+});
+
+// ---------- 错误分类 ----------
+
+test('classifyProviderError: HTTP 状态映射为中文提示', () => {
+  assert.match(classifyProviderError(new HttpError(401, 'X', '')), /Key/);
+  assert.match(classifyProviderError(new HttpError(404, 'X', '')), /不存在/);
+  assert.match(classifyProviderError(new HttpError(429, 'X', '')), /限流/);
+  assert.match(classifyProviderError(new HttpError(503, 'X', '')), /服务端/);
+  assert.match(classifyProviderError(new HttpError(400, 'X', 'bad')), /400/);
+});
+
+test('classifyProviderError: 取消/超时返回空串，网络错误提示连接', () => {
+  assert.equal(classifyProviderError(new DOMException('a', 'AbortError')), '');
+  assert.equal(classifyProviderError(new DOMException('t', 'TimeoutError')), '');
+  assert.match(classifyProviderError(new TypeError('Failed to fetch')), /无法连接/);
 });

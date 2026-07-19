@@ -154,6 +154,153 @@ body {
 .usage-tok {
   opacity: 0.7;
 }
+.continue-btn {
+  display: block;
+  margin-top: 8px;
+}
+.export-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.export-menu {
+  position: absolute;
+  top: 34px;
+  right: 0;
+  z-index: 20;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  padding: 4px;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+}
+.export-menu button {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  font: inherit;
+  white-space: nowrap;
+}
+.export-menu button:hover {
+  background: var(--bg-soft);
+}
+
+/* ---------- 会话历史抽屉 ---------- */
+.drawer-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+}
+.drawer {
+  width: 82%;
+  max-width: 340px;
+  height: 100%;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  animation: drawer-in 0.16s ease;
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(-16px);
+    opacity: 0.4;
+  }
+}
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.drawer-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+.drawer-new {
+  margin: 10px 12px;
+}
+.drawer-empty {
+  color: var(--text-dim);
+  font-size: 13px;
+  padding: 12px 14px;
+  line-height: 1.6;
+}
+.conv-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+.conv-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.conv-item:hover {
+  background: var(--bg-soft);
+}
+.conv-item.active {
+  background: var(--accent-soft);
+  cursor: default;
+}
+.conv-main {
+  min-width: 0;
+  flex: 1;
+}
+.conv-title {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.conv-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.conv-badge {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 5px;
+  padding: 0 5px;
+  font-size: 10px;
+}
+.conv-del {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+  font-size: 13px;
+  padding: 4px;
+  border-radius: 6px;
+  flex: 0 0 auto;
+}
+.conv-item:hover .conv-del {
+  opacity: 0.7;
+}
+.conv-del:hover {
+  opacity: 1;
+  background: var(--bg-tool);
+}
 .icon-btn {
   border: none;
   background: transparent;

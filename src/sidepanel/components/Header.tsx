@@ -1,5 +1,6 @@
 import { formatUsd } from '../../shared/context';
-import type { ModelPick } from '../../shared/types';
+import type { ModelPick, TimelineItem } from '../../shared/types';
+import { ExportMenu } from './ExportMenu';
 
 interface Usage {
   input: number;
@@ -14,8 +15,10 @@ interface Props {
   modelId: string;
   usage: Usage;
   running: boolean;
+  items: TimelineItem[];
   onModel: (id: string) => void;
   onNewChat: () => void;
+  onHistory: () => void;
   onOptions: () => void;
   onDetach: () => void;
 }
@@ -91,6 +94,13 @@ export function Header(props: Props) {
             )}
           </span>
         )}
+        <ExportMenu
+          items={props.items}
+          meta={{ modelLabel: cur?.label ?? props.modelId, usage }}
+        />
+        <button className="icon-btn" title="会话历史" onClick={props.onHistory}>
+          🕘
+        </button>
         <button className="icon-btn" title="释放浏览器控制" onClick={props.onDetach}>
           ⏏
         </button>

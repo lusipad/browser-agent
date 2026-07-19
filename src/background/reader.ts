@@ -526,9 +526,126 @@ export function pageAgent(cmd: string, payload: any): any {
       return { text: `Attached file "${file.name}" (${file.size} bytes) to ${descFor(input)}` };
     }
 
+    // ---------------- 结构化数据抽取（穿透 open shadow + 同源 iframe） ----------------
+    function allRoots(): Array<Document | ShadowRoot> {
+      const roots: Array<Document | ShadowRoot> = [];
+      function visit(root: Document | ShadowRoot): void {
+        if (roots.length > 400) return;
+        roots.push(root);
+        let els: NodeListOf<Element>;
+        try {
+          els = root.querySelectorAll('*');
+        } catch {
+          return;
+        }
+        for (const el of Array.from(els)) {
+          const sr = (el as any).shadowRoot as ShadowRoot | null;
+          if (sr) visit(sr);
+          if (el.tagName === 'IFRAME' || el.tagName === 'FRAME') {
+            try {
+              const cd = (el as HTMLIFrameElement).contentDocument;
+              if (cd) visit(cd);
+            } catch {
+              /* 跨域 iframe 不可读 */
+            }
+          }
+        }
+      }
+      visit(topDoc);
+      return roots;
+    }
+    function deepQueryAll(sel: string, cap: number): Element[] {
+      const found: Element[] = [];
+      for (const root of allRoots()) {
+        try {
+          for (const el of Array.from(root.querySelectorAll(sel))) {
+            found.push(el);
+            if (found.length >= cap) return found;
+          }
+        } catch {
+          /* 非法选择器 */
+        }
+      }
+      return found;
+    }
+    function cleanText(s: string | null | undefined, max: number): string {
+      return (s ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
+    }
+    function extractTables(): any[] {
+      return deepQueryAll('table', 30).map((t) => {
+        const caption = cleanText(t.querySelector('caption')?.textContent, 200);
+        let headers: string[] = [];
+        const body: string[][] = [];
+        const trs = Array.from(t.querySelectorAll('tr')).slice(0, 300);
+        trs.forEach((tr, i) => {
+          const cells = Array.from(tr.querySelectorAll('th,td')).map((c) => cleanText(c.textContent, 300));
+          if (!cells.length) return;
+          if (i === 0 && tr.querySelector('th') && !headers.length) headers = cells;
+          else body.push(cells);
+        });
+        return { caption, headers, rows: body };
+      });
+    }
+    function extractLinks(): any[] {
+      const seen = new Set<string>();
+      const out: Array<{ text: string; href: string }> = [];
+      for (const a of deepQueryAll('a[href]', 1000)) {
+        const href = (a as HTMLAnchorElement).href;
+        if (!href || href.startsWith('javascript:') || seen.has(href)) continue;
+        seen.add(href);
+        out.push({ text: cleanText(a.textContent, 160), href });
+        if (out.length >= 300) break;
+      }
+      return out;
+    }
+    function pickField(el: Element, spec: string): string | null {
+      let sel = spec;
+      let attr = '';
+      const at = spec.lastIndexOf('@');
+      if (at >= 0) {
+        sel = spec.slice(0, at);
+        attr = spec.slice(at + 1);
+      }
+      let target: Element | null = el;
+      if (sel) target = el.querySelector(sel);
+      if (!target) return null;
+      if (attr) {
+        if (attr === 'href' || attr === 'src') return (target as any)[attr] || target.getAttribute(attr);
+        return target.getAttribute(attr);
+      }
+      return cleanText(target.textContent, 600);
+    }
+    function extractSelector(selector: string, fields: Record<string, string> | null): any[] {
+      const els = deepQueryAll(selector, 300);
+      return els.map((el) => {
+        if (!fields) return cleanText(el.textContent, 600);
+        const obj: Record<string, string | null> = {};
+        for (const [name, spec] of Object.entries(fields)) obj[name] = pickField(el, String(spec));
+        return obj;
+      });
+    }
+    function extractData(p: any): any {
+      const mode = String(p?.mode || (p?.selector ? 'selector' : 'tables'));
+      if (mode === 'tables') {
+        const tables = extractTables();
+        return { mode, count: tables.length, tables };
+      }
+      if (mode === 'links') {
+        const links = extractLinks();
+        return { mode, count: links.length, links };
+      }
+      const selector = String(p?.selector ?? '');
+      if (!selector) throw new Error('extract_data: "selector" is required for selector mode');
+      const fields = p?.fields && typeof p.fields === 'object' ? (p.fields as Record<string, string>) : null;
+      const items = extractSelector(selector, fields);
+      return { mode: 'selector', selector, count: items.length, items };
+    }
+
     switch (cmd) {
       case 'read_page':
         return readPage(String(payload?.filter ?? 'interactive'), Number(payload?.max_chars ?? 16000));
+      case 'extract':
+        return extractData(payload);
       case 'collect':
         return collect();
       case 'probe':

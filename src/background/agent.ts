@@ -1,5 +1,6 @@
 // 智能体主循环：Planner（规划）→ Navigator（模型流式输出→执行工具→迭代）→ Validator（自检）
 import { openaiStream } from '../providers';
+import { classifyProviderError } from '../providers/types';
 import { buildSystemPrompt } from '../shared/prompts';
 import { loadConfig } from '../shared/settings';
 import type {
@@ -19,7 +20,12 @@ import { executeToolUse, shotBlocks, toolSpecs } from './tools/registry';
 
 const VALIDATOR_CAP = 2;
 
-export async function runTurn(session: Session, userText: string): Promise<void> {
+export async function runTurn(
+  session: Session,
+  userText: string,
+  opts?: { continuation?: boolean },
+): Promise<void> {
+  const continuation = !!opts?.continuation;
   session.cfg = await loadConfig();
   const model = session.cfg.models.find((m) => m.id === session.modelId);
   if (!model) {
@@ -45,8 +51,10 @@ export async function runTurn(session: Session, userText: string): Promise<void>
   session.emit({ type: 'run_state', running: true });
   const keepalive = setInterval(() => chrome.runtime.getPlatformInfo(() => {}), 15000);
 
-  session.messages.push({ role: 'user', content: [{ type: 'text', text: userText }] });
-  session.upsert({ kind: 'user', id: uid('u'), text: userText });
+  if (!continuation) {
+    session.messages.push({ role: 'user', content: [{ type: 'text', text: userText }] });
+    session.upsert({ kind: 'user', id: uid('u'), text: userText });
+  }
 
   const sysBase = buildSystemPrompt({
     date: new Date().toISOString().slice(0, 10),
@@ -54,12 +62,13 @@ export async function runTurn(session: Session, userText: string): Promise<void>
     screenshotMaxWidth: adv.screenshotMaxWidth,
   });
 
-  let successCriteria = userText;
+  // 「继续」时沿用最初的任务作为成功判据
+  let successCriteria = continuation ? firstUserText(session) || userText : userText;
   let validatorRounds = 0;
 
   try {
     // ---------- Planner ----------
-    if (adv.planning && firstTurn && !session.aborted) {
+    if (adv.planning && firstTurn && !continuation && !session.aborted) {
       const crit = await runPlanner(session, provider, model, sysBase, userText);
       if (crit) successCriteria = crit;
     }
@@ -151,13 +160,19 @@ export async function runTurn(session: Session, userText: string): Promise<void>
       }
       session.messages.push({ role: 'user', content: resultBlocks });
 
-      if (iter === adv.maxIterations - 1) session.info(`已达到单轮最大迭代次数（${adv.maxIterations}）。回复「继续」可以接着执行。`);
+      if (iter === adv.maxIterations - 1)
+        session.upsert({
+          kind: 'info',
+          id: uid('i'),
+          text: `已达到单轮最大迭代次数（${adv.maxIterations}）。任务可能尚未完成。`,
+          action: 'continue',
+        });
     }
     if (session.aborted) session.info('已停止。');
   } catch (e) {
     if (session.aborted || (e instanceof DOMException && e.name === 'AbortError')) session.info('已停止。');
     else if (e instanceof DOMException && e.name === 'TimeoutError') session.error(`请求超时（${Math.round(adv.requestTimeoutMs / 1000)}s）。可在设置中调整超时时间。`);
-    else session.error(errText(e));
+    else session.error(classifyProviderError(e) || errText(e));
   } finally {
     clearInterval(keepalive);
     session.running = false;
@@ -187,6 +202,7 @@ function streamOnce(
     maxTokens: adv.maxTokens,
     signal: session.controller!.signal,
     timeoutMs: adv.requestTimeoutMs,
+    retries: adv.maxRetries,
     onText,
   });
 }
@@ -313,6 +329,16 @@ function parseVerdict(text: string): Verdict {
   return { done: positive && !negative, reason: truncate(text.trim(), 200), next: '' };
 }
 
+/** 取历史里最早的一条用户文本（作为「继续」时的成功判据） */
+function firstUserText(session: Session): string {
+  for (const m of session.messages) {
+    if (m.role !== 'user') continue;
+    const t = m.content.find((b): b is TextBlock => b.type === 'text');
+    if (t) return t.text;
+  }
+  return '';
+}
+
 /** 时间线里最多保留最近 keep 张截图（UI 内存控制） */
 function pruneTimelineImages(session: Session, keep: number): void {
   let count = 0;
@@ -341,6 +367,8 @@ function summarizeArgs(name: string, input: Record<string, any>): string {
       return String(inp.url ?? inp.action ?? '');
     case 'find':
       return `"${inp.query ?? ''}"`;
+    case 'extract_data':
+      return inp.selector ? `${inp.mode ?? 'selector'} ${inp.selector}` : String(inp.mode ?? 'tables');
     case 'wait_for':
       return `${inp.condition ?? ''} ${inp.query ? `"${inp.query}"` : inp.text ? `"${truncate(String(inp.text), 24, '…')}"` : ''}`.trim();
     case 'form_input':

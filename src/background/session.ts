@@ -8,8 +8,9 @@ import type {
   ModelPick,
   TimelineItem,
 } from '../shared/types';
-import { uid } from '../shared/util';
+import { deriveTitle, uid } from '../shared/util';
 import type { GifFrame } from './gif';
+import type { ArchivedConv } from './history';
 import type { ApprovalHost } from './permissions';
 
 const MAX_GIF_FRAMES = 30;
@@ -18,6 +19,7 @@ export class Session implements ApprovalHost {
   readonly windowId: number;
   cfg: AppConfig;
   modelId: string;
+  conversationId: string = uid('conv');
   messages: ChatMessage[] = [];
   timeline: TimelineItem[] = [];
   running = false;
@@ -115,7 +117,40 @@ export class Session implements ApprovalHost {
     };
   }
 
+  title(): string {
+    return deriveTitle(this.messages);
+  }
+
+  /** 打包为可归档的会话快照 */
+  toArchived(): ArchivedConv {
+    return {
+      id: this.conversationId,
+      title: this.title(),
+      updatedAt: Date.now(),
+      msgCount: this.messages.length,
+      messages: this.messages,
+      timeline: this.timeline,
+      modelId: this.modelId,
+      usage: this.usage,
+    };
+  }
+
+  /** 从归档会话恢复为当前会话（切换历史时用） */
+  loadFrom(conv: ArchivedConv): void {
+    this.conversationId = conv.id;
+    this.messages = conv.messages ?? [];
+    this.timeline = conv.timeline ?? [];
+    this.usage = conv.usage ?? { input: 0, output: 0 };
+    if (this.cfg.models.find((m) => m.id === conv.modelId)) this.modelId = conv.modelId;
+    this.gifFrames = [];
+    this.tempAllowedHosts.clear();
+    this.currentTabId = null;
+    this.aborted = false;
+    void this.persist();
+  }
+
   reset(): void {
+    this.conversationId = uid('conv');
     this.messages = [];
     this.timeline = [];
     this.gifFrames = [];
@@ -132,6 +167,7 @@ export class Session implements ApprovalHost {
 
   async persist(): Promise<void> {
     const data = {
+      conversationId: this.conversationId,
       messages: this.messages,
       timeline: this.timeline,
       modelId: this.modelId,
@@ -172,6 +208,7 @@ export class Session implements ApprovalHost {
       const key = 'session:' + windowId;
       const data = (await chrome.storage.session.get(key))[key] as any;
       if (data) {
+        s.conversationId = data.conversationId ?? s.conversationId;
         s.messages = data.messages ?? [];
         s.timeline = data.timeline ?? [];
         s.modelId = data.modelId ?? cfg.defaultModelId;

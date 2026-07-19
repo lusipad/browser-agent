@@ -40,3 +40,10 @@ test('DEFAULT_CONFIG: 每个模型引用存在的服务商', () => {
   for (const m of DEFAULT_CONFIG.models) assert.ok(ids.has(m.providerId), `${m.id} 的 providerId 存在`);
   assert.ok(DEFAULT_CONFIG.models.some((m) => m.id === DEFAULT_CONFIG.defaultModelId), '默认模型存在');
 });
+
+test('DEFAULT_CONFIG: GPT-5.6 默认使用服务商实际提供的 Terra 模型名', () => {
+  assert.equal(DEFAULT_CONFIG.defaultModelId, 'openai/gpt-5.6-terra');
+  assert.ok(DEFAULT_CONFIG.models.some((m) => m.model === 'gpt-5.6-sol'));
+  assert.ok(DEFAULT_CONFIG.models.some((m) => m.model === 'gpt-5.6-terra'));
+  assert.ok(!DEFAULT_CONFIG.models.some((m) => m.model === 'gpt-5.6'));
+});

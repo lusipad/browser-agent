@@ -106,7 +106,7 @@ export async function runTurn(
 
       if (!toolUses.length) {
         if (!finalText.trim()) {
-          session.error(session.t('bg.emptyResponse'));
+          session.error(session.t('bg.emptyResponse', [model.model]));
           break;
         }
         // 模型认为完成 → Validator 自检
@@ -262,6 +262,15 @@ async function runPlanner(
     accrueUsage(session, res.usage);
     emitUsage(session, model);
     text = textOfBlocks(res.blocks) || text;
+    if (!text.trim()) {
+      session.upsert({
+        kind: 'assistant',
+        id,
+        text: session.t('bg.planSkipped', [session.t('bg.emptyStageResponse', [model.model])]),
+        done: true,
+      });
+      return null;
+    }
   } catch (e) {
     // 规划失败不致命：直接进入执行
     session.upsert({ kind: 'assistant', id, text: text || '', done: true });
@@ -305,7 +314,12 @@ async function runValidator(
     const res = await streamOnce(session, provider, model, sys, [{ role: 'user', content: user }], [], () => {});
     accrueUsage(session, res.usage);
     emitUsage(session, model);
-    return parseVerdict(textOfBlocks(res.blocks));
+    const text = textOfBlocks(res.blocks).trim();
+    if (!text) {
+      session.info(session.t('bg.validateSkipped', [session.t('bg.emptyStageResponse', [model.model])]));
+      return { done: true, reason: '', next: '' };
+    }
+    return parseVerdict(text);
   } catch (e) {
     // 校验失败时不阻塞收尾，视为完成
     session.info(session.t('bg.validateSkipped', [truncate(errText(e), 120)]));

@@ -7,11 +7,24 @@ import {
   HttpError,
   isRetryableStatus,
   mergeConsecutive,
+  readErrorBody,
 } from '../../src/providers/types';
 import { openaiStream } from '../../src/providers/openai';
+import { unavailableModelNames } from '../../src/options/panels/ProvidersPanel';
 import type { ChatMessage } from '../../src/shared/types';
 
 const PROV = { id: 'p', name: 'Mock', baseUrl: 'http://x/v1', apiKey: 'k' };
+
+test('unavailableModelNames: 只报告该服务商中接口未返回的模型', () => {
+  const models = [
+    { id: 'p/missing', providerId: 'p', model: 'missing', label: 'Missing', vision: false },
+    { id: 'p/ready', providerId: 'p', model: 'ready', label: 'Ready', vision: false },
+    { id: 'other/missing', providerId: 'other', model: 'missing', label: 'Other', vision: false },
+  ];
+
+  assert.deepEqual(unavailableModelNames(models, 'p', ['ready']), ['missing']);
+  assert.deepEqual(unavailableModelNames(models, 'p', null), []);
+});
 
 function listenOn(server: http.Server): Promise<number> {
   return new Promise((r) => server.listen(0, () => r((server.address() as any).port)));
@@ -140,6 +153,32 @@ test('openaiStream: HTTP 错误抛出含状态码', async () => {
   server.close();
 });
 
+test('openaiStream: HTTP 200 但非 SSE 时提示检查 /v1', async () => {
+  const server = http.createServer((_req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    res.end('<!doctype html><title>Web site</title>');
+  });
+  const port = await listenOn(server);
+  await assert.rejects(
+    () =>
+      openaiStream({
+        provider: { id: 'p', name: 'Mock', baseUrl: `http://127.0.0.1:${port}`, apiKey: 'k' },
+        model: { id: 'p/m', providerId: 'p', model: 'm', label: 'm', vision: false },
+        system: 'S',
+        messages: [{ role: 'user', content: [{ type: 'text', text: 'hi' }] }],
+        tools: [],
+        temperature: null,
+        maxTokens: 100,
+        signal: new AbortController().signal,
+        timeoutMs: 5000,
+        retries: 0,
+        onText: () => {},
+      }),
+    /不是 SSE.*\/v1/,
+  );
+  server.close();
+});
+
 // ---------- 退避重试 ----------
 
 test('isRetryableStatus: 5xx/429/408 可重试，4xx 不可', () => {
@@ -220,8 +259,13 @@ test('classifyProviderError: HTTP 状态映射为中文提示', () => {
   assert.match(classifyProviderError(new HttpError(401, 'X', '')), /Key/);
   assert.match(classifyProviderError(new HttpError(404, 'X', '')), /不存在/);
   assert.match(classifyProviderError(new HttpError(429, 'X', '')), /限流/);
-  assert.match(classifyProviderError(new HttpError(503, 'X', '')), /服务端/);
+  assert.match(classifyProviderError(new HttpError(503, 'X', 'resource unavailable')), /resource unavailable/);
   assert.match(classifyProviderError(new HttpError(400, 'X', 'bad')), /400/);
+});
+
+test('readErrorBody: 从兼容接口 JSON 错误中提取可读消息', async () => {
+  const resp = new Response('{"error":{"message":"resource unavailable","type":"server_error"}}');
+  assert.equal(await readErrorBody(resp), 'resource unavailable');
 });
 
 test('classifyProviderError: 取消/超时返回空串，网络错误提示连接', () => {

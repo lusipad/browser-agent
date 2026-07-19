@@ -15,7 +15,14 @@ export const backgroundDict = {
   'bg.timeout': { zh: '请求超时（{0}s）。可在设置中调整超时时间。', en: 'Request timed out ({0}s). Adjust the timeout in Settings.' },
   'bg.planSkipped': { zh: '（规划步骤跳过：{0}）', en: '(Planning step skipped: {0})' },
   'bg.validateSkipped': { zh: '（自检步骤跳过：{0}）', en: '(Self-check step skipped: {0})' },
-  'bg.emptyResponse': { zh: '模型返回了空响应（无文本、无工具调用）。可能原因：API Key 无效、模型不支持 function calling、或服务端返回了非标准格式。请到设置页检查服务商和模型配置，或打开 Service Worker 控制台查看详细错误。', en: 'The model returned an empty response (no text, no tool calls). Possible causes: invalid API key, model doesn\'t support function calling, or the server returned a non-standard format. Check your provider and model settings, or open the Service Worker console for details.' },
+  'bg.emptyStageResponse': {
+    zh: '模型「{0}」没有返回可解析内容。请在设置页点击“测试连接”，确认该模型存在且支持 Chat Completions。',
+    en: 'Model "{0}" returned no parseable content. Click "Test connection" in Settings and confirm the model exists and supports Chat Completions.',
+  },
+  'bg.emptyResponse': {
+    zh: '模型「{0}」返回空响应（无文本、无工具调用）。最常见原因是当前服务商不提供该模型，或模型不支持 Chat Completions / function calling。请到设置页点击“测试连接”；若提示模型不可用，请改用接口返回的模型。',
+    en: 'Model "{0}" returned an empty response (no text or tool calls). The provider may not offer this model, or the model may not support Chat Completions / function calling. Click "Test connection" in Settings; if the model is unavailable, choose one returned by the endpoint.',
+  },
   'bg.detach': { zh: '已释放浏览器控制（断开 {0} 个标签页的调试连接，撤销 {1} 个标签的 Agent 分组）。', en: 'Released browser control (detached debugger from {0} tab(s), ungrouped {1} tab(s) from the Agent group).' },
   // 授权卡片
   'bg.siteAllowTitle': { zh: '允许在 {0} 上操作？', en: 'Allow operating on {0}?' },

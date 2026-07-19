@@ -9,7 +9,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     { id: 'ollama', name: 'Ollama 本地', baseUrl: 'http://localhost:11434/v1', apiKey: 'ollama' },
   ],
   models: [
-    { id: 'openai/gpt-5.6', providerId: 'openai', model: 'gpt-5.6', label: 'GPT-5.6', vision: true, contextWindow: 400000, pricing: { input: 1.25, output: 10 } },
+    { id: 'openai/gpt-5.6-sol', providerId: 'openai', model: 'gpt-5.6-sol', label: 'GPT-5.6 Sol（高性能）', vision: true, contextWindow: 400000, pricing: { input: 1.25, output: 10 } },
     { id: 'openai/gpt-5.6-terra', providerId: 'openai', model: 'gpt-5.6-terra', label: 'GPT-5.6 Terra（均衡）', vision: true, contextWindow: 400000, pricing: { input: 0.6, output: 4 } },
     { id: 'openai/gpt-5.6-luna', providerId: 'openai', model: 'gpt-5.6-luna', label: 'GPT-5.6 Luna（快速）', vision: true, contextWindow: 400000, pricing: { input: 0.15, output: 1.2 } },
     { id: 'deepseek/deepseek-v4-flash', providerId: 'deepseek', model: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash（无视觉）', vision: false, contextWindow: 128000, pricing: { input: 0.14, output: 0.28 } },
@@ -18,7 +18,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     { id: 'openrouter/google/gemini-3-flash-preview', providerId: 'openrouter', model: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (OpenRouter)', vision: true, contextWindow: 1000000, pricing: { input: 0.3, output: 2.5 } },
     { id: 'ollama/qwen3-vl', providerId: 'ollama', model: 'qwen3-vl', label: 'Qwen3-VL（本地）', vision: true, contextWindow: 128000 },
   ],
-  defaultModelId: 'openai/gpt-5.6',
+  defaultModelId: 'openai/gpt-5.6-terra',
   safety: {
     allowAllSites: false,
     confirmNewSite: true,

@@ -60,6 +60,13 @@ export const openaiStream: ProviderImpl = async (p) => {
     { provider: p.provider, signal: p.signal, timeoutMs: p.timeoutMs, retries: p.retries },
   );
 
+  const contentType = (resp.headers.get('content-type') ?? '').toLowerCase();
+  if (!contentType.includes('text/event-stream')) {
+    throw new Error(
+      `接口返回了 ${contentType || '未知 Content-Type'}，不是 SSE 流。请检查服务商 Base URL 是否包含 /v1。`,
+    );
+  }
+
   let text = '';
   const calls = new Map<number, { id: string; name: string; args: string }>();
   let finish = 'stop';

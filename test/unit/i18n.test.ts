@@ -10,6 +10,7 @@ test('translate: 中英取对应语言', () => {
 test('translate: 参数插值 {0}{1}', () => {
   assert.equal(translate('en', 'history.msgCount', [3]), '3 msgs');
   assert.match(translate('zh', 'bg.detach', [2, 1]), /断开 2 .*撤销 1 /);
+  assert.match(translate('zh', 'bg.emptyResponse', ['gpt-test']), /gpt-test.*测试连接/);
 });
 
 test('translate: 未知 key 回落为 key 本身（供 toolLabel 探测缺失）', () => {

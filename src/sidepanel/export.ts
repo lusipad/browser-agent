@@ -1,6 +1,7 @@
 // 会话导出：把时间线导出为 Markdown（人类可读）或 JSON（结构化）
 import { formatUsd } from '../shared/context';
-import type { TimelineItem } from '../shared/types';
+import { makeT, type TFn } from '../shared/i18n';
+import type { ApprovalDecision, TimelineItem } from '../shared/types';
 import { toolLabel } from './components/toolMeta';
 
 export interface ExportMeta {
@@ -13,20 +14,26 @@ function stamp(d = new Date()): string {
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
 }
 
-function usageLine(u: ExportMeta['usage']): string {
-  const cost = u.cost != null ? `，成本 ${formatUsd(u.cost)}` : '';
+function usageLine(u: ExportMeta['usage'], t: TFn): string {
+  const cost = u.cost != null ? t('export.costSuffix', [formatUsd(u.cost)]) : '';
   return `↑${u.input.toLocaleString()} ↓${u.output.toLocaleString()} tokens${cost}`;
 }
 
-const STATUS_TEXT: Record<string, string> = { running: '进行中', ok: '成功', error: '失败' };
+const STATUS_KEY = { running: 'export.statusRunning', ok: 'export.statusOk', error: 'export.statusError' } as const;
+const DECISION_KEY: Record<ApprovalDecision, 'approval.decidedOnce' | 'approval.decidedSite' | 'approval.decidedDeny'> = {
+  allow_once: 'approval.decidedOnce',
+  allow_site: 'approval.decidedSite',
+  deny: 'approval.decidedDeny',
+};
 
-export function toMarkdown(items: TimelineItem[], meta: ExportMeta): string {
+/** t 缺省用中文，保证无 t 调用（如单测）仍产出中文 */
+export function toMarkdown(items: TimelineItem[], meta: ExportMeta, t: TFn = makeT('zh')): string {
   const lines: string[] = [
-    '# Browser Agent 对话记录',
+    `# ${t('export.docTitle')}`,
     '',
-    `- 模型：${meta.modelLabel}`,
-    `- 导出时间：${new Date().toLocaleString()}`,
-    `- 用量：${usageLine(meta.usage)}`,
+    `- ${t('export.model')}：${meta.modelLabel}`,
+    `- ${t('export.exportedAt')}：${new Date().toLocaleString()}`,
+    `- ${t('export.usage')}：${usageLine(meta.usage, t)}`,
     '',
     '---',
     '',
@@ -34,14 +41,14 @@ export function toMarkdown(items: TimelineItem[], meta: ExportMeta): string {
   for (const it of items) {
     switch (it.kind) {
       case 'user':
-        lines.push(`### 🧑 你`, '', it.text, '');
+        lines.push(`### 🧑 ${t('export.you')}`, '', it.text, '');
         break;
       case 'assistant':
-        if (it.text.trim()) lines.push(`### 🤖 助手`, '', it.text, '');
+        if (it.text.trim()) lines.push(`### 🤖 ${t('export.assistant')}`, '', it.text, '');
         break;
       case 'tool': {
-        const st = STATUS_TEXT[it.status] ?? it.status;
-        lines.push(`> 🔧 **${toolLabel(it.name)}** \`${it.summary}\` — ${st}`);
+        const st = t(STATUS_KEY[it.status] ?? 'export.statusOk');
+        lines.push(`> 🔧 **${toolLabel(it.name, t)}** \`${it.summary}\` — ${st}`);
         if (it.detail && it.status !== 'running') {
           const oneLine = it.detail.replace(/\s+/g, ' ').slice(0, 300);
           lines.push(`>`, `> ${oneLine}`);
@@ -49,9 +56,11 @@ export function toMarkdown(items: TimelineItem[], meta: ExportMeta): string {
         lines.push('');
         break;
       }
-      case 'approval':
-        lines.push(`> 🔒 授权：${it.title} — ${it.decision ?? '待处理'}`, '');
+      case 'approval': {
+        const decision = it.decision ? t(DECISION_KEY[it.decision]) : t('export.pending');
+        lines.push(`> 🔒 ${t('export.approval')}：${it.title} — ${decision}`, '');
         break;
+      }
       case 'info':
         lines.push(`> ℹ️ ${it.text}`, '');
         break;
@@ -92,9 +101,9 @@ export function download(filename: string, text: string, mime: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function exportSession(format: 'md' | 'json', items: TimelineItem[], meta: ExportMeta): void {
+export function exportSession(format: 'md' | 'json', items: TimelineItem[], meta: ExportMeta, t?: TFn): void {
   if (format === 'md') {
-    download(`browser-agent-${stamp()}.md`, toMarkdown(items, meta), 'text/markdown');
+    download(`browser-agent-${stamp()}.md`, toMarkdown(items, meta, t), 'text/markdown');
   } else {
     download(`browser-agent-${stamp()}.json`, toJson(items, meta), 'application/json');
   }

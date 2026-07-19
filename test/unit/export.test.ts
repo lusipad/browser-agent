@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { makeT } from '../../src/shared/i18n';
 import { toJson, toMarkdown, type ExportMeta } from '../../src/sidepanel/export';
 import type { TimelineItem } from '../../src/shared/types';
 
@@ -30,6 +31,14 @@ test('toMarkdown: 含标题、模型、成本与各类消息', () => {
 test('toMarkdown: 折叠多余空行', () => {
   const md = toMarkdown(ITEMS, META);
   assert.ok(!/\n{3,}/.test(md), '不应出现 3 个以上连续换行');
+});
+
+test('toMarkdown: 传入英文 t 时输出英文骨架与工具标签', () => {
+  const md = toMarkdown(ITEMS, META, makeT('en'));
+  assert.match(md, /Browser Agent Conversation/);
+  assert.match(md, /Navigate/); // toolLabel(navigate) en
+  assert.doesNotMatch(md, /对话记录/);
+  assert.doesNotMatch(md, /导航/);
 });
 
 test('toJson: 去掉 base64 截图，保留数量标注', () => {

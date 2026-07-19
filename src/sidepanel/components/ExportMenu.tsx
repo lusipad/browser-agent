@@ -26,7 +26,7 @@ export function ExportMenu({ items, meta }: Props) {
 
   function pick(format: 'md' | 'json') {
     setOpen(false);
-    exportSession(format, items, meta);
+    exportSession(format, items, meta, t);
   }
 
   return (

@@ -36,6 +36,19 @@ export const sidepanelDict = {
   // ExportMenu
   'export.md': { zh: '导出 Markdown', en: 'Export Markdown' },
   'export.json': { zh: '导出 JSON', en: 'Export JSON' },
+  // 导出文件内容
+  'export.docTitle': { zh: 'Browser Agent 对话记录', en: 'Browser Agent Conversation' },
+  'export.model': { zh: '模型', en: 'Model' },
+  'export.exportedAt': { zh: '导出时间', en: 'Exported' },
+  'export.usage': { zh: '用量', en: 'Usage' },
+  'export.costSuffix': { zh: '，成本 {0}', en: ', cost {0}' },
+  'export.you': { zh: '你', en: 'You' },
+  'export.assistant': { zh: '助手', en: 'Assistant' },
+  'export.statusRunning': { zh: '进行中', en: 'in progress' },
+  'export.statusOk': { zh: '成功', en: 'ok' },
+  'export.statusError': { zh: '失败', en: 'failed' },
+  'export.approval': { zh: '授权', en: 'Approval' },
+  'export.pending': { zh: '待处理', en: 'pending' },
   // HistoryDrawer
   'history.title': { zh: '会话历史', en: 'Chat history' },
   'history.close': { zh: '关闭', en: 'Close' },

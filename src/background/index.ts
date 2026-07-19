@@ -1,5 +1,6 @@
 // Service Worker 入口：面板连接管理、消息路由、会话生命周期
 import { computeCost } from '../shared/context';
+import { makeT, resolveLang } from '../shared/i18n';
 import { loadConfig, onConfigChange, saveConfig } from '../shared/settings';
 import type { AppConfig, ModelPick, PanelToBg } from '../shared/types';
 import { runTurn } from './agent';
@@ -187,15 +188,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (sender.id !== chrome.runtime.id) return undefined;
   if (msg?.type === 'diagnose') {
     void (async () => {
+      const lang = resolveLang((await loadConfig()).uiLang);
+      const dt = makeT(lang);
       try {
         const tabId = typeof msg.tabId === 'number' ? msg.tabId : await pickDiagnoseTab();
         if (tabId == null) {
-          sendResponse({ ok: false, tab: null, checks: [{ name: '目标标签页', status: 'warn', detail: '没有可诊断的 http(s) 网页。先在浏览器里打开一个普通网页，再回来点诊断。' }] });
+          sendResponse({ ok: false, tab: null, checks: [{ name: dt('bg.diag.targetTab'), status: 'warn', detail: dt('bg.diag.noHttp') }] });
           return;
         }
-        sendResponse(await runDiagnostics(tabId));
+        sendResponse(await runDiagnostics(tabId, lang));
       } catch (e) {
-        sendResponse({ ok: false, tab: null, checks: [{ name: '诊断', status: 'fail', detail: e instanceof Error ? e.message : String(e) }] });
+        sendResponse({ ok: false, tab: null, checks: [{ name: dt('bg.diag.title'), status: 'fail', detail: e instanceof Error ? e.message : String(e) }] });
       }
     })();
     return true; // 异步 sendResponse

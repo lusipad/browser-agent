@@ -224,6 +224,7 @@ A single adapter covers ALL OpenAI-compatible endpoints because:
 
 **Key behaviors:**
 - Streaming via SSE with `stream_options: { include_usage: true }`
+- Rejects HTTP 200 responses that are not `text/event-stream`, so a missing `/v1` path is reported as endpoint misconfiguration instead of an empty model response
 - Tool calls accumulated across delta chunks (handles fragmented `function.arguments`)
 - Reasoning models (o-series, gpt-5) get `max_completion_tokens` instead of `max_tokens` and no `temperature`
 - Screenshots moved from tool results to subsequent user messages (OpenAI doesn't support images in tool role)
@@ -490,6 +491,7 @@ Chrome 在 CDP 附加时会显示黄色 "debugger" 横幅 — 这是用户的视
 
 **关键行为：**
 - 通过 SSE 流式传输，带 `stream_options: { include_usage: true }`
+- 拒绝 Content-Type 非 `text/event-stream` 的 HTTP 200 响应，因此 Base URL 缺少 `/v1` 时会明确报告端点配置错误，而不是误报模型空响应
 - 工具调用跨多个 delta chunk 累积（处理分片的 `function.arguments`）
 - 推理模型（o系列、gpt-5）用 `max_completion_tokens` 而非 `max_tokens`，不设 `temperature`
 - 截图从工具结果移到后续 user 消息（OpenAI 不支持 tool 角色的图片）

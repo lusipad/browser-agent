@@ -17,7 +17,7 @@
 
 | 用途 | 尺寸 | 文件 |
 |---|---|---|
-| 扩展包 | — | [browser-agent-0.2.1.zip](https://github.com/lusipad/browser-agent/releases/download/v0.2.1/browser-agent-0.2.1.zip) |
+| 扩展包 | — | [browser-agent-0.2.2.zip](https://github.com/lusipad/browser-agent/releases/download/v0.2.2/browser-agent-0.2.2.zip) |
 | 商店图标 128×128 | 128×128 | 已在 manifest（`icons/icon128.png`），无需单独传 |
 | 截图（≥1，最多 5） | 1280×800 | `docs/screenshots/store-hero.png`、`docs/screenshots/options.png` |
 | 小宣传图（列表卡片用） | 440×280 | `docs/screenshots/promo-tile-440x280.png` |
@@ -29,7 +29,7 @@
 ---
 
 ## 1. 上传
-Add new item → 上传 `browser-agent-0.2.1.zip`。名称/描述会自动读 manifest 的 `_locales`（中英）。
+Add new item → 上传 `browser-agent-0.2.2.zip`。名称/描述会自动读 manifest 的 `_locales`（中英）。
 
 ## 2. 商店发布信息（Store listing）
 

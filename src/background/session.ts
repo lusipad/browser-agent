@@ -8,6 +8,7 @@ import type {
   ModelPick,
   TimelineItem,
 } from '../shared/types';
+import { resolveLang, translate, type MsgKey } from '../shared/i18n';
 import { deriveTitle, uid } from '../shared/util';
 import type { GifFrame } from './gif';
 import type { ArchivedConv } from './history';
@@ -42,6 +43,11 @@ export class Session implements ApprovalHost {
 
   modelVision(): boolean {
     return this.cfg.models.find((m) => m.id === this.modelId)?.vision ?? true;
+  }
+
+  /** 按当前界面语言翻译（面向用户的后台文案） */
+  t(key: MsgKey, params?: Array<string | number>): string {
+    return translate(resolveLang(this.cfg.uiLang), key, params);
   }
 
   emit(ev: BgToPanel): void {

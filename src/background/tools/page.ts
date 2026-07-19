@@ -113,7 +113,7 @@ export const pageTools: ToolDef[] = [
     async run(ctx, input) {
       const info = await runInPage(ctx.tabId, 'element_info', { ref: input.ref });
       if (info.isPassword) {
-        await confirmSensitive(ctx.session, 'password', `智能体想向密码输入框写入内容（${String(input.value ?? '').length} 个字符）。`);
+        await confirmSensitive(ctx.session, 'password', ctx.session.t('bg.confirmPasswordDesc', [String(input.value ?? '').length]));
       }
       const r = await runInPage(ctx.tabId, 'form_input', { ref: input.ref, value: input.value });
       return { content: [{ type: 'text', text: String(r?.text ?? 'ok') }] };
@@ -189,7 +189,7 @@ export const pageTools: ToolDef[] = [
       await confirmSensitive(
         ctx.session,
         'upload',
-        `智能体想把文件 ${String(input.filename ?? url.slice(0, 80))} 上传到当前页面。`,
+        ctx.session.t('bg.confirmUploadDesc', [String(input.filename ?? url.slice(0, 80))]),
       );
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(`Failed to fetch file: HTTP ${resp.status}`);

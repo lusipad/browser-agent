@@ -121,6 +121,8 @@ export interface AppConfig {
   safety: SafetySettings;
   advanced: AdvancedSettings;
   sites: SitePermissions;
+  /** 界面语言：'auto' 跟随浏览器，或强制 'zh' / 'en' */
+  uiLang: 'auto' | 'zh' | 'en';
 }
 
 // ============================================================

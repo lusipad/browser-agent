@@ -29,16 +29,16 @@ export async function runTurn(
   session.cfg = await loadConfig();
   const model = session.cfg.models.find((m) => m.id === session.modelId);
   if (!model) {
-    session.error('未找到所选模型，请到设置页配置模型后重试。');
+    session.error(session.t('bg.noModel'));
     return;
   }
   const provider = session.cfg.providers.find((p) => p.id === model.providerId);
   if (!provider) {
-    session.error(`模型 ${model.label} 引用的服务商不存在，请检查设置。`);
+    session.error(session.t('bg.providerMissing', [model.label]));
     return;
   }
   if (!provider.apiKey.trim()) {
-    session.error(`「${provider.name}」还没有配置 API Key。点击右上角 ⚙ 打开设置页填写。`);
+    session.error(session.t('bg.noApiKey', [provider.name]));
     return;
   }
 
@@ -110,7 +110,14 @@ export async function runTurn(
           const verdict = await runValidator(session, provider, model, sysBase, userText, successCriteria);
           if (!verdict.done) {
             validatorRounds++;
-            session.upsert({ kind: 'info', id: uid('i'), text: `🔎 自检未通过：${verdict.reason || '任务尚未达成'}${verdict.next ? `｜下一步：${verdict.next}` : ''}` });
+            session.upsert({
+              kind: 'info',
+              id: uid('i'),
+              text: session.t('bg.validatorFail', [
+                verdict.reason || session.t('bg.validatorFailReason'),
+                verdict.next ? session.t('bg.validatorNext', [verdict.next]) : '',
+              ]),
+            });
             session.messages.push({
               role: 'user',
               content: [
@@ -125,9 +132,9 @@ export async function runTurn(
             });
             continue;
           }
-          session.upsert({ kind: 'info', id: uid('i'), text: '✅ 自检通过：任务达成。' });
+          session.upsert({ kind: 'info', id: uid('i'), text: session.t('bg.validatorPass') });
         }
-        if (result.stopReason === 'length') session.info('输出达到 max_tokens 上限被截断，可在设置中调大。');
+        if (result.stopReason === 'length') session.info(session.t('bg.maxTokens'));
         break;
       }
 
@@ -164,14 +171,14 @@ export async function runTurn(
         session.upsert({
           kind: 'info',
           id: uid('i'),
-          text: `已达到单轮最大迭代次数（${adv.maxIterations}）。任务可能尚未完成。`,
+          text: session.t('bg.maxIter', [adv.maxIterations]),
           action: 'continue',
         });
     }
-    if (session.aborted) session.info('已停止。');
+    if (session.aborted) session.info(session.t('bg.stopped'));
   } catch (e) {
-    if (session.aborted || (e instanceof DOMException && e.name === 'AbortError')) session.info('已停止。');
-    else if (e instanceof DOMException && e.name === 'TimeoutError') session.error(`请求超时（${Math.round(adv.requestTimeoutMs / 1000)}s）。可在设置中调整超时时间。`);
+    if (session.aborted || (e instanceof DOMException && e.name === 'AbortError')) session.info(session.t('bg.stopped'));
+    else if (e instanceof DOMException && e.name === 'TimeoutError') session.error(session.t('bg.timeout', [Math.round(adv.requestTimeoutMs / 1000)]));
     else session.error(classifyProviderError(e) || errText(e));
   } finally {
     clearInterval(keepalive);
@@ -254,7 +261,7 @@ async function runPlanner(
   } catch (e) {
     // 规划失败不致命：直接进入执行
     session.upsert({ kind: 'assistant', id, text: text || '', done: true });
-    session.info(`（规划步骤跳过：${truncate(errText(e), 120)}）`);
+    session.info(session.t('bg.planSkipped', [truncate(errText(e), 120)]));
     return null;
   }
   session.upsert({ kind: 'assistant', id, text: text || '(无计划输出)', done: true });
@@ -297,7 +304,7 @@ async function runValidator(
     return parseVerdict(textOfBlocks(res.blocks));
   } catch (e) {
     // 校验失败时不阻塞收尾，视为完成
-    session.info(`（自检步骤跳过：${truncate(errText(e), 120)}）`);
+    session.info(session.t('bg.validateSkipped', [truncate(errText(e), 120)]));
     return { done: true, reason: '', next: '' };
   }
 }

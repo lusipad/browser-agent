@@ -41,6 +41,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     planning: true,
     enableJavascriptTool: false,
   },
+  uiLang: 'auto',
   sites: {
     allowed: [],
     blocked: [
@@ -67,6 +68,7 @@ export function mergeConfig(raw: unknown): AppConfig {
     defaultModelId: r.defaultModelId || DEFAULT_CONFIG.defaultModelId,
     safety: { ...DEFAULT_CONFIG.safety, ...(r.safety ?? {}) },
     advanced: { ...DEFAULT_CONFIG.advanced, ...(r.advanced ?? {}) },
+    uiLang: r.uiLang === 'zh' || r.uiLang === 'en' ? r.uiLang : 'auto',
     sites: {
       allowed: r.sites?.allowed ?? DEFAULT_CONFIG.sites.allowed,
       blocked: r.sites?.blocked ?? DEFAULT_CONFIG.sites.blocked,

@@ -1,5 +1,6 @@
 import { formatUsd } from '../../shared/context';
 import type { ModelPick, TimelineItem } from '../../shared/types';
+import { useT } from '../../shared/i18nReact';
 import { ExportMenu } from './ExportMenu';
 
 interface Usage {
@@ -37,6 +38,7 @@ function meterColor(pct: number): string {
 }
 
 export function Header(props: Props) {
+  const t = useT();
   const { usage } = props;
   const cur = props.models.find((m) => m.id === props.modelId);
   const hasUsage = usage.input + usage.output > 0;
@@ -44,9 +46,10 @@ export function Header(props: Props) {
     usage.contextTokens && usage.contextBudget ? Math.min(1, usage.contextTokens / usage.contextBudget) : 0;
 
   const usageTitle =
-    `输入 ${usage.input.toLocaleString()} · 输出 ${usage.output.toLocaleString()} tokens` +
-    (usage.cost != null ? `\n累计成本 ${formatUsd(usage.cost)}（按当前模型计费）` : '\n当前模型未配置计费，无法估算成本') +
-    (pct ? `\n上下文占用 ${fmt(usage.contextTokens)} / ${fmt(usage.contextBudget)}（${Math.round(pct * 100)}%）` : '');
+    t('header.usageDetail', [usage.input.toLocaleString(), usage.output.toLocaleString()]) +
+    '\n' +
+    (usage.cost != null ? t('header.costTitle', [formatUsd(usage.cost)]) : t('header.noPricing')) +
+    (pct ? '\n' + t('header.ctxUsage', [fmt(usage.contextTokens), fmt(usage.contextBudget), Math.round(pct * 100)]) : '');
 
   return (
     <header className="header">
@@ -58,20 +61,20 @@ export function Header(props: Props) {
             value={props.modelId}
             disabled={props.running}
             onChange={(e) => props.onModel(e.target.value)}
-            title={cur ? `${cur.providerName} · ${cur.vision ? '支持视觉' : '无视觉'}` : '选择模型'}
+            title={cur ? `${cur.providerName} · ${cur.vision ? t('header.vision') : t('header.noVision')}` : t('header.model')}
           >
-            {!props.models.length && <option value="">未配置模型 →请打开设置</option>}
+            {!props.models.length && <option value="">{t('header.noModel')}</option>}
             {props.models.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.label}
-                {m.vision ? '' : ' 〔无视觉〕'}
+                {m.vision ? '' : ` 〔${t('header.noVision')}〕`}
               </option>
             ))}
           </select>
           {cur && (
             <span className="model-meta">
               {cur.providerName}
-              {!cur.vision && ' · 无视觉'}
+              {!cur.vision && ` · ${t('header.noVision')}`}
             </span>
           )}
         </div>
@@ -98,16 +101,16 @@ export function Header(props: Props) {
           items={props.items}
           meta={{ modelLabel: cur?.label ?? props.modelId, usage }}
         />
-        <button className="icon-btn" title="会话历史" onClick={props.onHistory}>
+        <button className="icon-btn" title={t('header.history')} onClick={props.onHistory}>
           🕘
         </button>
-        <button className="icon-btn" title="释放浏览器控制" onClick={props.onDetach}>
+        <button className="icon-btn" title={t('header.detach')} onClick={props.onDetach}>
           ⏏
         </button>
-        <button className="icon-btn" title="新对话" onClick={props.onNewChat} disabled={props.running}>
+        <button className="icon-btn" title={t('header.newChat')} onClick={props.onNewChat} disabled={props.running}>
           ✎
         </button>
-        <button className="icon-btn" title="设置" onClick={props.onOptions}>
+        <button className="icon-btn" title={t('header.settings')} onClick={props.onOptions}>
           ⚙
         </button>
       </div>

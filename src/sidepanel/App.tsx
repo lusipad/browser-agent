@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { detectLang, makeT, resolveLang, type Lang } from '../shared/i18n';
+import { I18nProvider } from '../shared/i18nReact';
+import { loadConfig, onConfigChange } from '../shared/settings';
 import type { BgToPanel, ConvMeta, ModelPick, TimelineItem } from '../shared/types';
 import { BgPort } from './port';
 import { Timeline } from './components/Timeline';
@@ -8,6 +11,8 @@ import { HistoryDrawer } from './components/HistoryDrawer';
 
 export function App() {
   const port = useMemo(() => new BgPort(), []);
+  const [lang, setLang] = useState<Lang>(detectLang());
+  const t = useMemo(() => makeT(lang), [lang]);
   const [items, setItems] = useState<TimelineItem[]>([]);
   const [running, setRunning] = useState(false);
   const [models, setModels] = useState<ModelPick[]>([]);
@@ -24,6 +29,12 @@ export function App() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedBottom = useRef(true);
+
+  // 界面语言：加载配置 + 监听变更
+  useEffect(() => {
+    void loadConfig().then((c) => setLang(resolveLang(c.uiLang)));
+    onConfigChange((c) => setLang(resolveLang(c.uiLang)));
+  }, []);
 
   useEffect(() => {
     const off = port.onMessage((msg: BgToPanel) => {
@@ -96,6 +107,7 @@ export function App() {
   }
 
   return (
+    <I18nProvider value={t}>
     <div className="app">
       <Header
         models={models}
@@ -144,5 +156,6 @@ export function App() {
         hasModel={!!modelId}
       />
     </div>
+    </I18nProvider>
   );
 }

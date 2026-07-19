@@ -157,12 +157,11 @@ chrome.runtime.onConnect.addListener((port) => {
             break;
           case 'detach': {
             const n = await detachAll();
-            let ungrouped = 0;
             if (bound) {
-              ungrouped = await ungroupAgentTabs(bound.windowId);
+              const ungrouped = await ungroupAgentTabs(bound.windowId);
               bound.groupedTabs.clear();
+              bound.info(bound.t('bg.detach', [n, ungrouped]));
             }
-            bound?.info(`已释放浏览器控制（断开 ${n} 个标签页的调试连接，撤销 ${ungrouped} 个标签的 Agent 分组）。`);
             break;
           }
           case 'open_options':

@@ -28,7 +28,7 @@ export const devtoolsTools: ToolDef[] = [
       await confirmSensitive(
         ctx.session,
         'javascript',
-        '代码预览：\n' + truncate(code, 600),
+        ctx.session.t('bg.confirmJsDesc') + '\n' + truncate(code, 600),
       );
       const value = await evalInPage(ctx.tabId, `(async () => {\n${code}\n})()`);
       let rendered: string;

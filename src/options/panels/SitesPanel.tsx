@@ -1,24 +1,27 @@
 import { useState } from 'react';
+import { useT } from '../../shared/i18nReact';
 import type { PanelProps } from './common';
 
 export function SitesPanel({ cfg, onChange }: PanelProps) {
+  const t = useT();
   return (
     <div className="panel">
-      <h1>站点权限</h1>
+      <h1>{t('opt.sites.title')}</h1>
       <p className="lead">
-        <b>允许列表</b>中的网站无需每次确认即可操作；<b>黑名单</b>中的网站会被完全阻止（银行、支付、交易所等已预置）。
-        支持精确域名或 <code>*.example.com</code> 形式，匹配其所有子域名。
+        {t('opt.sites.leadA')}
+        <code>*.example.com</code>
+        {t('opt.sites.leadB')}
       </p>
       <ListEditor
-        title="始终允许（白名单）"
-        emptyHint="还没有始终允许的网站。你在侧边栏点「始终允许此站点」时会自动加入这里。"
+        title={t('opt.sites.allowTitle')}
+        emptyHint={t('opt.sites.allowEmpty')}
         items={cfg.sites.allowed}
         placeholder="example.com"
         onChange={(allowed) => onChange({ ...cfg, sites: { ...cfg.sites, allowed } })}
       />
       <ListEditor
-        title="始终阻止（黑名单）"
-        emptyHint="黑名单为空。"
+        title={t('opt.sites.blockTitle')}
+        emptyHint={t('opt.sites.blockEmpty')}
         items={cfg.sites.blocked}
         placeholder="bank.com"
         danger
@@ -43,6 +46,7 @@ function ListEditor({
   danger?: boolean;
   onChange: (items: string[]) => void;
 }) {
+  const t = useT();
   const [val, setVal] = useState('');
   function add() {
     const v = val.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
@@ -67,7 +71,7 @@ function ListEditor({
           }}
         />
         <button className="btn" onClick={add}>
-          添加
+          {t('opt.sites.add')}
         </button>
       </div>
       {items.length === 0 ? (

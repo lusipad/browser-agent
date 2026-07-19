@@ -10,3 +10,4 @@ import './context.test';
 import './export.test';
 import './history.test';
 import './prompts.test';
+import './i18n.test';

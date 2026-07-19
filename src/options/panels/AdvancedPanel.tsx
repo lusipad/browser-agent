@@ -1,7 +1,9 @@
 import type { AdvancedSettings } from '../../shared/types';
+import { useT } from '../../shared/i18nReact';
 import { Field, Toggle, type PanelProps } from './common';
 
 export function AdvancedPanel({ cfg, onChange }: PanelProps) {
+  const t = useT();
   const a = cfg.advanced;
   function patch(p: Partial<AdvancedSettings>) {
     onChange({ ...cfg, advanced: { ...a, ...p } });
@@ -13,12 +15,25 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
 
   return (
     <div className="panel">
-      <h1>高级</h1>
-      <p className="lead">影响智能体循环、上下文占用和请求行为的参数。默认值适用于大多数场景。</p>
+      <h1>{t('opt.advanced.title')}</h1>
+      <p className="lead">{t('opt.advanced.lead')}</p>
+
+      <div className="card">
+        <Field label={t('opt.lang.label')}>
+          <select
+            value={cfg.uiLang}
+            onChange={(e) => onChange({ ...cfg, uiLang: e.target.value as 'auto' | 'zh' | 'en' })}
+          >
+            <option value="auto">{t('opt.lang.auto')}</option>
+            <option value="zh">{t('opt.lang.zh')}</option>
+            <option value="en">{t('opt.lang.en')}</option>
+          </select>
+        </Field>
+      </div>
 
       <div className="card">
         <div className="card-row">
-          <Field label="单轮最大迭代次数" hint="一次消息内模型↔工具往返上限（防失控）">
+          <Field label={t('opt.advanced.maxIterations')} hint={t('opt.advanced.maxIterationsHint')}>
             <input
               type="number"
               value={a.maxIterations}
@@ -27,7 +42,7 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
               onChange={(e) => patch({ maxIterations: num(e.target.value, 1, 100, 24) })}
             />
           </Field>
-          <Field label="保留截图数量" hint="历史中保留的最近截图数，越大越占 token">
+          <Field label={t('opt.advanced.maxImagesKept')} hint={t('opt.advanced.maxImagesKeptHint')}>
             <input
               type="number"
               value={a.maxImagesKept}
@@ -37,7 +52,7 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
             />
           </Field>
         </div>
-        <Field label="上下文兜底预算 (token)" hint="模型未填「上下文窗口」时，历史超过此值即从最旧消息开始裁剪">
+        <Field label={t('opt.advanced.maxContextTokens')} hint={t('opt.advanced.maxContextTokensHint')}>
           <input
             type="number"
             value={a.maxContextTokens}
@@ -48,7 +63,7 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
           />
         </Field>
         <div className="card-row">
-          <Field label="截图最大宽度 (px)" hint="越小越省 token，但过小会看不清细节">
+          <Field label={t('opt.advanced.screenshotMaxWidth')} hint={t('opt.advanced.screenshotMaxWidthHint')}>
             <input
               type="number"
               value={a.screenshotMaxWidth}
@@ -58,7 +73,7 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
               onChange={(e) => patch({ screenshotMaxWidth: num(e.target.value, 640, 2560, 1366) })}
             />
           </Field>
-          <Field label="JPEG 质量 (1-100)">
+          <Field label={t('opt.advanced.jpegQuality')}>
             <input
               type="number"
               value={a.jpegQuality}
@@ -72,7 +87,7 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
 
       <div className="card">
         <div className="card-row">
-          <Field label="max_tokens（单次回复上限）">
+          <Field label={t('opt.advanced.maxTokens')}>
             <input
               type="number"
               value={a.maxTokens}
@@ -82,20 +97,20 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
               onChange={(e) => patch({ maxTokens: num(e.target.value, 256, 32000, 4096) })}
             />
           </Field>
-          <Field label="temperature" hint="留空表示使用模型默认（gpt-5 系列会忽略该参数）">
+          <Field label={t('opt.advanced.temperature')} hint={t('opt.advanced.temperatureHint')}>
             <input
               type="number"
               value={a.temperature ?? ''}
               min={0}
               max={2}
               step={0.1}
-              placeholder="默认"
+              placeholder={t('opt.advanced.temperaturePlaceholder')}
               onChange={(e) => patch({ temperature: e.target.value === '' ? null : num(e.target.value, 0, 2, 0) })}
             />
           </Field>
         </div>
         <div className="card-row">
-          <Field label="请求超时 (秒)">
+          <Field label={t('opt.advanced.requestTimeout')}>
             <input
               type="number"
               value={Math.round(a.requestTimeoutMs / 1000)}
@@ -105,7 +120,7 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
               onChange={(e) => patch({ requestTimeoutMs: num(e.target.value, 30, 600, 180) * 1000 })}
             />
           </Field>
-          <Field label="失败重试次数" hint="遇到 5xx / 429 / 网络错误时的指数退避重试上限">
+          <Field label={t('opt.advanced.maxRetries')} hint={t('opt.advanced.maxRetriesHint')}>
             <input
               type="number"
               value={a.maxRetries}
@@ -121,26 +136,26 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
         <Toggle
           checked={a.autoScreenshot}
           onChange={(v) => patch({ autoScreenshot: v })}
-          label="每次操作后自动截图"
-          hint="关闭后模型需主动调用 screenshot 才能看到结果，更省 token 但更易出错"
+          label={t('opt.advanced.autoScreenshot')}
+          hint={t('opt.advanced.autoScreenshotHint')}
         />
         <Toggle
           checked={a.setOfMarks}
           onChange={(v) => patch({ setOfMarks: v })}
-          label="set-of-marks 编号框标注"
-          hint="在截图上给可交互元素叠加编号框，模型按编号点击，大幅提升视觉准确率（仅视觉模型生效）"
+          label={t('opt.advanced.setOfMarks')}
+          hint={t('opt.advanced.setOfMarksHint')}
         />
         <Toggle
           checked={a.planning}
           onChange={(v) => patch({ planning: v })}
-          label="Planner + Validator（规划与自检）"
-          hint="任务开始先拆解步骤+定成功判据，模型停手时自检是否真正达成，未达成会继续。更可靠但更耗 token"
+          label={t('opt.advanced.planning')}
+          hint={t('opt.advanced.planningHint')}
         />
         <Toggle
           checked={a.enableJavascriptTool}
           onChange={(v) => patch({ enableJavascriptTool: v })}
-          label="启用 javascript_tool（在页面执行任意 JS）"
-          hint="⚠️ 强能力也是攻击面：开启后模型可在页面执行任意 JavaScript（仍需逐次确认）。出于安全默认关闭；不需要时保持关闭"
+          label={t('opt.advanced.enableJs')}
+          hint={t('opt.advanced.enableJsHint')}
         />
       </div>
     </div>

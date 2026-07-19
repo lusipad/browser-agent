@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { TimelineItem } from '../../shared/types';
+import { useT } from '../../shared/i18nReact';
 import { exportSession, type ExportMeta } from '../export';
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 
 /** 导出按钮 + 弹出选择 Markdown / JSON */
 export function ExportMenu({ items, meta }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const disabled = items.length === 0;
@@ -31,7 +33,7 @@ export function ExportMenu({ items, meta }: Props) {
     <div className="export-wrap" ref={wrap}>
       <button
         className="icon-btn"
-        title="导出对话"
+        title={t('header.export')}
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
       >
@@ -39,8 +41,8 @@ export function ExportMenu({ items, meta }: Props) {
       </button>
       {open && !disabled && (
         <div className="export-menu">
-          <button onClick={() => pick('md')}>导出 Markdown</button>
-          <button onClick={() => pick('json')}>导出 JSON</button>
+          <button onClick={() => pick('md')}>{t('export.md')}</button>
+          <button onClick={() => pick('json')}>{t('export.json')}</button>
         </div>
       )}
     </div>

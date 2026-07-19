@@ -1,5 +1,7 @@
-# Chrome Web Store 提交对照单（复制即用）
+# Chrome Web Store Submission Checklist / 提交对照单
 
+> Step-by-step field-by-field guide for the CWS developer console. Copy-paste ready.
+>
 > 你在开发者控制台逐字段照抄。上传 / 填表 / 提交都由你本人完成（涉及接受开发者协议与数据安全法律申报，必须本人确认）。
 > 字段清单已按官方文档（cws-dashboard-listing / cws-dashboard-privacy）核对，覆盖 Store listing / Privacy practices / Distribution 三个标签页。
 

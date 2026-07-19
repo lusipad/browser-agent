@@ -1,6 +1,8 @@
-# Chrome Web Store 上架资料
+# Chrome Web Store Listing / 上架资料
 
-本文件汇总提交 Chrome Web Store 审核所需的文案与**权限用途说明**。审核方会逐条阅读权限理由——如实、清楚地说明每个权限的必要性是过审的关键。
+> Internal reference for CWS review submission. Contains permission justifications and store copy.
+>
+> 本文件汇总提交 Chrome Web Store 审核所需的文案与**权限用途说明**。审核方会逐条阅读权限理由——如实、清楚地说明每个权限的必要性是过审的关键。
 
 ---
 

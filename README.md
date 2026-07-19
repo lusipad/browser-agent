@@ -102,16 +102,19 @@ src/
 npm test          # typecheck + 单元测试 + E2E
 npm run test:unit # 纯逻辑单元测试（node:test，esbuild 打包后运行）
 npm run test:e2e  # 真实 Chromium 里跑感知层（需先 npx playwright install chromium）
+npm run bench     # 感知层基准评测（真实 Chromium，输出通过率）
 ```
 
 - **单元测试**（`test/unit/`）：适配器流式解析 / 工具分片累积 / 历史格式转换、set-of-marks 几何、`wait_for` 条件、站点权限匹配、配置合并、工具函数、**上下文治理**（token 估算 / 预算裁剪 / 配对完整性 / 结果压缩 / 成本换算）、**退避重试与错误分类**、**会话导出**、**会话归档存储**——共 63 项，纯 Node、毫秒级。
 - **E2E**（`test/e2e/`）：用 Playwright 把 `pageAgent` 注入**真实 Chromium** 页面，在带 Shadow DOM、同源 iframe、表单、视口外元素的 fixture 上验证——Shadow DOM 穿透、iframe 坐标换算、`form_input` 事件触发、`probe`，以及 **`extract_data`** 的表格 / 链接 / selector 抽取（同样穿透 shadow 与同源 iframe）。这是 jsdom（无布局）覆盖不了、也是感知层最需要真机验证的部分。
+- **基准评测**（`eval/perception.bench.mjs`）：用多样真实前端结构（电商卡片列表、数据表格、shadow+iframe 混合、动态加载、复杂定位）的 fixture + ground-truth，量化 `read_page` / `find` / `extract_data` / `wait_for` 的可靠性，输出通过率并在有失败时非零退出（CI 友好）。这是端到端任务成功率的**地基**，无需真实 API。
 - 全链路的浏览器行为（CDP 可信输入、侧边栏、完整 agent 循环）仍需加载扩展后按 [`TESTING.md`](./TESTING.md) 手动验证或用设置页「诊断」。
+- **完整的端到端任务成功率**（WebVoyager 式，含 LLM 决策 + 真实网站）需要真实 API key 且要把 CDP 驱动层替换为可自动化环境，暂未纳入；`bench` 覆盖的是其可离线自动化的感知地基。
 
 ## 已知限制 / 后续可做
 
 - **跨域 iframe 内部内容**目前只作为整体可点区域，未深入提取（可后续用 `allFrames` 分帧注入 + 坐标偏移合并解决）
-- 尚无自动化**评测**（如 WebVoyager 成功率）——这是衡量「是否真能干活」的下一步
+- 感知层已有自动化**基准评测**（`npm run bench`）；但完整的**端到端任务成功率**（WebVoyager 式，含 LLM 决策）仍缺，需真实 API + 可自动化的 CDP 驱动替身——这是衡量「是否真能干活」的下一步
 - 无法自动化 `chrome://`、Web Store 等浏览器内置页面
 - 不会也不应绕过验证码 / 反爬
 - `computer` 的输入用 `Input.insertText`，个别强依赖逐键 keydown 的富文本编辑器可能无反应，此时优先用 `form_input`

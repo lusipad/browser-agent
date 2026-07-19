@@ -104,6 +104,8 @@ export interface AdvancedSettings {
   setOfMarks: boolean;
   /** 任务开始先规划、完成时自检是否达成（Planner + Validator） */
   planning: boolean;
+  /** 是否启用 javascript_tool（在页面执行任意 JS）；出于安全默认关闭 */
+  enableJavascriptTool: boolean;
 }
 
 export interface SitePermissions {

@@ -88,7 +88,7 @@ export async function runTurn(
         maxInputTokens: budget,
       });
 
-      const result = await streamOnce(session, provider, model, sysBase, governed.messages, toolSpecs(), (delta) => {
+      const result = await streamOnce(session, provider, model, sysBase, governed.messages, activeToolSpecs(session), (delta) => {
         streamed += delta;
         session.emit({ type: 'text_delta', id: asstId, delta });
       });
@@ -327,6 +327,13 @@ function parseVerdict(text: string): Verdict {
   const negative = /\b(not\s+(done|complete)|incomplete|未完成|没有完成|尚未)\b/i.test(text);
   const positive = /\b(done|complete|success|完成|已完成|通过)\b/i.test(text);
   return { done: positive && !negative, reason: truncate(text.trim(), 200), next: '' };
+}
+
+/** 按会话配置过滤工具清单：javascript_tool 默认关闭时不暴露给模型 */
+function activeToolSpecs(session: Session): ReturnType<typeof toolSpecs> {
+  const specs = toolSpecs();
+  if (session.cfg.advanced.enableJavascriptTool) return specs;
+  return specs.filter((s) => s.name !== 'javascript_tool');
 }
 
 /** 取历史里最早的一条用户文本（作为「继续」时的成功判据） */

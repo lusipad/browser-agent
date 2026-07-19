@@ -39,6 +39,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     maxRetries: 2,
     setOfMarks: true,
     planning: true,
+    enableJavascriptTool: false,
   },
   sites: {
     allowed: [],

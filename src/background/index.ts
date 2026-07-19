@@ -177,7 +177,9 @@ chrome.runtime.onConnect.addListener((port) => {
 });
 
 // 一次性诊断请求（来自设置页），不走面板长连接
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  // 纵深防御：只接受本扩展自身页面的消息（无 externally_connectable，但仍显式校验）
+  if (sender.id !== chrome.runtime.id) return undefined;
   if (msg?.type === 'diagnose') {
     void (async () => {
       try {

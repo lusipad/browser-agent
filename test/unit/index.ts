@@ -9,3 +9,4 @@ import './page.test';
 import './context.test';
 import './export.test';
 import './history.test';
+import './prompts.test';

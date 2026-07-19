@@ -136,6 +136,12 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
           label="Planner + Validator（规划与自检）"
           hint="任务开始先拆解步骤+定成功判据，模型停手时自检是否真正达成，未达成会继续。更可靠但更耗 token"
         />
+        <Toggle
+          checked={a.enableJavascriptTool}
+          onChange={(v) => patch({ enableJavascriptTool: v })}
+          label="启用 javascript_tool（在页面执行任意 JS）"
+          hint="⚠️ 强能力也是攻击面：开启后模型可在页面执行任意 JavaScript（仍需逐次确认）。出于安全默认关闭；不需要时保持关闭"
+        />
       </div>
     </div>
   );

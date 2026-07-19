@@ -105,6 +105,10 @@ export async function runTurn(
       const toolUses = result.blocks.filter((b): b is ToolUseBlock => b.type === 'tool_use');
 
       if (!toolUses.length) {
+        if (!finalText.trim()) {
+          session.error(session.t('bg.emptyResponse'));
+          break;
+        }
         // 模型认为完成 → Validator 自检
         if (adv.planning && validatorRounds < VALIDATOR_CAP && !session.aborted) {
           const verdict = await runValidator(session, provider, model, sysBase, userText, successCriteria);

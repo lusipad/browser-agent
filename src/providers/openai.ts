@@ -3,11 +3,27 @@
 import type { ContentBlock, ImageBlock, TextBlock } from '../shared/types';
 import { textOfBlocks, uid } from '../shared/util';
 import { sseData } from './sse';
-import { fetchWithRetry, mergeConsecutive, type ProviderImpl } from './types';
+import { HttpError, fetchWithRetry, mergeConsecutive, type ProviderImpl } from './types';
 
-/** o 系列 / gpt-5 系列：不接受 temperature，须用 max_completion_tokens */
+/** o 系列推理模型：不接受 temperature，须用 max_completion_tokens */
 function isReasoningModel(model: string): boolean {
-  return /^(o\d|gpt-5)/i.test(model);
+  return /^o\d/i.test(model);
+}
+
+/** 从 SSE delta 中提取文本：兼容 string 格式和 content-parts 数组格式 */
+function extractDeltaText(delta: any): string {
+  if (typeof delta.content === 'string') return delta.content;
+  if (Array.isArray(delta.content)) {
+    let out = '';
+    for (const part of delta.content) {
+      if (part.type === 'text' && typeof part.text === 'string') out += part.text;
+      else if (part.type === 'output_text' && typeof part.text === 'string') out += part.text;
+      else if (typeof part.text === 'string') out += part.text;
+    }
+    return out;
+  }
+  if (typeof delta.refusal === 'string' && delta.refusal) return `[Refused] ${delta.refusal}`;
+  return '';
 }
 
 export const openaiStream: ProviderImpl = async (p) => {
@@ -57,15 +73,23 @@ export const openaiStream: ProviderImpl = async (p) => {
     } catch {
       continue;
     }
+    if (j.error) {
+      throw new HttpError(
+        typeof j.error.code === 'number' ? j.error.code : 500,
+        p.provider.name,
+        j.error.message ?? JSON.stringify(j.error),
+      );
+    }
     if (j.usage) {
       usage = { input: j.usage.prompt_tokens ?? 0, output: j.usage.completion_tokens ?? 0 };
     }
     const choice = j.choices?.[0];
     if (!choice) continue;
     const d = choice.delta ?? {};
-    if (typeof d.content === 'string' && d.content) {
-      text += d.content;
-      p.onText(d.content);
+    const chunk = extractDeltaText(d);
+    if (chunk) {
+      text += chunk;
+      p.onText(chunk);
     }
     for (const tc of d.tool_calls ?? []) {
       const idx = tc.index ?? 0;

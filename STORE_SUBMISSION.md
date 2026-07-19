@@ -1,10 +1,20 @@
 # Chrome Web Store 提交对照单（复制即用）
 
 > 你在开发者控制台逐字段照抄。上传 / 填表 / 提交都由你本人完成（涉及接受开发者协议与数据安全法律申报，必须本人确认）。
-> 需要的两个文件：
-> - 扩展包：<https://github.com/lusipad/browser-agent/releases/download/v0.2.0/browser-agent-0.2.0.zip>
-> - 截图（1280×800，各上传）：`docs/screenshots/store-hero.png`、`docs/screenshots/options.png`
->   （`sidepanel-convo.png` 是竖图 800×1624，**不符合商店尺寸，不要上传**）
+> 字段清单已按官方文档（cws-dashboard-listing / cws-dashboard-privacy）核对，覆盖 Store listing / Privacy practices / Distribution 三个标签页。
+
+## 需要上传的文件
+
+| 用途 | 尺寸 | 文件 |
+|---|---|---|
+| 扩展包 | — | [browser-agent-0.2.0.zip](https://github.com/lusipad/browser-agent/releases/download/v0.2.0/browser-agent-0.2.0.zip) |
+| 商店图标 128×128 | 128×128 | 已在 manifest（`icons/icon128.png`），无需单独传 |
+| 截图（≥1，最多 5） | 1280×800 | `docs/screenshots/store-hero.png`、`docs/screenshots/options.png` |
+| 小宣传图（列表卡片用） | 440×280 | `docs/screenshots/promo-tile-440x280.png` |
+| 大横幅宣传图（可选） | 1400×560 | 暂无（可选，想要我再生成） |
+| 宣传视频（可选） | YouTube | 无 |
+
+> `sidepanel-convo.png` 是竖图 800×1624，**不符合商店尺寸，不要传**。
 
 ---
 
@@ -89,6 +99,11 @@ https://github.com/lusipad/browser-agent/blob/main/PRIVACY.md
 用户可能要求在任意网站上执行任务，故需广泛主机权限；但实际操作前每个站点都要经用户逐站授权，未授权站点不会被读取或操作，且金融/支付类站点预置为完全禁止。
 ```
 
+**远程代码（Remote code）**
+- 选 **「No, I am not using remote code」**。
+- 理由：扩展所有代码都打包在扩展内，**不加载任何远程托管的脚本/Wasm 文件**（MV3 也禁止）。
+- ⚠️ 需你知情的细节：`javascript_tool` 会把模型生成的 JS 在**页面主世界**执行——但它**默认关闭**、每次执行都要你确认、且不是「加载远程托管代码文件」。若审核追问，如实说明这点即可（默认关闭 + 逐次确认 + 运行于页面上下文而非扩展上下文）。
+
 **数据用途申报（勾选）**
 - 是否收集/使用用户数据？→ **是**
 - 数据类型：**网站内容（页面内容/截图，作为上下文）**、**用户输入的文本（指令）**
@@ -102,7 +117,17 @@ https://github.com/lusipad/browser-agent/blob/main/PRIVACY.md
 - ☑ 仅为单一用途使用/传输数据
 - ☑ 传输经加密（HTTPS 到模型端点）
 
-## 4. 提交
+## 4. 分发设置（Distribution 标签页）
+- **可见性 Visibility**：`Public`（公开，任何人可搜到安装）——如只想先小范围测试，可选 `Unlisted`（有链接才能装）
+- **地区 Regions**：`All regions`（全部）
+- **定价 Pricing**：`Free`（免费）
+
+## 5. 其他字段（Additional fields，可选但建议填）
+- **主页 URL（Homepage）**：`https://github.com/lusipad/browser-agent`
+- **支持 URL（Support）**：`https://github.com/lusipad/browser-agent/issues`
+- **内容分级（Content rating）**：如实填问卷——本扩展是效率工具，无暴力/成人/赌博等内容，结果应为「适合所有人 / Everyone」
+
+## 6. 提交
 Submit for review。带 `debugger` 的扩展审核更久（数天到数周），可能被要求补充权限说明——把上面 `debugger` 那段回复过去即可。
 
 ---

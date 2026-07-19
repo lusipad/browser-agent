@@ -47,6 +47,8 @@ npm run build        # 产物输出到 dist/
 3. 首次安装自动打开设置页 — 填入 endpoint 和 API Key，点击**测试连接**
 4. 点击工具栏图标打开**侧边栏**，选好模型，开始对话
 
+> 大多数 OpenAI 兼容接口的 Base URL 需要以 `/v1` 结尾（例如 `https://provider.example/v1`）。**测试连接**会校验 `/models` 返回格式，并列出服务商未提供的已配置模型。
+>
 > 开发时用 `npm run watch` 监听 `src/`，改完刷新扩展即可。修改 `public/` 需重新 `npm run build`。
 
 ## 安全模型

@@ -1,8 +1,14 @@
 import { useState } from 'react';
-import type { ProviderConfig } from '../../shared/types';
+import type { ModelConfig, ProviderConfig } from '../../shared/types';
 import { uid } from '../../shared/util';
 import { useT } from '../../shared/i18nReact';
 import { Field, type PanelProps } from './common';
+
+export function unavailableModelNames(models: ModelConfig[], providerId: string, available: unknown): string[] {
+  if (!Array.isArray(available)) return [];
+  const ids = new Set(available.filter((id): id is string => typeof id === 'string'));
+  return models.filter((m) => m.providerId === providerId && !ids.has(m.model)).map((m) => m.model);
+}
 
 export function ProvidersPanel({ cfg, onChange }: PanelProps) {
   const t = useT();
@@ -34,8 +40,16 @@ export function ProvidersPanel({ cfg, onChange }: PanelProps) {
       });
       if (resp.ok) {
         const j = await resp.json().catch(() => null);
-        const n = Array.isArray(j?.data) ? j.data.length : null;
-        setTesting((s) => ({ ...s, [p.id]: n != null ? t('opt.providers.testOkN', [n]) : t('opt.providers.testOk') }));
+        if (!Array.isArray(j?.data)) {
+          setTesting((s) => ({ ...s, [p.id]: t('opt.providers.testInvalidResponse') }));
+          return;
+        }
+        const modelIds = j.data.map((m: any) => m?.id).filter((id: unknown) => typeof id === 'string');
+        const missing = unavailableModelNames(cfg.models, p.id, modelIds);
+        const result = missing.length
+          ? t('opt.providers.testMissingModels', [missing.join(', ')])
+          : t('opt.providers.testOkN', [modelIds.length]);
+        setTesting((s) => ({ ...s, [p.id]: result }));
       } else {
         setTesting((s) => ({ ...s, [p.id]: `✗ HTTP ${resp.status}` }));
       }

@@ -47,6 +47,8 @@ npm run build        # outputs to dist/
 3. The Options page opens — enter your endpoint URL and API key, click **Test Connection**
 4. Click the toolbar icon to open the **sidebar**, pick a model, start chatting
 
+> Most OpenAI-compatible endpoints require a Base URL ending in `/v1` (for example, `https://provider.example/v1`). **Test Connection** verifies the `/models` response and reports configured models the provider does not offer.
+>
 > Use `npm run watch` during development. Changes to `src/` are rebuilt automatically; changes to `public/` require a full `npm run build`.
 
 ## Security Model

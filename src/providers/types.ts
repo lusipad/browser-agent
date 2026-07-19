@@ -55,6 +55,13 @@ export function combinedSignal(signal: AbortSignal, timeoutMs: number): AbortSig
 export async function readErrorBody(resp: Response): Promise<string> {
   try {
     const text = await resp.text();
+    try {
+      const json = JSON.parse(text);
+      const message = json?.error?.message ?? json?.message ?? (typeof json?.error === 'string' ? json.error : '');
+      if (message) return String(message).slice(0, 500);
+    } catch {
+      // 非 JSON 响应直接显示原文
+    }
     return text.slice(0, 500);
   } catch {
     return '(无法读取错误响应体)';
@@ -151,7 +158,7 @@ export function classifyProviderError(e: unknown): string {
     if (e.status === 404)
       return `接口或模型不存在（HTTP 404）。检查服务商 baseUrl 是否含 /v1，以及模型名是否正确。`;
     if (e.status === 429) return `触发限流（HTTP 429），重试后仍失败。请稍后再试或降低请求频率。`;
-    if (e.status >= 500) return `服务端错误（HTTP ${e.status}），重试后仍失败。请稍后再试。`;
+    if (e.status >= 500) return `服务端错误（HTTP ${e.status}），重试后仍失败${body}。请稍后再试或检查当前模型是否可用。`;
     if (e.status === 400) return `请求被拒绝（HTTP 400）${body}。可能是模型不支持某个参数或消息格式。`;
     return `${e.providerName} 请求失败（HTTP ${e.status}）${body}`;
   }

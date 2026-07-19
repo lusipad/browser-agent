@@ -44,8 +44,15 @@ export const optionsDict = {
   },
   'opt.providers.test': { zh: '测试连接', en: 'Test connection' },
   'opt.providers.testing': { zh: '测试中…', en: 'Testing…' },
-  'opt.providers.testOk': { zh: '✓ 连接成功', en: '✓ Connected' },
   'opt.providers.testOkN': { zh: '✓ 连接成功（{0} 个模型）', en: '✓ Connected ({0} models)' },
+  'opt.providers.testInvalidResponse': {
+    zh: '✗ 接口返回的不是 OpenAI /models 格式，请检查 Base URL 是否包含 /v1',
+    en: '✗ The endpoint did not return the OpenAI /models format. Check whether Base URL includes /v1',
+  },
+  'opt.providers.testMissingModels': {
+    zh: '✗ 连接成功，但以下已配置模型不可用：{0}',
+    en: '✗ Connected, but these configured models are unavailable: {0}',
+  },
   'opt.providers.testFail': { zh: '连接失败', en: 'Connection failed' },
   'opt.providers.hasModels': {
     zh: '该服务商下还有模型，请先在「模型」页删除它们。',
@@ -66,7 +73,7 @@ export const optionsDict = {
   'opt.models.label': { zh: '显示名称', en: 'Display name' },
   'opt.models.provider': { zh: '服务商', en: 'Provider' },
   'opt.models.modelName': { zh: '模型名（传给 API）', en: 'Model name (sent to API)' },
-  'opt.models.modelNameHint': { zh: '例如 gpt-5.6、deepseek-v4-flash', en: 'e.g. gpt-5.6, deepseek-v4-flash' },
+  'opt.models.modelNameHint': { zh: '例如 gpt-5.6-sol、deepseek-v4-flash', en: 'e.g. gpt-5.6-sol, deepseek-v4-flash' },
   'opt.models.vision': { zh: '支持视觉（截图）', en: 'Vision (screenshots)' },
   'opt.models.contextWindow': { zh: '上下文窗口 (token)', en: 'Context window (tokens)' },
   'opt.models.contextWindowHint': {

@@ -1,5 +1,5 @@
 {
-  "extName": { "message": "Browser Agent — 多模型浏览器智能体" },
+  "extName": { "message": "Browser Agent" },
   "extShortName": { "message": "Browser Agent" },
   "extDesc": { "message": "在侧边栏运行的 AI 浏览器智能体：接任意 OpenAI 兼容模型，用自然语言自动完成网页操作。密钥只存本机。" },
   "actionTitle": { "message": "打开 Browser Agent" }

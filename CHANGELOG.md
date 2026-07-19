@@ -6,6 +6,22 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 0.2.2 — 2026-07-19
+
+### Fixed / 修复
+
+- **兼容接口诊断** — 当 Base URL 缺少 `/v1`、接口返回网页而非 SSE，或服务端返回 JSON 错误时，直接展示可操作的原因，不再笼统误报“模型空响应”。
+- **规划与自检提示** — 模型在规划或校验阶段未返回可解析内容时明确标出模型和失败阶段，避免反复显示“任务尚未达成”。
+- **模型可用性检查** — “测试连接”现在校验 OpenAI `/models` 响应格式，并列出当前服务商未提供的已配置模型。
+- **GPT-5.6 默认配置** — 移除不存在的裸 `gpt-5.6`，补充 `gpt-5.6-sol`，并将新安装的默认模型设为已验证可用的 `gpt-5.6-terra`。
+
+### Changed / 变更
+
+- **扩展名称精简** — 中英文显示名统一缩短为 `Browser Agent`，避免浏览器扩展页和地址栏标题过长。
+- **文档整理** — 补充双语 README、架构与测试文档，并更新商店提交说明和英文截图。
+
+---
+
 ## 0.2.1 — 2026-07-19
 
 - **Store icon redesign** — replaced generic silhouette with a branded robot face (blue gradient + white head + indigo eyes + antenna/smile), consistent with promo materials; still rendered by the zero-dependency generator at 16/32/48/128px.

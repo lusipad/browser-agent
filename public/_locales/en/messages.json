@@ -1,5 +1,5 @@
 {
-  "extName": { "message": "Browser Agent — Multi-model Browser AI" },
+  "extName": { "message": "Browser Agent" },
   "extShortName": { "message": "Browser Agent" },
   "extDesc": { "message": "An AI browser agent in your side panel: connect any OpenAI-compatible model to automate web tasks with natural language. Keys stay on your machine." },
   "actionTitle": { "message": "Open Browser Agent" }

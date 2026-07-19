@@ -16,13 +16,13 @@ npm run bench         # perception benchmark (5 fixtures, ground-truth scoring)
 npm run bench:e2e     # end-to-end agent eval (real LLM + Playwright)
 ```
 
-**Unit tests** (`test/unit/`): adapter streaming, tool chunk accumulation, history format conversion, set-of-marks geometry, `wait_for` conditions, site permission matching, config merging, context governance (token estimation, budget trimming, pair integrity, result compression, cost calculation), retry & error classification, session export, session archive — 71 tests, pure Node.
+**Unit tests** (`test/unit/`): adapter streaming, tool chunk accumulation, history format conversion, set-of-marks geometry, `wait_for` conditions, site permission matching, config merging, context governance (token estimation, budget trimming, pair integrity, result compression, cost calculation), retry & error classification, session export, session archive — 75 tests, pure Node.
 
 **E2E** (`test/e2e/`): Playwright injects `pageAgent` into real Chromium pages with Shadow DOM, same-origin iframes, forms, and off-viewport elements. Tests Shadow DOM piercing, iframe coordinate conversion, `form_input` event triggering, `probe`, and `extract_data` (tables/links/selector extraction piercing shadow & iframe) — 11 tests.
 
 **Perception benchmark** (`eval/perception.bench.mjs`): Diverse frontend structure fixtures (e-commerce cards, data tables, shadow+iframe mix, dynamic loading, complex positioning) + ground-truth. Quantifies `read_page` / `find` / `extract_data` / `wait_for` reliability. Non-zero exit on failure (CI-friendly). Baseline: **5/5**.
 
-**Agent E2E eval** (`eval/agent-e2e.bench.mjs`): WebVoyager-inspired reproducible local version — real LLM decisions + Playwright browser + local fixture sites + automatic judgment. Tasks: click-to-cart, structured data QA, form submission, multi-step navigation. Requires `EVAL_BASE_URL` / `EVAL_API_KEY` / `EVAL_MODEL` env vars. Tested with gpt-5.4-mini: **4/4**.
+**Agent E2E eval** (`eval/agent-e2e.bench.mjs`): WebVoyager-inspired reproducible local version — real LLM decisions + Playwright browser + local fixture sites + automatic judgment. Tasks: click-to-cart, structured data QA, form submission, multi-step navigation. Requires `EVAL_BASE_URL` / `EVAL_API_KEY` / `EVAL_MODEL` env vars. Tested with gpt-5.4-mini and gpt-5.6-terra: **4/4**.
 
 ### Manual Verification Protocol
 
@@ -36,7 +36,7 @@ The automated tests cover perception and logic. The following protocol covers **
 npm install && npm run build
 ```
 
-`chrome://extensions` → Developer mode → Load unpacked → select `dist` → fill API key in Options → Test Connection → open sidebar, pick a visual model (e.g., GPT-5.6).
+`chrome://extensions` → Developer mode → Load unpacked → select `dist` → fill the Base URL (usually ending in `/v1`) and API key in Options → Test Connection → open sidebar, pick a visual model (e.g., GPT-5.6 Terra).
 
 > Debug: click the "Service Worker" link on the extension card to open the background console.
 
@@ -97,13 +97,13 @@ npm run bench         # 感知层基准评测（5 fixture，ground-truth 计分�
 npm run bench:e2e     # 端到端 agent 评测（真实 LLM + Playwright）
 ```
 
-**单元测试**（`test/unit/`）：适配器流式解析、工具分片累积、历史格式转换、set-of-marks 几何、`wait_for` 条件、站点权限匹配、配置合并、上下文治理（token 估算/预算裁剪/配对完整性/结果压缩/成本换算）、退避重试与错误分类、会话导出、会话归档存储 — 共 71 项，纯 Node。
+**单元测试**（`test/unit/`）：适配器流式解析、工具分片累积、历史格式转换、set-of-marks 几何、`wait_for` 条件、站点权限匹配、配置合并、上下文治理（token 估算/预算裁剪/配对完整性/结果压缩/成本换算）、退避重试与错误分类、会话导出、会话归档存储 — 共 75 项，纯 Node。
 
 **E2E**（`test/e2e/`）：用 Playwright 把 `pageAgent` 注入真实 Chromium 页面，在带 Shadow DOM、同源 iframe、表单、视口外元素的 fixture 上验证 — Shadow DOM 穿透、iframe 坐标换算、`form_input` 事件触发、`probe`，以及 `extract_data` 的表格/链接/selector 抽取 — 共 11 项。
 
 **感知层基准**（`eval/perception.bench.mjs`）：多样真实前端结构 fixture + ground-truth，量化 `read_page`/`find`/`extract_data`/`wait_for` 可靠性。有失败时非零退出（CI 友好）。基线：**5/5**。
 
-**端到端 agent 评测**（`eval/agent-e2e.bench.mjs`）：WebVoyager 精神的可复现本地版 — 真实 LLM 决策 + Playwright 浏览器 + 本地 fixture 站点 + 自动判定。需 `EVAL_BASE_URL`/`EVAL_API_KEY`/`EVAL_MODEL` 环境变量。已实测 gpt-5.4-mini：**4/4**。
+**端到端 agent 评测**（`eval/agent-e2e.bench.mjs`）：WebVoyager 精神的可复现本地版 — 真实 LLM 决策 + Playwright 浏览器 + 本地 fixture 站点 + 自动判定。需 `EVAL_BASE_URL`/`EVAL_API_KEY`/`EVAL_MODEL` 环境变量。已实测 gpt-5.4-mini 和 gpt-5.6-terra：**4/4**。
 
 ### 手动验证协议
 
@@ -117,7 +117,7 @@ npm run bench:e2e     # 端到端 agent 评测（真实 LLM + Playwright）
 npm install && npm run build
 ```
 
-`chrome://extensions` → 开发者模式 → 加载已解压的扩展程序 → 选 `dist` → 设置页填 API Key → 测试连接 → 工具栏图标打开侧边栏，选视觉模型。
+`chrome://extensions` → 开发者模式 → 加载已解压的扩展程序 → 选 `dist` → 设置页填写 Base URL（通常以 `/v1` 结尾）和 API Key → 测试连接 → 工具栏图标打开侧边栏，选视觉模型（如 GPT-5.6 Terra）。
 
 #### 0.5 一键诊断（最快的第一步，不花 API 钱）
 

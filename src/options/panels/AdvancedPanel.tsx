@@ -37,6 +37,16 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
             />
           </Field>
         </div>
+        <Field label="上下文兜底预算 (token)" hint="模型未填「上下文窗口」时，历史超过此值即从最旧消息开始裁剪">
+          <input
+            type="number"
+            value={a.maxContextTokens}
+            min={8000}
+            max={1000000}
+            step={4000}
+            onChange={(e) => patch({ maxContextTokens: num(e.target.value, 8000, 1000000, 96000) })}
+          />
+        </Field>
         <div className="card-row">
           <Field label="截图最大宽度 (px)" hint="越小越省 token，但过小会看不清细节">
             <input

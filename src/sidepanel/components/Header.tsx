@@ -1,9 +1,18 @@
+import { formatUsd } from '../../shared/context';
 import type { ModelPick } from '../../shared/types';
+
+interface Usage {
+  input: number;
+  output: number;
+  cost: number | null;
+  contextTokens?: number;
+  contextBudget?: number;
+}
 
 interface Props {
   models: ModelPick[];
   modelId: string;
-  usage: { input: number; output: number };
+  usage: Usage;
   running: boolean;
   onModel: (id: string) => void;
   onNewChat: () => void;
@@ -11,13 +20,31 @@ interface Props {
   onDetach: () => void;
 }
 
-function fmt(n: number): string {
-  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+function fmt(n: number | undefined): string {
+  if (n == null) return '—';
+  if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k';
   return String(n);
 }
 
+/** 上下文占用条的颜色随占用升高：绿 → 橙 → 红 */
+function meterColor(pct: number): string {
+  if (pct >= 0.9) return '#e5484d';
+  if (pct >= 0.7) return '#f5a623';
+  return '#3fb950';
+}
+
 export function Header(props: Props) {
+  const { usage } = props;
   const cur = props.models.find((m) => m.id === props.modelId);
+  const hasUsage = usage.input + usage.output > 0;
+  const pct =
+    usage.contextTokens && usage.contextBudget ? Math.min(1, usage.contextTokens / usage.contextBudget) : 0;
+
+  const usageTitle =
+    `输入 ${usage.input.toLocaleString()} · 输出 ${usage.output.toLocaleString()} tokens` +
+    (usage.cost != null ? `\n累计成本 ${formatUsd(usage.cost)}（按当前模型计费）` : '\n当前模型未配置计费，无法估算成本') +
+    (pct ? `\n上下文占用 ${fmt(usage.contextTokens)} / ${fmt(usage.contextBudget)}（${Math.round(pct * 100)}%）` : '');
+
   return (
     <header className="header">
       <div className="brand">
@@ -47,9 +74,21 @@ export function Header(props: Props) {
         </div>
       </div>
       <div className="actions">
-        {props.usage.input + props.usage.output > 0 && (
-          <span className="usage" title="本会话累计 token">
-            ↑{fmt(props.usage.input)} ↓{fmt(props.usage.output)}
+        {hasUsage && (
+          <span className="usage" title={usageTitle}>
+            {usage.cost != null ? (
+              <>
+                <b>{formatUsd(usage.cost)}</b>
+                <span className="usage-tok">
+                  {' '}
+                  ↑{fmt(usage.input)} ↓{fmt(usage.output)}
+                </span>
+              </>
+            ) : (
+              <>
+                ↑{fmt(usage.input)} ↓{fmt(usage.output)}
+              </>
+            )}
           </span>
         )}
         <button className="icon-btn" title="释放浏览器控制" onClick={props.onDetach}>
@@ -62,6 +101,11 @@ export function Header(props: Props) {
           ⚙
         </button>
       </div>
+      {pct > 0 && (
+        <div className="ctx-meter" title={usageTitle}>
+          <span style={{ width: `${Math.round(pct * 100)}%`, background: meterColor(pct) }} />
+        </div>
+      )}
     </header>
   );
 }

@@ -11,7 +11,13 @@ export function App() {
   const [running, setRunning] = useState(false);
   const [models, setModels] = useState<ModelPick[]>([]);
   const [modelId, setModelId] = useState('');
-  const [usage, setUsage] = useState({ input: 0, output: 0 });
+  const [usage, setUsage] = useState<{
+    input: number;
+    output: number;
+    cost: number | null;
+    contextTokens?: number;
+    contextBudget?: number;
+  }>({ input: 0, output: 0, cost: null });
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedBottom = useRef(true);
 
@@ -54,7 +60,14 @@ export function App() {
           setModelId(msg.modelId);
           break;
         case 'usage':
-          setUsage({ input: msg.input, output: msg.output });
+          setUsage((prev) => ({
+            input: msg.input,
+            output: msg.output,
+            cost: msg.cost,
+            // 上下文占用仅主循环请求会带上，其余（planner/切模型）沿用上次的值
+            contextTokens: msg.contextTokens ?? prev.contextTokens,
+            contextBudget: msg.contextBudget ?? prev.contextBudget,
+          }));
           break;
       }
     });

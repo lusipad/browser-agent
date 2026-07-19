@@ -61,12 +61,13 @@ npm run build          # 产物输出到 dist/
 ```
 src/
   shared/          类型、设置、系统提示词、工具函数（前后台共用）
+    context.ts       上下文治理：token 估算 + 预算裁剪 + 结果压缩 + 成本核算
   providers/       OpenAI 兼容适配器（SSE 流式解析 + 历史格式转换）
   background/      Service Worker：智能体主循环、会话、权限、标签页
     cdp.ts           chrome.debugger 会话、截图、控制台/网络缓冲
     reader.ts        注入页面的自包含 DOM 感知/操作函数（ref 注册表）
     tools/           工具定义与分发（含站点授权门控、动作后自动截图）
-    agent.ts         模型 ↔ 工具 迭代循环、上下文裁剪（旧截图清理）
+    agent.ts         模型 ↔ 工具 迭代循环、上下文治理调度、Planner/Validator
     session.ts       每窗口会话，持久化到 chrome.storage.session
   sidepanel/       React 侧边栏：对话时间线、审批卡片、模型切换
   options/         React 设置页：服务商、模型、安全、站点、高级
@@ -78,6 +79,8 @@ src/
 - **set-of-marks**：截图上给可交互元素叠加**编号框**，编号即元素 ref，模型「按编号点击」——视觉 grounding 最可靠的方式，远胜裸坐标（可在高级设置关闭）
 - **Planner + Validator**：任务开始先拆解步骤并定「成功判据」，模型停手时对照当前页面状态**自检是否真正达成**，未达成自动继续（有上限）
 - **稳定性**：动作/导航后等待 DOM complete + **网络静默（network-idle）**，适配 SPA 延迟加载
+- **上下文治理**：每次请求前对历史做 token 预算裁剪（对标 browser-use MessageManager）——始终保留系统提示 + 原始任务 + 最近一整轮，其余从最旧开始丢弃，超长 `read_page`/`get_page_text` 结果压缩中段，且**严格维持 `tool_use`/`tool_result` 配对**（避免 OpenAI 拒绝孤儿）。优先用模型自报的上下文窗口算预算，缺省回落全局兜底值
+- **成本可见**：给模型配置计费（$/100 万 token）后，侧边栏实时显示累计成本；header 底部一条细进度条展示上下文占用（接近上限转橙/红）
 - 内部消息用 Anthropic 风格 content blocks，适配器与 OpenAI 格式互转（tool_use ↔ tool_calls，截图从 tool 消息挪到随后的 user 消息）
 - 页面感知函数以 `func` 注入且**完全自包含**（不引用模块级标识符），ref 注册表挂在隔离世界，导航后自动失效
 - Service Worker 运行期定时调扩展 API 保活；被回收后可从 `chrome.storage.session` 恢复会话
@@ -94,7 +97,7 @@ npm run test:unit # 纯逻辑单元测试（node:test，esbuild 打包后运行�
 npm run test:e2e  # 真实 Chromium 里跑感知层（需先 npx playwright install chromium）
 ```
 
-- **单元测试**（`test/unit/`）：适配器流式解析 / 工具分片累积 / 历史格式转换、set-of-marks 几何、`wait_for` 条件、站点权限匹配、配置合并、工具函数——共 30 项，纯 Node、毫秒级。
+- **单元测试**（`test/unit/`）：适配器流式解析 / 工具分片累积 / 历史格式转换、set-of-marks 几何、`wait_for` 条件、站点权限匹配、配置合并、工具函数，以及**上下文治理**（token 估算 / 预算裁剪 / 配对完整性 / 结果压缩 / 成本换算）——共 48 项，纯 Node、毫秒级。
 - **E2E**（`test/e2e/`）：用 Playwright 把 `pageAgent` 注入**真实 Chromium** 页面，在带 Shadow DOM、同源 iframe、表单、视口外元素的 fixture 上验证——Shadow DOM 穿透、iframe 坐标换算、`form_input` 事件触发、`probe`。这是 jsdom（无布局）覆盖不了、也是感知层最需要真机验证的部分。
 - 全链路的浏览器行为（CDP 可信输入、侧边栏、完整 agent 循环）仍需加载扩展后按 [`TESTING.md`](./TESTING.md) 手动验证或用设置页「诊断」。
 

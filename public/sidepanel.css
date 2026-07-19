@@ -60,6 +60,23 @@ body {
   border-bottom: 1px solid var(--border);
   background: var(--bg);
   flex: 0 0 auto;
+  position: relative;
+}
+/* 上下文占用条：贴在 header 底部，宽度=占用比例，接近上限时变红 */
+.ctx-meter {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: transparent;
+  pointer-events: none;
+}
+.ctx-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: 0 2px 2px 0;
+  transition: width 0.3s ease, background 0.3s ease;
 }
 .brand {
   display: flex;
@@ -128,6 +145,14 @@ body {
   font-family: var(--mono);
   margin-right: 4px;
   white-space: nowrap;
+  cursor: default;
+}
+.usage b {
+  color: var(--text);
+  font-weight: 600;
+}
+.usage-tok {
+  opacity: 0.7;
 }
 .icon-btn {
   border: none;

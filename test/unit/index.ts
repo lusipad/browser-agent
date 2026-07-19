@@ -6,3 +6,4 @@ import './settings.test';
 import './permissions.test';
 import './providers.test';
 import './page.test';
+import './context.test';

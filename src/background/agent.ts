@@ -11,6 +11,7 @@ import type {
   TextBlock,
   ToolUseBlock,
 } from '../shared/types';
+import { computeCost, governContext, inputBudgetFor } from '../shared/context';
 import { errText, textOfBlocks, truncate, uid } from '../shared/util';
 import { runInPage } from './inject';
 import type { Session } from './session';
@@ -71,12 +72,20 @@ export async function runTurn(session: Session, userText: string): Promise<void>
       let streamed = '';
       session.upsert({ kind: 'assistant', id: asstId, text: '', done: false });
 
-      const result = await streamOnce(session, provider, model, sysBase, prepareForApi(session.messages, model.vision, adv.maxImagesKept), toolSpecs(), (delta) => {
+      const budget = inputBudgetFor(model.contextWindow, adv.maxTokens, adv.maxContextTokens);
+      const governed = governContext(session.messages, {
+        vision: model.vision,
+        maxImages: adv.maxImagesKept,
+        maxInputTokens: budget,
+      });
+
+      const result = await streamOnce(session, provider, model, sysBase, governed.messages, toolSpecs(), (delta) => {
         streamed += delta;
         session.emit({ type: 'text_delta', id: asstId, delta });
       });
 
       accrueUsage(session, result.usage);
+      emitUsage(session, model, { tokens: governed.estInputTokens, budget });
       const finalText = textOfBlocks(result.blocks) || streamed;
       session.upsert({ kind: 'assistant', id: asstId, text: finalText, done: true });
       session.messages.push({
@@ -186,7 +195,18 @@ function accrueUsage(session: Session, usage?: { input: number; output: number }
   if (!usage) return;
   session.usage.input += usage.input;
   session.usage.output += usage.output;
-  session.emit({ type: 'usage', input: session.usage.input, output: session.usage.output });
+}
+
+/** 向面板推送累计 token / 成本 / 上下文占用（成本按当前模型计费换算） */
+function emitUsage(session: Session, model: ModelConfig, context?: { tokens: number; budget: number }): void {
+  session.emit({
+    type: 'usage',
+    input: session.usage.input,
+    output: session.usage.output,
+    cost: computeCost(session.usage, model.pricing),
+    contextTokens: context?.tokens,
+    contextBudget: context?.budget,
+  });
 }
 
 /** Planner：把任务拆成清单并给出可观测的成功判据（不调用工具） */
@@ -213,6 +233,7 @@ async function runPlanner(
       session.emit({ type: 'text_delta', id, delta: d });
     });
     accrueUsage(session, res.usage);
+    emitUsage(session, model);
     text = textOfBlocks(res.blocks) || text;
   } catch (e) {
     // 规划失败不致命：直接进入执行
@@ -256,6 +277,7 @@ async function runValidator(
     ];
     const res = await streamOnce(session, provider, model, sys, [{ role: 'user', content: user }], [], () => {});
     accrueUsage(session, res.usage);
+    emitUsage(session, model);
     return parseVerdict(textOfBlocks(res.blocks));
   } catch (e) {
     // 校验失败时不阻塞收尾，视为完成
@@ -289,40 +311,6 @@ function parseVerdict(text: string): Verdict {
   const negative = /\b(not\s+(done|complete)|incomplete|未完成|没有完成|尚未)\b/i.test(text);
   const positive = /\b(done|complete|success|完成|已完成|通过)\b/i.test(text);
   return { done: positive && !negative, reason: truncate(text.trim(), 200), next: '' };
-}
-
-/**
- * 发给 API 前的历史整理（不改动原始历史）：
- * - 只保留最近 maxImages 张截图，更早的替换为占位文本
- * - 无视觉模型：移除全部图片
- */
-function prepareForApi(messages: ChatMessage[], vision: boolean, maxImages: number): ChatMessage[] {
-  const placeholder = vision
-    ? '[older screenshot removed to save context — take a fresh one if needed]'
-    : '[screenshot omitted: current model has no vision — use read_page / get_page_text instead]';
-  let remaining = vision ? Math.max(0, maxImages) : 0;
-  const clone: ChatMessage[] = messages.map((m) => ({
-    role: m.role,
-    content: m.content.map((b) => (b.type === 'tool_result' ? { ...b, content: b.content.map((c) => ({ ...c })) } : { ...b })),
-  }));
-  for (let i = clone.length - 1; i >= 0; i--) {
-    const content = clone[i].content;
-    for (let j = content.length - 1; j >= 0; j--) {
-      const b = content[j];
-      if (b.type === 'image') {
-        if (remaining > 0) remaining--;
-        else content[j] = { type: 'text', text: placeholder };
-      } else if (b.type === 'tool_result') {
-        for (let k = b.content.length - 1; k >= 0; k--) {
-          if (b.content[k].type === 'image') {
-            if (remaining > 0) remaining--;
-            else b.content[k] = { type: 'text', text: placeholder };
-          }
-        }
-      }
-    }
-  }
-  return clone;
 }
 
 /** 时间线里最多保留最近 keep 张截图（UI 内存控制） */

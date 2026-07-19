@@ -1,4 +1,5 @@
 // Service Worker 入口：面板连接管理、消息路由、会话生命周期
+import { computeCost } from '../shared/context';
 import { loadConfig, onConfigChange, saveConfig } from '../shared/settings';
 import type { AppConfig, ModelPick, PanelToBg } from '../shared/types';
 import { runTurn } from './agent';
@@ -48,6 +49,13 @@ function modelPicks(cfg: AppConfig): ModelPick[] {
   }));
 }
 
+/** 用当前所选模型的计费换算累计成本并推送（token 数不变，仅重算美元） */
+function pushUsage(s: Session): void {
+  if (s.usage.input + s.usage.output <= 0) return;
+  const model = s.cfg.models.find((m) => m.id === s.modelId);
+  s.emit({ type: 'usage', input: s.usage.input, output: s.usage.output, cost: computeCost(s.usage, model?.pricing) });
+}
+
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== 'panel') return;
   let bound: Session | null = null;
@@ -63,9 +71,7 @@ chrome.runtime.onConnect.addListener((port) => {
             s.cfg = await loadConfig();
             if (!s.cfg.models.find((m) => m.id === s.modelId)) s.modelId = s.cfg.defaultModelId;
             port.postMessage(s.snapshot(modelPicks(s.cfg)));
-            if (s.usage.input + s.usage.output > 0) {
-              port.postMessage({ type: 'usage', input: s.usage.input, output: s.usage.output });
-            }
+            pushUsage(s);
             break;
           }
           case 'send': {
@@ -87,6 +93,7 @@ chrome.runtime.onConnect.addListener((port) => {
           case 'set_model': {
             if (bound && bound.cfg.models.find((m) => m.id === msg.modelId)) {
               bound.modelId = msg.modelId;
+              pushUsage(bound); // 新模型计费不同 → 立即重算成本
               void bound.persist();
             }
             break;
@@ -142,6 +149,7 @@ onConfigChange((cfg) => {
     s.cfg = cfg;
     if (!cfg.models.find((m) => m.id === s.modelId)) s.modelId = cfg.defaultModelId;
     s.emit({ type: 'models', models: modelPicks(cfg), modelId: s.modelId });
+    pushUsage(s); // 计费可能已改动 → 重算成本
   }
 });
 

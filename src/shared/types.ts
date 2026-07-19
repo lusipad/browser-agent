@@ -54,6 +54,13 @@ export interface ProviderConfig {
   apiKey: string;
 }
 
+export interface ModelPricing {
+  /** 每 100 万输入 token 的美元价 */
+  input: number;
+  /** 每 100 万输出 token 的美元价 */
+  output: number;
+}
+
 export interface ModelConfig {
   /** `${providerId}/${model}` */
   id: string;
@@ -63,6 +70,10 @@ export interface ModelConfig {
   label: string;
   /** 是否支持图像输入；false 时自动省略截图，改用 read_page */
   vision: boolean;
+  /** 上下文窗口大小（token）；用于计算输入预算，缺省则回落到 advanced.maxContextTokens */
+  contextWindow?: number;
+  /** 计费（美元 / 100 万 token）；填写后侧边栏显示累计成本 */
+  pricing?: ModelPricing;
 }
 
 export interface SafetySettings {
@@ -78,6 +89,8 @@ export interface AdvancedSettings {
   maxIterations: number;
   /** 对话历史中保留的最近截图数量，更早的会被清理以节省 token */
   maxImagesKept: number;
+  /** 输入 token 兜底预算：模型未填 contextWindow 时，历史超过此值即从最旧开始裁剪 */
+  maxContextTokens: number;
   screenshotMaxWidth: number;
   jpegQuality: number;
   temperature: number | null;
@@ -186,4 +199,14 @@ export type BgToPanel =
   | { type: 'text_delta'; id: string; delta: string }
   | { type: 'run_state'; running: boolean }
   | { type: 'models'; models: ModelPick[]; modelId: string }
-  | { type: 'usage'; input: number; output: number };
+  | {
+      type: 'usage';
+      input: number;
+      output: number;
+      /** 累计成本（美元）；当前模型未配置计费时为 null */
+      cost: number | null;
+      /** 上次请求发送前估算的输入 token 占用（治理后） */
+      contextTokens?: number;
+      /** 当前输入 token 预算 */
+      contextBudget?: number;
+    };

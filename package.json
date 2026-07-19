@@ -1,6 +1,6 @@
 {
   "name": "browser-agent",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "description": "Claude-in-Chrome 风格的多模型浏览器智能体扩展（任意 OpenAI 兼容端点）",

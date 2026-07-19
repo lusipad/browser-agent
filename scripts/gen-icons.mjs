@@ -58,32 +58,48 @@ function roundRectDist(x, y, size) {
   return Math.min(Math.max(qx, qy), 0) + Math.hypot(ox, oy) - r;
 }
 
+// 圆角矩形有符号距离（居中于 cx,cy，半宽/半高 hw/hh，圆角 rr）
+function sdRoundRect(px, py, cx, cy, hw, hh, rr) {
+  const qx = Math.abs(px - cx) - (hw - rr);
+  const qy = Math.abs(py - cy) - (hh - rr);
+  const ox = Math.max(qx, 0), oy = Math.max(qy, 0);
+  return Math.min(Math.max(qx, qy), 0) + Math.hypot(ox, oy) - rr;
+}
+// 距离 → 覆盖率（抗锯齿）
+function cov(d) {
+  return d < -0.5 ? 1 : d < 0.5 ? 0.5 - d : 0;
+}
+
 function pixel(x, y, size) {
   const d = roundRectDist(x, y, size);
   if (d >= 0.5) return [0, 0, 0, 0];
   const alpha = d < -0.5 ? 255 : Math.round((0.5 - d) * 255);
+  const px = x + 0.5, py = y + 0.5;
   // 对角渐变：靛蓝 → 天蓝
   const t = (x + y) / (2 * size);
-  let r = Math.round(79 + (14 - 79) * t);
-  let g = Math.round(70 + (165 - 70) * t);
-  let b = Math.round(229 + (233 - 229) * t);
-  // 白色圆点（光标示意）
-  const cx = size * 0.5, cy = size * 0.44, cr = size * 0.17;
-  const dd = Math.hypot(x - cx + 0.5, y - cy + 0.5) - cr;
-  if (dd < 0.5) {
-    const w = dd < -0.5 ? 1 : 0.5 - dd;
-    r = Math.round(r + (255 - r) * w);
-    g = Math.round(g + (255 - g) * w);
-    b = Math.round(b + (255 - b) * w);
+  let r = 79 + (14 - 79) * t;
+  let g = 70 + (165 - 70) * t;
+  let b = 229 + (233 - 229) * t;
+  const blend = (nr, ng, nb, c) => {
+    if (c <= 0) return;
+    r += (nr - r) * c; g += (ng - g) * c; b += (nb - b) * c;
+  };
+  // 机器人天线（白色小杆 + 圆点），仅较大尺寸
+  if (size >= 32) {
+    blend(255, 255, 255, cov(sdRoundRect(px, py, size * 0.5, size * 0.28, size * 0.018, size * 0.055, size * 0.015)));
+    blend(255, 255, 255, cov(Math.hypot(px - size * 0.5, py - size * 0.2) - size * 0.055));
   }
-  // 底部白色小横条（面板示意）
-  const byTop = size * 0.68, byBot = size * 0.76, bxL = size * 0.3, bxR = size * 0.7;
-  if (y >= byTop && y <= byBot && x >= bxL && x <= bxR && size >= 32) {
-    r = Math.round(r + (255 - r) * 0.9);
-    g = Math.round(g + (255 - g) * 0.9);
-    b = Math.round(b + (255 - b) * 0.9);
+  // 白色机器人头（圆角方脸）
+  blend(255, 255, 255, cov(sdRoundRect(px, py, size * 0.5, size * 0.56, size * 0.27, size * 0.23, size * 0.09)));
+  // 两只靛蓝眼睛
+  const eyR = size * 0.062;
+  blend(79, 70, 229, cov(Math.hypot(px - size * 0.4, py - size * 0.53) - eyR));
+  blend(79, 70, 229, cov(Math.hypot(px - size * 0.6, py - size * 0.53) - eyR));
+  // 微笑嘴（白底上的靛蓝短横），仅较大尺寸
+  if (size >= 48) {
+    blend(79, 70, 229, cov(sdRoundRect(px, py, size * 0.5, size * 0.66, size * 0.1, size * 0.018, size * 0.018)));
   }
-  return [r, g, b, alpha];
+  return [Math.round(r), Math.round(g), Math.round(b), alpha];
 }
 
 export function genIcons(dir) {

@@ -5,3 +5,4 @@ test-results/
 *.log
 .DS_Store
 public/icons/
+.gstack/

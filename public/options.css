@@ -279,6 +279,104 @@ nav {
   color: var(--err);
 }
 
+/* ---------- Registry / Fetch ---------- */
+.registry-section {
+  margin-bottom: 18px;
+}
+.registry-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.fetch-btn {
+  white-space: nowrap;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.fetch-btn:hover {
+  background: var(--accent-soft);
+}
+.fetch-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.registry-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.registry-error {
+  color: var(--err);
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.registry-results {
+  padding: 0;
+  overflow: hidden;
+}
+.registry-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.registry-title {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.registry-date {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.registry-group {
+  padding: 8px 0;
+}
+.registry-group-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 16px 6px;
+}
+.registry-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.registry-item:hover {
+  background: var(--accent-soft);
+}
+.registry-item input[type="checkbox"] {
+  margin-top: 3px;
+  flex: 0 0 auto;
+}
+.registry-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.registry-item-label {
+  font-weight: 500;
+  font-size: 13.5px;
+}
+.registry-item-meta {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+}
+.registry-actions {
+  display: flex;
+  gap: 10px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+}
+
 /* ---------- Toggle ---------- */
 .toggles {
   display: flex;

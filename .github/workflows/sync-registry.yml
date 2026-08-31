@@ -1,0 +1,46 @@
+name: Sync Model Registry
+
+on:
+  schedule:
+    # Every Monday 08:00 UTC
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: node scripts/sync-registry.mjs
+
+      - name: Check for changes
+        id: diff
+        run: |
+          if git diff --quiet registry/models.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Pull Request
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: auto/sync-registry
+          commit-message: 'chore: sync model registry from LiteLLM'
+          title: 'chore: sync model registry from LiteLLM'
+          body: |
+            Automated weekly sync from [LiteLLM model database](https://github.com/BerriAI/litellm).
+
+            Run `npm run sync-registry` locally to preview changes.
+          labels: bot
+          delete-branch: true

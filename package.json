@@ -12,6 +12,7 @@
     "test": "npm run typecheck && npm run test:unit && npm run test:e2e",
     "test:unit": "node test/run-unit.mjs",
     "test:e2e": "node --test test/e2e/collector.e2e.mjs test/e2e/extract.e2e.mjs",
+    "sync-registry": "node scripts/sync-registry.mjs",
     "bench": "node eval/perception.bench.mjs",
     "bench:e2e": "node eval/agent-e2e.bench.mjs"
   },

@@ -90,6 +90,23 @@ export const optionsDict = {
   'opt.models.priceOutput': { zh: '输出', en: 'Output' },
   'opt.models.setDefault': { zh: '设为默认', en: 'Set as default' },
   'opt.models.add': { zh: '+ 添加模型', en: '+ Add model' },
+  'opt.models.fetchLatest': { zh: '拉取最新模型', en: 'Fetch latest models' },
+  'opt.models.fetching': { zh: '拉取中…', en: 'Fetching…' },
+  'opt.models.fetchHint': {
+    zh: '从远程模型仓库拉取最新的模型清单，无需更新扩展',
+    en: 'Pull the latest model list from the remote registry — no extension update needed',
+  },
+  'opt.models.fetchFail': { zh: '拉取失败：{0}', en: 'Fetch failed: {0}' },
+  'opt.models.fetchFound': {
+    zh: '发现 {0} 个新模型，{1} 个已有模型有更新',
+    en: '{0} new model(s), {1} existing model(s) with updates',
+  },
+  'opt.models.fetchUpToDate': { zh: '模型清单已是最新', en: 'Model list is up to date' },
+  'opt.models.registryDate': { zh: '仓库更新于 {0}', en: 'Registry updated {0}' },
+  'opt.models.newModelsLabel': { zh: '新模型', en: 'New models' },
+  'opt.models.updatedModelsLabel': { zh: '可更新', en: 'Updates available' },
+  'opt.models.importSelected': { zh: '导入选中（{0}）', en: 'Import selected ({0})' },
+  'opt.models.dismiss': { zh: '关闭', en: 'Dismiss' },
 
   // 安全与确认
   'opt.safety.title': { zh: '安全与确认', en: 'Safety & Confirmations' },

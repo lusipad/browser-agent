@@ -5,6 +5,16 @@ export const sidepanelDict = {
   'header.noVision': { zh: '无视觉', en: 'no vision' },
   'header.model': { zh: '选择模型', en: 'Select model' },
   'header.vision': { zh: '支持视觉', en: 'vision' },
+  'header.visionUse': {
+    zh: '本次会话是否使用视觉（截图感知）；新对话时重置为跟随模型',
+    en: 'Use vision (screenshot perception) for this session; resets to follow the model on new chat',
+  },
+  'header.visionOn': { zh: '视觉：开', en: 'Vision: on' },
+  'header.visionOff': { zh: '视觉：关', en: 'Vision: off' },
+  'header.visionForce': {
+    zh: '该模型未标记支持视觉；强制开启可能被部分接口拒绝',
+    en: 'This model is not declared vision-capable; forcing vision on may be rejected by some APIs',
+  },
   'header.history': { zh: '会话历史', en: 'History' },
   'header.detach': { zh: '释放浏览器控制', en: 'Release browser control' },
   'header.newChat': { zh: '新对话', en: 'New chat' },

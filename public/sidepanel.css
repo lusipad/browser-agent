@@ -134,6 +134,33 @@ body {
   text-overflow: ellipsis;
   max-width: 210px;
 }
+.model-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.vision-btn {
+  font-size: 10px;
+  line-height: 1;
+  padding: 4px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.vision-btn.on {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.vision-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 .actions {
   display: flex;
   align-items: center;

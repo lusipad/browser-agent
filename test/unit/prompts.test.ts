@@ -14,8 +14,8 @@ test('系统提示含反 prompt-injection 段（安全关键，防回归）', ()
   assert.match(p, /require an explicit request from the USER/);
 });
 
-test('无视觉模型提示改用文本感知', () => {
+test('无视觉提示改用文本感知（会话级关闭视觉）', () => {
   const p = buildSystemPrompt({ ...env, vision: false });
-  assert.match(p, /does NOT support images/);
+  assert.match(p, /Image input is disabled/);
   assert.match(p, /read_page/);
 });

@@ -17,6 +17,7 @@ export function App() {
   const [running, setRunning] = useState(false);
   const [models, setModels] = useState<ModelPick[]>([]);
   const [modelId, setModelId] = useState('');
+  const [visionOverride, setVisionOverride] = useState<boolean | null>(null);
   const [usage, setUsage] = useState<{
     input: number;
     output: number;
@@ -44,6 +45,7 @@ export function App() {
           setRunning(msg.running);
           setModels(msg.models);
           setModelId(msg.modelId);
+          setVisionOverride(msg.visionOverride);
           break;
         case 'item_upsert':
           setItems((prev) => {
@@ -114,9 +116,14 @@ export function App() {
         modelId={modelId}
         usage={usage}
         items={items}
+        visionOverride={visionOverride}
         onModel={(id) => {
           setModelId(id);
           port.post({ type: 'set_model', modelId: id });
+        }}
+        onVision={(enabled) => {
+          setVisionOverride(enabled);
+          port.post({ type: 'set_vision', enabled });
         }}
         onNewChat={() => port.post({ type: 'new_chat' })}
         onHistory={() => setHistoryOpen((o) => !o)}

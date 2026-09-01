@@ -32,6 +32,8 @@ export class Session implements ApprovalHost {
   groupedTabs = new Set<number>();
   gifFrames: GifFrame[] = [];
   usage = { input: 0, output: 0 };
+  /** 会话级视觉覆盖：null=跟随模型，false=本会话关闭视觉，true=本会话强制开启 */
+  visionOverride: boolean | null = null;
   port: chrome.runtime.Port | null = null;
   private pendingApprovals = new Map<string, (d: ApprovalDecision) => void>();
 
@@ -41,8 +43,9 @@ export class Session implements ApprovalHost {
     this.modelId = cfg.defaultModelId;
   }
 
-  modelVision(): boolean {
-    return this.cfg.models.find((m) => m.id === this.modelId)?.vision ?? true;
+  /** 本会话生效的视觉策略 = 会话覆盖 ?? 模型能力 */
+  effectiveVision(): boolean {
+    return this.visionOverride ?? this.cfg.models.find((m) => m.id === this.modelId)?.vision ?? true;
   }
 
   /** 按当前界面语言翻译（面向用户的后台文案） */
@@ -122,6 +125,7 @@ export class Session implements ApprovalHost {
       running: this.running,
       modelId: this.modelId,
       models,
+      visionOverride: this.visionOverride,
     };
   }
 
@@ -140,6 +144,7 @@ export class Session implements ApprovalHost {
       timeline: this.timeline,
       modelId: this.modelId,
       usage: this.usage,
+      visionOverride: this.visionOverride,
     };
   }
 
@@ -150,6 +155,7 @@ export class Session implements ApprovalHost {
     this.timeline = conv.timeline ?? [];
     this.usage = conv.usage ?? { input: 0, output: 0 };
     if (this.cfg.models.find((m) => m.id === conv.modelId)) this.modelId = conv.modelId;
+    this.visionOverride = conv.visionOverride ?? null;
     this.gifFrames = [];
     this.tempAllowedHosts.clear();
     this.groupedTabs.clear();
@@ -166,6 +172,7 @@ export class Session implements ApprovalHost {
     this.tempAllowedHosts.clear();
     this.groupedTabs.clear();
     this.usage = { input: 0, output: 0 };
+    this.visionOverride = null;
     this.currentTabId = null;
     this.aborted = false;
     void this.persist();
@@ -181,6 +188,7 @@ export class Session implements ApprovalHost {
       messages: this.messages,
       timeline: this.timeline,
       modelId: this.modelId,
+      visionOverride: this.visionOverride,
       currentTabId: this.currentTabId,
       usage: this.usage,
       tempAllowedHosts: [...this.tempAllowedHosts],
@@ -222,6 +230,7 @@ export class Session implements ApprovalHost {
         s.messages = data.messages ?? [];
         s.timeline = data.timeline ?? [];
         s.modelId = data.modelId ?? cfg.defaultModelId;
+        s.visionOverride = typeof data.visionOverride === 'boolean' ? data.visionOverride : null;
         s.currentTabId = data.currentTabId ?? null;
         s.usage = data.usage ?? { input: 0, output: 0 };
         s.tempAllowedHosts = new Set(data.tempAllowedHosts ?? []);

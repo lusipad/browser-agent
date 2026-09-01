@@ -7,6 +7,8 @@ export interface ArchivedConv extends ConvMeta {
   timeline: TimelineItem[];
   modelId: string;
   usage: { input: number; output: number };
+  /** 会话级视觉覆盖（null=跟随模型）；用于恢复历史会话时还原感知方式 */
+  visionOverride?: boolean | null;
 }
 
 const INDEX_KEY = 'conv_index';

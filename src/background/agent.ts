@@ -58,7 +58,7 @@ export async function runTurn(
 
   const sysBase = buildSystemPrompt({
     date: new Date().toISOString().slice(0, 10),
-    vision: model.vision,
+    vision: session.effectiveVision(),
     screenshotMaxWidth: adv.screenshotMaxWidth,
   });
 
@@ -83,7 +83,7 @@ export async function runTurn(
 
       const budget = inputBudgetFor(model.contextWindow, adv.maxTokens, adv.maxContextTokens);
       const governed = governContext(session.messages, {
-        vision: model.vision,
+        vision: session.effectiveVision(),
         maxImages: adv.maxImagesKept,
         maxInputTokens: budget,
       });
@@ -331,7 +331,7 @@ async function currentStateBlocks(session: Session): Promise<Array<TextBlock | I
   const tabId = session.currentTabId;
   if (tabId == null) return [{ type: 'text', text: '(no active browser tab — judge from the conversation)' }];
   try {
-    if (session.modelVision()) return await shotBlocks(session, tabId, 'validation');
+    if (session.effectiveVision()) return await shotBlocks(session, tabId, 'validation');
     const r = await runInPage(tabId, 'read_page', { filter: 'interactive', max_chars: 6000 });
     return [{ type: 'text', text: String(r?.text ?? '(empty)') }];
   } catch (e) {

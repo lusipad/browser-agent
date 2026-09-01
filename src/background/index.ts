@@ -153,6 +153,15 @@ chrome.runtime.onConnect.addListener((port) => {
             }
             break;
           }
+          case 'set_vision': {
+            // 会话级临时视觉配置：true=本轮会话强制开启，false=关闭；新对话时重置为跟随模型
+            if (bound) {
+              bound.visionOverride = msg.enabled;
+              void bound.persist();
+              port.postMessage(bound.snapshot(modelPicks(bound.cfg)));
+            }
+            break;
+          }
           case 'approval':
             bound?.resolveApproval(msg.id, msg.decision);
             break;

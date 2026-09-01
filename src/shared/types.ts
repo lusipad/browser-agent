@@ -200,6 +200,7 @@ export type PanelToBg =
   | { type: 'switch_conv'; id: string }
   | { type: 'delete_conv'; id: string }
   | { type: 'set_model'; modelId: string }
+  | { type: 'set_vision'; enabled: boolean }
   | { type: 'approval'; id: string; decision: ApprovalDecision }
   | { type: 'detach' }
   | { type: 'open_options' };
@@ -211,6 +212,8 @@ export type BgToPanel =
       running: boolean;
       modelId: string;
       models: ModelPick[];
+      /** 会话级视觉覆盖：null=跟随模型，false=本会话关闭，true=本会话强制开启 */
+      visionOverride: boolean | null;
     }
   | { type: 'item_upsert'; item: TimelineItem }
   | { type: 'text_delta'; id: string; delta: string }

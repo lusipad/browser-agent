@@ -81,7 +81,7 @@ export async function shotBlocks(
   label?: string,
 ): Promise<Array<TextBlock | ImageBlock>> {
   const adv = session.cfg.advanced;
-  const vision = session.modelVision();
+  const vision = session.effectiveVision();
 
   // set-of-marks：先收集可交互元素，作为编号框叠加到截图上（仅视觉模型）
   let rawMarks: RawMark[] | undefined;

@@ -17,7 +17,10 @@ interface Props {
   usage: Usage;
   running: boolean;
   items: TimelineItem[];
+  /** 会话级视觉覆盖（null=跟随模型，false=关闭，true=强制开启） */
+  visionOverride: boolean | null;
   onModel: (id: string) => void;
+  onVision: (enabled: boolean) => void;
   onNewChat: () => void;
   onHistory: () => void;
   onOptions: () => void;
@@ -44,6 +47,8 @@ export function Header(props: Props) {
   const hasUsage = usage.input + usage.output > 0;
   const pct =
     usage.contextTokens && usage.contextBudget ? Math.min(1, usage.contextTokens / usage.contextBudget) : 0;
+  const visionOn = props.visionOverride ?? cur?.vision ?? false;
+  const visionTitle = t('header.visionUse') + (cur && !cur.vision && visionOn ? '\n' + t('header.visionForce') : '');
 
   const usageTitle =
     t('header.usageDetail', [usage.input.toLocaleString(), usage.output.toLocaleString()]) +
@@ -56,21 +61,33 @@ export function Header(props: Props) {
       <div className="brand">
         <span className="logo" />
         <div className="model-wrap">
-          <select
-            className="model-select"
-            value={props.modelId}
-            disabled={props.running}
-            onChange={(e) => props.onModel(e.target.value)}
-            title={cur ? `${cur.providerName} · ${cur.vision ? t('header.vision') : t('header.noVision')}` : t('header.model')}
-          >
-            {!props.models.length && <option value="">{t('header.noModel')}</option>}
-            {props.models.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.label}
-                {m.vision ? '' : ` 〔${t('header.noVision')}〕`}
-              </option>
-            ))}
-          </select>
+          <div className="model-row">
+            <select
+              className="model-select"
+              value={props.modelId}
+              disabled={props.running}
+              onChange={(e) => props.onModel(e.target.value)}
+              title={cur ? `${cur.providerName} · ${cur.vision ? t('header.vision') : t('header.noVision')}` : t('header.model')}
+            >
+              {!props.models.length && <option value="">{t('header.noModel')}</option>}
+              {props.models.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label}
+                  {m.vision ? '' : ` 〔${t('header.noVision')}〕`}
+                </option>
+              ))}
+            </select>
+            {cur && (
+              <button
+                className={`vision-btn${visionOn ? ' on' : ''}`}
+                disabled={props.running}
+                title={visionTitle}
+                onClick={() => props.onVision(!visionOn)}
+              >
+                {visionOn ? t('header.visionOn') : t('header.visionOff')}
+              </button>
+            )}
+          </div>
           {cur && (
             <span className="model-meta">
               {cur.providerName}

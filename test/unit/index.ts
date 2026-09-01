@@ -12,3 +12,4 @@ import './history.test';
 import './prompts.test';
 import './i18n.test';
 import './registry.test';
+import './session.test';

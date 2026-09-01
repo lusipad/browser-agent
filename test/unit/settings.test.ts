@@ -47,3 +47,7 @@ test('DEFAULT_CONFIG: GPT-5.6 默认使用服务商实际提供的 Terra 模型�
   assert.ok(DEFAULT_CONFIG.models.some((m) => m.model === 'gpt-5.6-terra'));
   assert.ok(!DEFAULT_CONFIG.models.some((m) => m.model === 'gpt-5.6'));
 });
+
+test('DEFAULT_CONFIG: 单轮迭代上限为 100', () => {
+  assert.equal(DEFAULT_CONFIG.advanced.maxIterations, 100);
+});

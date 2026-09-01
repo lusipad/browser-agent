@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## Unreleased
+
+### Changed / 变更
+
+- **单轮迭代上限放宽** — 「单轮最大迭代次数」默认值由 24 提升至 100，设置页可调范围仍为 1–100（新安装生效；已保存的设置不受影响）。
+
+---
+
 ## 0.3.0 — 2026-09-02
 
 ### Added / 新增

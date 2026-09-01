@@ -27,7 +27,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     confirmUpload: true,
   },
   advanced: {
-    maxIterations: 24,
+    maxIterations: 100,
     maxImagesKept: 4,
     maxContextTokens: 96000,
     screenshotMaxWidth: 1366,

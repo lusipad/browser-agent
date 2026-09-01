@@ -39,7 +39,7 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
               value={a.maxIterations}
               min={1}
               max={100}
-              onChange={(e) => patch({ maxIterations: num(e.target.value, 1, 100, 24) })}
+              onChange={(e) => patch({ maxIterations: num(e.target.value, 1, 100, 100) })}
             />
           </Field>
           <Field label={t('opt.advanced.maxImagesKept')} hint={t('opt.advanced.maxImagesKeptHint')}>

@@ -6,6 +6,22 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 0.3.0 — 2026-09-02
+
+### Added / 新增
+
+- **远程模型仓库热更新** — `registry/models.json` 成为独立于扩展发版的模型清单源：设置页一键「拉取最新模型」，预览变更、勾选导入并自动补全缺失的服务商配置，无需等待新版本。
+- **LiteLLM 开源模型库同步** — 接入 LiteLLM 模型数据库自动同步定价、上下文窗口、视觉支持等元数据，覆盖 22 个服务商、109 个模型（含 Anthropic、xAI、Mistral、Together 等）。
+- **服务商与模型扩充** — 新增 Google AI Studio、Groq、硅基流动 SiliconFlow，以及智谱 AI、阿里云百炼、月之暗面 Kimi、阶跃星辰、百川智能、MiniMax、讯飞星火等国内主流服务商。
+- **每周自动同步 CI** — GitHub Actions 每周拉取 LiteLLM 最新数据，有变更时自动创建 PR；也可通过 `npm run sync-registry` 手动更新。
+- **发布工作流** — 新增 `.github/workflows/release.yml`，支持一键创建 GitHub Release。
+
+### Testing / 测试
+
+- 80 个单元测试全部通过，TypeScript 类型检查通过，构建产物正常生成。
+
+---
+
 ## 0.2.2 — 2026-07-19
 
 ### Fixed / 修复

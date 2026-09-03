@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { detectLang, makeT, resolveLang, type Lang } from '../shared/i18n';
 import { I18nProvider } from '../shared/i18nReact';
 import { loadConfig, onConfigChange } from '../shared/settings';
-import type { BgToPanel, ConvMeta, ModelPick, TimelineItem } from '../shared/types';
+import type { BgToPanel, ConvMeta, BindingPick, TimelineItem } from '../shared/types';
 import { BgPort } from './port';
 import { Timeline } from './components/Timeline';
 import { Composer } from './components/Composer';
@@ -15,8 +15,8 @@ export function App() {
   const t = useMemo(() => makeT(lang), [lang]);
   const [items, setItems] = useState<TimelineItem[]>([]);
   const [running, setRunning] = useState(false);
-  const [models, setModels] = useState<ModelPick[]>([]);
-  const [modelId, setModelId] = useState('');
+  const [bindings, setBindings] = useState<BindingPick[]>([]);
+  const [bindingId, setBindingId] = useState('');
   const [visionOverride, setVisionOverride] = useState<boolean | null>(null);
   const [usage, setUsage] = useState<{
     input: number;
@@ -43,8 +43,8 @@ export function App() {
         case 'snapshot':
           setItems(msg.items);
           setRunning(msg.running);
-          setModels(msg.models);
-          setModelId(msg.modelId);
+          setBindings(msg.bindings);
+          setBindingId(msg.bindingId);
           setVisionOverride(msg.visionOverride);
           break;
         case 'item_upsert':
@@ -72,9 +72,9 @@ export function App() {
         case 'run_state':
           setRunning(msg.running);
           break;
-        case 'models':
-          setModels(msg.models);
-          setModelId(msg.modelId);
+        case 'bindings':
+          setBindings(msg.bindings);
+          setBindingId(msg.bindingId);
           break;
         case 'conversations':
           setConversations(msg.list);
@@ -112,14 +112,14 @@ export function App() {
     <I18nProvider value={t}>
     <div className="app">
       <Header
-        models={models}
-        modelId={modelId}
+        bindings={bindings}
+        bindingId={bindingId}
         usage={usage}
         items={items}
         visionOverride={visionOverride}
-        onModel={(id) => {
-          setModelId(id);
-          port.post({ type: 'set_model', modelId: id });
+        onBinding={(id) => {
+          setBindingId(id);
+          port.post({ type: 'set_binding', bindingId: id });
         }}
         onVision={(enabled) => {
           setVisionOverride(enabled);
@@ -160,7 +160,7 @@ export function App() {
         running={running}
         onSend={(text) => port.post({ type: 'send', text })}
         onAbort={() => port.post({ type: 'abort' })}
-        hasModel={!!modelId}
+        hasModel={!!bindingId}
       />
     </div>
     </I18nProvider>

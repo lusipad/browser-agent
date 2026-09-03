@@ -26,7 +26,7 @@ function installMemStorage() {
 
 function conv(id: string, title: string, updatedAt: number, extra?: Partial<ArchivedConv>): ArchivedConv {
   const messages: ChatMessage[] = [{ role: 'user', content: [{ type: 'text', text: title }] }];
-  return { id, title, updatedAt, msgCount: messages.length, messages, timeline: [], modelId: 'm', usage: { input: 0, output: 0 }, ...extra };
+  return { id, title, updatedAt, msgCount: messages.length, messages, timeline: [], bindingId: 'b', usage: { input: 0, output: 0 }, ...extra };
 }
 
 test('history: 保存后可在列表与详情中读到', async () => {
@@ -69,7 +69,7 @@ test('history: 归档丢弃 base64 截图', async () => {
     },
   ];
   const timeline: TimelineItem[] = [{ kind: 'tool', id: 't1', name: 'screenshot', summary: '', status: 'ok', images: ['data:image/jpeg;base64,BIG'] }];
-  await saveConversation({ id: 's', title: '看这个', updatedAt: 1, msgCount: 2, messages, timeline, modelId: 'm', usage: { input: 0, output: 0 } });
+  await saveConversation({ id: 's', title: '看这个', updatedAt: 1, msgCount: 2, messages, timeline, bindingId: 'b', usage: { input: 0, output: 0 } });
   const loaded = await loadConversation('s');
   const flat = loaded!.messages.flatMap((m) => m.content);
   assert.equal(flat.some((b) => b.type === 'image'), false, '顶层图片被移除');

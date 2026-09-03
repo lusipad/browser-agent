@@ -5,8 +5,10 @@ import type { ChatMessage, ConvMeta, TimelineItem } from '../shared/types';
 export interface ArchivedConv extends ConvMeta {
   messages: ChatMessage[];
   timeline: TimelineItem[];
-  modelId: string;
-  usage: { input: number; output: number };
+  bindingId: string;
+  /** v1 归档兼容字段 */
+  modelId?: string;
+  usage: { input: number; output: number; cost?: number | null };
   /** 会话级视觉覆盖（null=跟随模型）；用于恢复历史会话时还原感知方式 */
   visionOverride?: boolean | null;
 }

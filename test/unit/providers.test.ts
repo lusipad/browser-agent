@@ -11,19 +11,60 @@ import {
 } from '../../src/providers/types';
 import { openaiStream } from '../../src/providers/openai';
 import { unavailableModelNames } from '../../src/options/panels/ProvidersPanel';
+import { discoverEndpointModels } from '../../src/shared/registry';
+import { endpointUrls } from '../../src/shared/endpoints';
 import type { ChatMessage } from '../../src/shared/types';
 
 const PROV = { id: 'p', name: 'Mock', baseUrl: 'http://x/v1', apiKey: 'k' };
 
 test('unavailableModelNames: 只报告该服务商中接口未返回的模型', () => {
   const models = [
-    { id: 'p/missing', providerId: 'p', model: 'missing', label: 'Missing', vision: false },
-    { id: 'p/ready', providerId: 'p', model: 'ready', label: 'Ready', vision: false },
-    { id: 'other/missing', providerId: 'other', model: 'missing', label: 'Other', vision: false },
+    { id: 'b-missing', modelId: 'missing', providerId: 'p', apiModelName: 'missing' },
+    { id: 'b-ready', modelId: 'ready', providerId: 'p', apiModelName: 'ready' },
+    { id: 'b-other-missing', modelId: 'missing', providerId: 'other', apiModelName: 'missing' },
   ];
 
   assert.deepEqual(unavailableModelNames(models, 'p', ['ready']), ['missing']);
   assert.deepEqual(unavailableModelNames(models, 'p', null), []);
+});
+
+test('endpointUrls: 同时兼容带 /v1 与不带 /v1 的 Base URL', () => {
+  assert.deepEqual(endpointUrls('https://api.example.com', 'models'), [
+    'https://api.example.com/models',
+    'https://api.example.com/v1/models',
+  ]);
+  assert.deepEqual(endpointUrls('https://api.example.com/v1/', '/models'), [
+    'https://api.example.com/v1/models',
+    'https://api.example.com/models',
+  ]);
+});
+
+test('discoverEndpointModels: 404 时尝试 /v1 备用路径并保留元数据', async () => {
+  const server = http.createServer((req, res) => {
+    if (req.url === '/models') {
+      res.writeHead(404);
+      res.end();
+      return;
+    }
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({
+      object: 'list',
+      data: [
+        { id: 'deepseek-chat', owned_by: 'deepseek', object: 'model' },
+        { id: 'deepseek-reasoner' },
+      ],
+    }));
+  });
+  const port = await listenOn(server);
+  const models = await discoverEndpointModels({
+    baseUrl: `http://127.0.0.1:${port}`,
+    apiKey: 'k',
+  });
+  assert.deepEqual(models, [
+    { id: 'deepseek-chat', ownedBy: 'deepseek', object: 'model' },
+    { id: 'deepseek-reasoner' },
+  ]);
+  server.close();
 });
 
 function listenOn(server: http.Server): Promise<number> {
@@ -74,7 +115,8 @@ test('openaiStream: 流式解析 + 工具分片累积 + usage', async () => {
   let streamed = '';
   const result = await openaiStream({
     provider: { id: 'p', name: 'Mock', baseUrl: `http://127.0.0.1:${srv.port}/v1`, apiKey: 'k' },
-    model: { id: 'p/m', providerId: 'p', model: 'gpt-test', label: 'm', vision: true },
+    model: { id: 'gpt-test', label: 'm', vision: true },
+    binding: { id: 'p/gpt-test', modelId: 'gpt-test', providerId: 'p', apiModelName: 'gpt-test' },
     system: 'SYS',
     messages: [{ role: 'user', content: [{ type: 'text', text: '打开 x.com' }] }],
     tools: [{ name: 'navi', description: 'nav', schema: { type: 'object', properties: { url: { type: 'string' } } } }],
@@ -102,7 +144,8 @@ test('openaiStream: tool 结果转 tool 消息 + 截图挪到 user', async () =>
   const srv = await mockServer((b) => (body = b));
   await openaiStream({
     provider: { id: 'p', name: 'Mock', baseUrl: `http://127.0.0.1:${srv.port}/v1`, apiKey: 'k' },
-    model: { id: 'p/m', providerId: 'p', model: 'gpt-test', label: 'm', vision: true },
+    model: { id: 'gpt-test', label: 'm', vision: true },
+    binding: { id: 'p/gpt-test', modelId: 'gpt-test', providerId: 'p', apiModelName: 'gpt-test' },
     system: 'SYS',
     messages: [
       { role: 'assistant', content: [{ type: 'tool_use', id: 'call_0', name: 'navi', input: { url: 'a' } }] },
@@ -137,7 +180,8 @@ test('openaiStream: HTTP 错误抛出含状态码', async () => {
     () =>
       openaiStream({
         provider: { id: 'p', name: 'Mock', baseUrl: `http://127.0.0.1:${port}/v1`, apiKey: 'bad' },
-        model: { id: 'p/m', providerId: 'p', model: 'm', label: 'm', vision: true },
+        model: { id: 'm', label: 'm', vision: true },
+        binding: { id: 'p/m', modelId: 'm', providerId: 'p', apiModelName: 'm' },
         system: 'S',
         messages: [{ role: 'user', content: [{ type: 'text', text: 'hi' }] }],
         tools: [],
@@ -163,7 +207,8 @@ test('openaiStream: HTTP 200 但非 SSE 时提示检查 /v1', async () => {
     () =>
       openaiStream({
         provider: { id: 'p', name: 'Mock', baseUrl: `http://127.0.0.1:${port}`, apiKey: 'k' },
-        model: { id: 'p/m', providerId: 'p', model: 'm', label: 'm', vision: false },
+        model: { id: 'm', label: 'm', vision: false },
+        binding: { id: 'p/m', modelId: 'm', providerId: 'p', apiModelName: 'm' },
         system: 'S',
         messages: [{ role: 'user', content: [{ type: 'text', text: 'hi' }] }],
         tools: [],

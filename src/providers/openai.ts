@@ -2,6 +2,7 @@
 // 同时覆盖所有 OpenAI 兼容端点：DeepSeek、Ollama、OpenRouter、LM Studio、vLLM…
 import type { ContentBlock, ImageBlock, TextBlock } from '../shared/types';
 import { textOfBlocks, uid } from '../shared/util';
+import { endpointUrls } from '../shared/endpoints';
 import { sseData } from './sse';
 import { HttpError, fetchWithRetry, mergeConsecutive, type ProviderImpl } from './types';
 
@@ -27,9 +28,10 @@ function extractDeltaText(delta: any): string {
 }
 
 export const openaiStream: ProviderImpl = async (p) => {
-  const url = p.provider.baseUrl.replace(/\/+$/, '') + '/chat/completions';
+  const urls = endpointUrls(p.provider.baseUrl, 'chat/completions');
+  if (!urls.length) throw new Error('服务商 Base URL 为空');
   const body: Record<string, unknown> = {
-    model: p.model.model,
+    model: p.binding.apiModelName,
     messages: buildMessages(p.system, mergeConsecutive(p.messages)),
     stream: true,
     stream_options: { include_usage: true },
@@ -40,25 +42,36 @@ export const openaiStream: ProviderImpl = async (p) => {
       function: { name: t.name, description: t.description, parameters: t.schema },
     }));
   }
-  if (isReasoningModel(p.model.model)) {
+  if (isReasoningModel(p.binding.apiModelName)) {
     body.max_completion_tokens = p.maxTokens;
   } else {
     body.max_tokens = p.maxTokens;
     if (p.temperature != null) body.temperature = p.temperature;
   }
 
-  const resp = await fetchWithRetry(
-    url,
-    {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${p.provider.apiKey}`,
-      },
-      body: JSON.stringify(body),
-    },
-    { provider: p.provider, signal: p.signal, timeoutMs: p.timeoutMs, retries: p.retries },
-  );
+  let resp: Response | undefined;
+  let lastError: unknown;
+  for (const url of urls) {
+    try {
+      resp = await fetchWithRetry(
+        url,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${p.provider.apiKey}`,
+          },
+          body: JSON.stringify(body),
+        },
+        { provider: p.provider, signal: p.signal, timeoutMs: p.timeoutMs, retries: p.retries },
+      );
+      break;
+    } catch (e) {
+      lastError = e;
+      if (!(e instanceof HttpError) || e.status !== 404 || url === urls[urls.length - 1]) throw e;
+    }
+  }
+  if (!resp) throw lastError instanceof Error ? lastError : new Error(String(lastError));
 
   const contentType = (resp.headers.get('content-type') ?? '').toLowerCase();
   if (!contentType.includes('text/event-stream')) {

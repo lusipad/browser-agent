@@ -20,8 +20,8 @@ export const sidepanelDict = {
   'header.newChat': { zh: '新对话', en: 'New chat' },
   'header.settings': { zh: '设置', en: 'Settings' },
   'header.export': { zh: '导出对话', en: 'Export chat' },
-  'header.costTitle': { zh: '累计成本 {0}（按当前模型计费）', en: 'Total cost {0} (at current model pricing)' },
-  'header.noPricing': { zh: '当前模型未配置计费，无法估算成本', en: 'Current model has no pricing configured' },
+  'header.costTitle': { zh: '累计成本 {0}（按实际接入计费）', en: 'Total cost {0} (based on actual bindings used)' },
+  'header.noPricing': { zh: '部分接入未配置计费，无法完整估算成本', en: 'Some bindings have no pricing; total cost is incomplete' },
   'header.ctxUsage': { zh: '上下文占用 {0} / {1}（{2}%）', en: 'Context {0} / {1} ({2}%)' },
   'header.usageDetail': { zh: '输入 {0} · 输出 {1} tokens', en: 'Input {0} · Output {1} tokens' },
   // Composer

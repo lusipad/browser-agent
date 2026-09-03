@@ -7,6 +7,7 @@ import type {
   ChatMessage,
   ContentBlock,
   ImageBlock,
+  ModelBinding,
   ModelConfig,
   ProviderConfig,
   TextBlock,
@@ -17,6 +18,7 @@ import { errText, textOfBlocks, truncate, uid } from '../shared/util';
 import { runInPage } from './inject';
 import type { Session } from './session';
 import { executeToolUse, shotBlocks, toolSpecs } from './tools/registry';
+import { isBindingEnabled } from '../shared/models';
 
 const VALIDATOR_CAP = 2;
 
@@ -27,12 +29,13 @@ export async function runTurn(
 ): Promise<void> {
   const continuation = !!opts?.continuation;
   session.cfg = await loadConfig();
-  const model = session.cfg.models.find((m) => m.id === session.modelId);
-  if (!model) {
+  const binding = session.cfg.bindings.find((b) => b.id === session.bindingId);
+  const model = binding && session.cfg.models.find((m) => m.id === binding.modelId);
+  if (!binding || !model || !isBindingEnabled(binding)) {
     session.error(session.t('bg.noModel'));
     return;
   }
-  const provider = session.cfg.providers.find((p) => p.id === model.providerId);
+  const provider = session.cfg.providers.find((p) => p.id === binding.providerId);
   if (!provider) {
     session.error(session.t('bg.providerMissing', [model.label]));
     return;
@@ -69,7 +72,7 @@ export async function runTurn(
   try {
     // ---------- Planner ----------
     if (adv.planning && firstTurn && !continuation && !session.aborted) {
-      const crit = await runPlanner(session, provider, model, sysBase, userText);
+      const crit = await runPlanner(session, provider, model, binding, sysBase, userText);
       if (crit) successCriteria = crit;
     }
 
@@ -88,13 +91,13 @@ export async function runTurn(
         maxInputTokens: budget,
       });
 
-      const result = await streamOnce(session, provider, model, sysBase, governed.messages, activeToolSpecs(session), (delta) => {
+      const result = await streamOnce(session, provider, model, binding, sysBase, governed.messages, activeToolSpecs(session), (delta) => {
         streamed += delta;
         session.emit({ type: 'text_delta', id: asstId, delta });
       });
 
-      accrueUsage(session, result.usage);
-      emitUsage(session, model, { tokens: governed.estInputTokens, budget });
+      accrueUsage(session, result.usage, binding.pricing);
+      emitUsage(session, { tokens: governed.estInputTokens, budget });
       const finalText = textOfBlocks(result.blocks) || streamed;
       session.upsert({ kind: 'assistant', id: asstId, text: finalText, done: true });
       session.messages.push({
@@ -106,12 +109,12 @@ export async function runTurn(
 
       if (!toolUses.length) {
         if (!finalText.trim()) {
-          session.error(session.t('bg.emptyResponse', [model.model]));
+          session.error(session.t('bg.emptyResponse', [binding.apiModelName]));
           break;
         }
         // 模型认为完成 → Validator 自检
         if (adv.planning && validatorRounds < VALIDATOR_CAP && !session.aborted) {
-          const verdict = await runValidator(session, provider, model, sysBase, userText, successCriteria);
+          const verdict = await runValidator(session, provider, model, binding, sysBase, userText, successCriteria);
           if (!verdict.done) {
             validatorRounds++;
             session.upsert({
@@ -197,6 +200,7 @@ function streamOnce(
   session: Session,
   provider: ProviderConfig,
   model: ModelConfig,
+  binding: ModelBinding,
   system: string,
   messages: ChatMessage[],
   tools: ReturnType<typeof toolSpecs>,
@@ -206,6 +210,7 @@ function streamOnce(
   return openaiStream({
     provider,
     model,
+    binding,
     system,
     messages,
     tools,
@@ -218,19 +223,31 @@ function streamOnce(
   });
 }
 
-function accrueUsage(session: Session, usage?: { input: number; output: number }): void {
+function accrueUsage(
+  session: Session,
+  usage: { input: number; output: number } | undefined,
+  pricing: ModelBinding['pricing'],
+): void {
   if (!usage) return;
   session.usage.input += usage.input;
   session.usage.output += usage.output;
+  const requestCost = computeCost(usage, pricing);
+  if (session.usage.input === usage.input && session.usage.output === usage.output) {
+    session.usage.cost = requestCost;
+  } else if (session.usage.cost != null && requestCost != null) {
+    session.usage.cost += requestCost;
+  } else {
+    session.usage.cost = null;
+  }
 }
 
-/** 向面板推送累计 token / 成本 / 上下文占用（成本按当前模型计费换算） */
-function emitUsage(session: Session, model: ModelConfig, context?: { tokens: number; budget: number }): void {
+/** 向面板推送按实际绑定累计的 token / 成本 / 上下文占用 */
+function emitUsage(session: Session, context?: { tokens: number; budget: number }): void {
   session.emit({
     type: 'usage',
     input: session.usage.input,
     output: session.usage.output,
-    cost: computeCost(session.usage, model.pricing),
+    cost: session.usage.cost,
     contextTokens: context?.tokens,
     contextBudget: context?.budget,
   });
@@ -241,6 +258,7 @@ async function runPlanner(
   session: Session,
   provider: ProviderConfig,
   model: ModelConfig,
+  binding: ModelBinding,
   sysBase: string,
   task: string,
 ): Promise<string | null> {
@@ -255,18 +273,18 @@ async function runPlanner(
   session.upsert({ kind: 'assistant', id, text: '', done: false });
   let text = '';
   try {
-    const res = await streamOnce(session, provider, model, sys, [{ role: 'user', content: [{ type: 'text', text: task }] }], [], (d) => {
+    const res = await streamOnce(session, provider, model, binding, sys, [{ role: 'user', content: [{ type: 'text', text: task }] }], [], (d) => {
       text += d;
       session.emit({ type: 'text_delta', id, delta: d });
     });
-    accrueUsage(session, res.usage);
-    emitUsage(session, model);
+    accrueUsage(session, res.usage, binding.pricing);
+    emitUsage(session);
     text = textOfBlocks(res.blocks) || text;
     if (!text.trim()) {
       session.upsert({
         kind: 'assistant',
         id,
-        text: session.t('bg.planSkipped', [session.t('bg.emptyStageResponse', [model.model])]),
+        text: session.t('bg.planSkipped', [session.t('bg.emptyStageResponse', [binding.apiModelName])]),
         done: true,
       });
       return null;
@@ -295,6 +313,7 @@ async function runValidator(
   session: Session,
   provider: ProviderConfig,
   model: ModelConfig,
+  binding: ModelBinding,
   sysBase: string,
   task: string,
   criteria: string,
@@ -311,12 +330,12 @@ async function runValidator(
       { type: 'text', text: `Task: ${task}\nSuccess criterion: ${criteria}\n\nCurrent page state:` },
       ...state,
     ];
-    const res = await streamOnce(session, provider, model, sys, [{ role: 'user', content: user }], [], () => {});
-    accrueUsage(session, res.usage);
-    emitUsage(session, model);
+    const res = await streamOnce(session, provider, model, binding, sys, [{ role: 'user', content: user }], [], () => {});
+    accrueUsage(session, res.usage, binding.pricing);
+    emitUsage(session);
     const text = textOfBlocks(res.blocks).trim();
     if (!text) {
-      session.info(session.t('bg.validateSkipped', [session.t('bg.emptyStageResponse', [model.model])]));
+      session.info(session.t('bg.validateSkipped', [session.t('bg.emptyStageResponse', [binding.apiModelName])]));
       return { done: true, reason: '', next: '' };
     }
     return parseVerdict(text);

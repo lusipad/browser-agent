@@ -279,6 +279,115 @@ nav {
   color: var(--err);
 }
 
+.provider-card {
+  padding-bottom: 0;
+}
+.provider-discovery-error {
+  color: var(--err);
+  font-size: 12.5px;
+  padding: 10px 0;
+}
+.provider-models,
+.provider-configured {
+  border-top: 1px solid var(--border);
+  margin-top: 14px;
+  padding: 12px 0 0;
+}
+.provider-models-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+.provider-models-meta {
+  color: var(--text-dim);
+  font-size: 11.5px;
+  font-weight: 400;
+}
+.provider-model-list {
+  max-height: 250px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.provider-model-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+}
+.provider-model-row:first-child {
+  border-top: none;
+}
+.provider-model-row:hover {
+  background: var(--accent-soft);
+}
+.provider-model-id {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+.provider-model-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-dim);
+}
+.provider-model-status,
+.provider-binding-status {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.provider-model-status.new {
+  color: var(--accent);
+}
+.provider-model-status.configured,
+.provider-binding-status {
+  color: var(--ok);
+}
+.provider-model-status.stale {
+  color: #f59e0b;
+}
+.provider-binding-status.disabled,
+.row-disabled .provider-model-id,
+.binding-state.disabled {
+  color: var(--text-dim);
+  text-decoration: line-through;
+}
+.provider-batch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 0 2px;
+}
+.link-button {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  padding: 3px 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+.link-button:hover {
+  text-decoration: underline;
+}
+.binding-state {
+  color: var(--ok);
+  font-size: 12px;
+}
+
 /* ---------- Registry / Fetch ---------- */
 .registry-section {
   margin-bottom: 18px;

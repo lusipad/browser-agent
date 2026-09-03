@@ -1,5 +1,5 @@
 import { formatUsd } from '../../shared/context';
-import type { ModelPick, TimelineItem } from '../../shared/types';
+import type { BindingPick, TimelineItem } from '../../shared/types';
 import { useT } from '../../shared/i18nReact';
 import { ExportMenu } from './ExportMenu';
 
@@ -12,14 +12,14 @@ interface Usage {
 }
 
 interface Props {
-  models: ModelPick[];
-  modelId: string;
+  bindings: BindingPick[];
+  bindingId: string;
   usage: Usage;
   running: boolean;
   items: TimelineItem[];
   /** 会话级视觉覆盖（null=跟随模型，false=关闭，true=强制开启） */
   visionOverride: boolean | null;
-  onModel: (id: string) => void;
+  onBinding: (id: string) => void;
   onVision: (enabled: boolean) => void;
   onNewChat: () => void;
   onHistory: () => void;
@@ -43,7 +43,7 @@ function meterColor(pct: number): string {
 export function Header(props: Props) {
   const t = useT();
   const { usage } = props;
-  const cur = props.models.find((m) => m.id === props.modelId);
+  const cur = props.bindings.find((m) => m.id === props.bindingId);
   const hasUsage = usage.input + usage.output > 0;
   const pct =
     usage.contextTokens && usage.contextBudget ? Math.min(1, usage.contextTokens / usage.contextBudget) : 0;
@@ -64,15 +64,15 @@ export function Header(props: Props) {
           <div className="model-row">
             <select
               className="model-select"
-              value={props.modelId}
+              value={props.bindingId}
               disabled={props.running}
-              onChange={(e) => props.onModel(e.target.value)}
+              onChange={(e) => props.onBinding(e.target.value)}
               title={cur ? `${cur.providerName} · ${cur.vision ? t('header.vision') : t('header.noVision')}` : t('header.model')}
             >
-              {!props.models.length && <option value="">{t('header.noModel')}</option>}
-              {props.models.map((m) => (
+              {!props.bindings.length && <option value="">{t('header.noModel')}</option>}
+              {props.bindings.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.label}
+                  {m.label} · {m.providerName}
                   {m.vision ? '' : ` 〔${t('header.noVision')}〕`}
                 </option>
               ))}
@@ -116,7 +116,7 @@ export function Header(props: Props) {
         )}
         <ExportMenu
           items={props.items}
-          meta={{ modelLabel: cur?.label ?? props.modelId, usage }}
+          meta={{ modelLabel: cur ? `${cur.label} · ${cur.providerName}` : props.bindingId, usage }}
         />
         <button className="icon-btn" title={t('header.history')} onClick={props.onHistory}>
           🕘

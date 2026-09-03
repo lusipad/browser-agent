@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import { Session } from '../../src/background/session';
 import type { AppConfig } from '../../src/shared/types';
 
-function cfgWith(vision: boolean, modelId = 'p/m'): AppConfig {
+function cfgWith(vision: boolean, bindingId = 'p/m'): AppConfig {
   const c = {
     version: 1 as const,
     providers: [{ id: 'p', name: 'P', baseUrl: 'http://p/v1', apiKey: 'k' }],
-    models: [{ id: 'p/m', providerId: 'p', model: 'm', label: 'M', vision: !!vision }],
-    defaultModelId: 'p/m',
+    models: [{ id: 'm', label: 'M', vision: !!vision }],
+    bindings: [{ id: 'p/m', modelId: 'm', providerId: 'p', apiModelName: 'm' }],
+    defaultBindingId: 'p/m',
     safety: { allowAllSites: false, confirmNewSite: true, confirmPassword: true, confirmJavascript: true, confirmUpload: true },
     advanced: {
       maxIterations: 100, maxImagesKept: 4, maxContextTokens: 96000, screenshotMaxWidth: 1366,
@@ -18,7 +19,7 @@ function cfgWith(vision: boolean, modelId = 'p/m'): AppConfig {
     uiLang: 'auto' as const,
     sites: { allowed: [], blocked: [] },
   };
-  return { ...c, models: [{ ...c.models[0], id: modelId }], defaultModelId: modelId } as AppConfig;
+  return { ...c, bindings: [{ ...c.bindings[0], id: bindingId }], defaultBindingId: bindingId } as AppConfig;
 }
 
 test('effectiveVision: 默认跟随模型能力', () => {
@@ -42,7 +43,7 @@ test('effectiveVision: 会话级覆盖可强制开启（即使模型未标记）
 
 test('effectiveVision: 模型缺失时回落为开启（能力未知不误关）', () => {
   const s = new Session(1, cfgWith(false));
-  s.modelId = 'p/nope';
+  s.bindingId = 'p/nope';
   assert.equal(s.effectiveVision(), true);
 });
 

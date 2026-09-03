@@ -1,4 +1,4 @@
-import type { ChatMessage, ContentBlock, ModelConfig, ProviderConfig } from '../shared/types';
+import type { ChatMessage, ContentBlock, ModelBinding, ModelConfig, ProviderConfig } from '../shared/types';
 
 export interface ToolSpec {
   name: string;
@@ -9,6 +9,7 @@ export interface ToolSpec {
 export interface StreamParams {
   provider: ProviderConfig;
   model: ModelConfig;
+  binding: ModelBinding;
   system: string;
   messages: ChatMessage[];
   tools: ToolSpec[];

@@ -224,7 +224,8 @@ A single adapter covers ALL OpenAI-compatible endpoints because:
 
 **Key behaviors:**
 - Streaming via SSE with `stream_options: { include_usage: true }`
-- Rejects HTTP 200 responses that are not `text/event-stream`, so a missing `/v1` path is reported as endpoint misconfiguration instead of an empty model response
+- Accepts Base URLs with or without `/v1`; only a 404 triggers a fallback to the alternate path, while authentication, rate-limit, and server errors are preserved
+- Rejects HTTP 200 responses that are not `text/event-stream`, reporting an endpoint protocol mismatch instead of an empty model response
 - Tool calls accumulated across delta chunks (handles fragmented `function.arguments`)
 - Reasoning models (o-series, gpt-5) get `max_completion_tokens` instead of `max_tokens` and no `temperature`
 - Screenshots moved from tool results to subsequent user messages (OpenAI doesn't support images in tool role)
@@ -306,7 +307,7 @@ The sidebar and background communicate via a long-lived `chrome.runtime.Port`:
 - `send` — user typed a message
 - `continue` — resume after iteration cap
 - `abort` — stop the agent
-- `set_model` — switch model
+- `set_binding` — switch the active model endpoint binding
 - `approval` — user responded to approval card
 - `switch_conv` / `delete_conv` / `new_chat` — history management
 - `detach` — release control (ungroup tabs, detach CDP)
@@ -317,6 +318,8 @@ The sidebar and background communicate via a long-lived `chrome.runtime.Port`:
 - `text_delta` — streaming text chunk
 - `run_state` — agent running/stopped
 - `conversations` — history list update
+- `bindings` — enabled model endpoint bindings
+- `usage` — accumulated token and cost usage
 - `models` — available model list
 - `usage` — token counts, cost, context usage
 
@@ -491,7 +494,8 @@ Chrome 在 CDP 附加时会显示黄色 "debugger" 横幅 — 这是用户的视
 
 **关键行为：**
 - 通过 SSE 流式传输，带 `stream_options: { include_usage: true }`
-- 拒绝 Content-Type 非 `text/event-stream` 的 HTTP 200 响应，因此 Base URL 缺少 `/v1` 时会明确报告端点配置错误，而不是误报模型空响应
+- Base URL 末尾可带或不带 `/v1`；仅 404 时尝试备用路径，鉴权、限流和服务端错误保持原样返回
+- 拒绝 Content-Type 非 `text/event-stream` 的 HTTP 200 响应，明确报告端点协议不匹配，而不是误报模型空响应
 - 工具调用跨多个 delta chunk 累积（处理分片的 `function.arguments`）
 - 推理模型（o系列、gpt-5）用 `max_completion_tokens` 而非 `max_tokens`，不设 `temperature`
 - 截图从工具结果移到后续 user 消息（OpenAI 不支持 tool 角色的图片）
@@ -557,10 +561,10 @@ fetchWithRetry()
 侧边栏与后台通过长连接 `chrome.runtime.Port` 通信：
 
 **面板 → 后台（`PanelToBg`）：**
-`hello` / `send` / `continue` / `abort` / `set_model` / `approval` / `switch_conv` / `delete_conv` / `new_chat` / `detach` / `open_options`
+`hello` / `send` / `continue` / `abort` / `set_binding` / `approval` / `switch_conv` / `delete_conv` / `new_chat` / `detach` / `open_options`
 
 **后台 → 面板（`BgToPanel`）：**
-`snapshot`（连接时全量同步）/ `item_upsert` / `text_delta` / `run_state` / `conversations` / `models` / `usage`
+`snapshot`（连接时全量同步）/ `item_upsert` / `text_delta` / `run_state` / `conversations` / `bindings` / `usage`
 
 ### 构建系统
 

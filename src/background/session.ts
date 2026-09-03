@@ -5,10 +5,12 @@ import type {
   ApprovalDecision,
   BgToPanel,
   ChatMessage,
-  ModelPick,
+  BindingPick,
   TimelineItem,
 } from '../shared/types';
 import { resolveLang, translate, type MsgKey } from '../shared/i18n';
+import { resolveModelBinding } from '../shared/models';
+import { defaultEnabledBindingId, isBindingEnabled } from '../shared/models';
 import { deriveTitle, uid } from '../shared/util';
 import type { GifFrame } from './gif';
 import type { ArchivedConv } from './history';
@@ -19,7 +21,7 @@ const MAX_GIF_FRAMES = 30;
 export class Session implements ApprovalHost {
   readonly windowId: number;
   cfg: AppConfig;
-  modelId: string;
+  bindingId: string;
   conversationId: string = uid('conv');
   messages: ChatMessage[] = [];
   timeline: TimelineItem[] = [];
@@ -31,7 +33,7 @@ export class Session implements ApprovalHost {
   /** 已归入 Agent 标签组的标签（避免重复分组；不持久化） */
   groupedTabs = new Set<number>();
   gifFrames: GifFrame[] = [];
-  usage = { input: 0, output: 0 };
+  usage: { input: number; output: number; cost: number | null } = { input: 0, output: 0, cost: null };
   /** 会话级视觉覆盖：null=跟随模型，false=本会话关闭视觉，true=本会话强制开启 */
   visionOverride: boolean | null = null;
   port: chrome.runtime.Port | null = null;
@@ -40,12 +42,12 @@ export class Session implements ApprovalHost {
   constructor(windowId: number, cfg: AppConfig) {
     this.windowId = windowId;
     this.cfg = cfg;
-    this.modelId = cfg.defaultModelId;
+    this.bindingId = cfg.defaultBindingId;
   }
 
   /** 本会话生效的视觉策略 = 会话覆盖 ?? 模型能力 */
   effectiveVision(): boolean {
-    return this.visionOverride ?? this.cfg.models.find((m) => m.id === this.modelId)?.vision ?? true;
+    return this.visionOverride ?? resolveModelBinding(this.cfg, this.bindingId)?.model.vision ?? true;
   }
 
   /** 按当前界面语言翻译（面向用户的后台文案） */
@@ -118,13 +120,13 @@ export class Session implements ApprovalHost {
     }
   }
 
-  snapshot(models: ModelPick[]): BgToPanel {
+  snapshot(bindings: BindingPick[]): BgToPanel {
     return {
       type: 'snapshot',
       items: this.timeline,
       running: this.running,
-      modelId: this.modelId,
-      models,
+      bindingId: this.bindingId,
+      bindings,
       visionOverride: this.visionOverride,
     };
   }
@@ -142,7 +144,7 @@ export class Session implements ApprovalHost {
       msgCount: this.messages.length,
       messages: this.messages,
       timeline: this.timeline,
-      modelId: this.modelId,
+      bindingId: this.bindingId,
       usage: this.usage,
       visionOverride: this.visionOverride,
     };
@@ -153,8 +155,14 @@ export class Session implements ApprovalHost {
     this.conversationId = conv.id;
     this.messages = conv.messages ?? [];
     this.timeline = conv.timeline ?? [];
-    this.usage = conv.usage ?? { input: 0, output: 0 };
-    if (this.cfg.models.find((m) => m.id === conv.modelId)) this.modelId = conv.modelId;
+    this.usage = {
+      input: conv.usage?.input ?? 0,
+      output: conv.usage?.output ?? 0,
+      cost: typeof conv.usage?.cost === 'number' ? conv.usage.cost : null,
+    };
+    const bindingId = conv.bindingId ?? conv.modelId;
+    if (bindingId && this.cfg.bindings.find((b) => b.id === bindingId && isBindingEnabled(b))) this.bindingId = bindingId;
+    else this.bindingId = defaultEnabledBindingId(this.cfg);
     this.visionOverride = conv.visionOverride ?? null;
     this.gifFrames = [];
     this.tempAllowedHosts.clear();
@@ -171,7 +179,7 @@ export class Session implements ApprovalHost {
     this.gifFrames = [];
     this.tempAllowedHosts.clear();
     this.groupedTabs.clear();
-    this.usage = { input: 0, output: 0 };
+    this.usage = { input: 0, output: 0, cost: null };
     this.visionOverride = null;
     this.currentTabId = null;
     this.aborted = false;
@@ -187,7 +195,7 @@ export class Session implements ApprovalHost {
       conversationId: this.conversationId,
       messages: this.messages,
       timeline: this.timeline,
-      modelId: this.modelId,
+      bindingId: this.bindingId,
       visionOverride: this.visionOverride,
       currentTabId: this.currentTabId,
       usage: this.usage,
@@ -229,16 +237,20 @@ export class Session implements ApprovalHost {
         s.conversationId = data.conversationId ?? s.conversationId;
         s.messages = data.messages ?? [];
         s.timeline = data.timeline ?? [];
-        s.modelId = data.modelId ?? cfg.defaultModelId;
+        s.bindingId = data.bindingId ?? data.modelId ?? cfg.defaultBindingId;
         s.visionOverride = typeof data.visionOverride === 'boolean' ? data.visionOverride : null;
         s.currentTabId = data.currentTabId ?? null;
-        s.usage = data.usage ?? { input: 0, output: 0 };
+        s.usage = {
+          input: data.usage?.input ?? 0,
+          output: data.usage?.output ?? 0,
+          cost: typeof data.usage?.cost === 'number' ? data.usage.cost : null,
+        };
         s.tempAllowedHosts = new Set(data.tempAllowedHosts ?? []);
       }
     } catch {
       /* 无存档或解析失败 */
     }
-    if (!cfg.models.find((m) => m.id === s.modelId)) s.modelId = cfg.defaultModelId;
+    if (!cfg.bindings.find((b) => b.id === s.bindingId && isBindingEnabled(b))) s.bindingId = defaultEnabledBindingId(cfg);
     return s;
   }
 }

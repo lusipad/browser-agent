@@ -1,13 +1,13 @@
 // Service Worker 入口：面板连接管理、消息路由、会话生命周期
-import { computeCost } from '../shared/context';
 import { makeT, resolveLang } from '../shared/i18n';
 import { loadConfig, onConfigChange, saveConfig } from '../shared/settings';
-import type { AppConfig, ModelPick, PanelToBg } from '../shared/types';
+import type { AppConfig, BindingPick, PanelToBg } from '../shared/types';
 import { runTurn } from './agent';
 import { detachAll } from './cdp';
 import { pickDiagnoseTab, runDiagnostics } from './diagnose';
 import { deleteConversation, listConversations, loadConversation, saveConversation } from './history';
 import { Session } from './session';
+import { defaultEnabledBindingId, isBindingEnabled } from '../shared/models';
 import { ungroupAgentTabs } from './tabs';
 import { browserTools } from './tools/browser';
 import { computerTool } from './tools/computer';
@@ -43,20 +43,24 @@ async function sessionFor(windowId: number): Promise<Session> {
   return s;
 }
 
-function modelPicks(cfg: AppConfig): ModelPick[] {
-  return cfg.models.map((m) => ({
-    id: m.id,
-    label: m.label,
-    vision: m.vision,
-    providerName: cfg.providers.find((p) => p.id === m.providerId)?.name ?? m.providerId,
-  }));
+function bindingPicks(cfg: AppConfig): BindingPick[] {
+  return cfg.bindings.flatMap((binding) => {
+    if (!isBindingEnabled(binding)) return [];
+    const model = cfg.models.find((m) => m.id === binding.modelId);
+    if (!model) return [];
+    return [{
+      id: binding.id,
+      label: model.label,
+      vision: model.vision,
+      providerName: cfg.providers.find((p) => p.id === binding.providerId)?.name ?? binding.providerId,
+    }];
+  });
 }
 
-/** 用当前所选模型的计费换算累计成本并推送（token 数不变，仅重算美元） */
+/** 推送按实际请求绑定累计的用量与成本。 */
 function pushUsage(s: Session): void {
   if (s.usage.input + s.usage.output <= 0) return;
-  const model = s.cfg.models.find((m) => m.id === s.modelId);
-  s.emit({ type: 'usage', input: s.usage.input, output: s.usage.output, cost: computeCost(s.usage, model?.pricing) });
+  s.emit({ type: 'usage', input: s.usage.input, output: s.usage.output, cost: s.usage.cost });
 }
 
 /** 推送会话列表（把尚未落盘的当前会话也并入，保证它可见并高亮） */
@@ -86,8 +90,8 @@ chrome.runtime.onConnect.addListener((port) => {
             bound = s;
             s.port = port;
             s.cfg = await loadConfig();
-            if (!s.cfg.models.find((m) => m.id === s.modelId)) s.modelId = s.cfg.defaultModelId;
-            port.postMessage(s.snapshot(modelPicks(s.cfg)));
+            if (!s.cfg.bindings.find((b) => b.id === s.bindingId && isBindingEnabled(b))) s.bindingId = defaultEnabledBindingId(s.cfg);
+            port.postMessage(s.snapshot(bindingPicks(s.cfg)));
             pushUsage(s);
             await pushConversations(s);
             break;
@@ -114,7 +118,7 @@ chrome.runtime.onConnect.addListener((port) => {
             if (bound && !bound.running) {
               await archiveCurrent(bound);
               bound.reset();
-              port.postMessage(bound.snapshot(modelPicks(bound.cfg)));
+              port.postMessage(bound.snapshot(bindingPicks(bound.cfg)));
               pushUsage(bound);
               await pushConversations(bound);
             }
@@ -126,7 +130,7 @@ chrome.runtime.onConnect.addListener((port) => {
               if (conv) {
                 await archiveCurrent(bound);
                 bound.loadFrom(conv);
-                port.postMessage(bound.snapshot(modelPicks(bound.cfg)));
+                port.postMessage(bound.snapshot(bindingPicks(bound.cfg)));
                 pushUsage(bound);
                 await pushConversations(bound);
               }
@@ -138,17 +142,16 @@ chrome.runtime.onConnect.addListener((port) => {
               await deleteConversation(msg.id);
               if (msg.id === bound.conversationId && !bound.running) {
                 bound.reset();
-                port.postMessage(bound.snapshot(modelPicks(bound.cfg)));
+                port.postMessage(bound.snapshot(bindingPicks(bound.cfg)));
                 pushUsage(bound);
               }
               await pushConversations(bound);
             }
             break;
           }
-          case 'set_model': {
-            if (bound && bound.cfg.models.find((m) => m.id === msg.modelId)) {
-              bound.modelId = msg.modelId;
-              pushUsage(bound); // 新模型计费不同 → 立即重算成本
+          case 'set_binding': {
+            if (bound && bound.cfg.bindings.find((b) => b.id === msg.bindingId && isBindingEnabled(b))) {
+              bound.bindingId = msg.bindingId;
               void bound.persist();
             }
             break;
@@ -158,7 +161,7 @@ chrome.runtime.onConnect.addListener((port) => {
             if (bound) {
               bound.visionOverride = msg.enabled;
               void bound.persist();
-              port.postMessage(bound.snapshot(modelPicks(bound.cfg)));
+              port.postMessage(bound.snapshot(bindingPicks(bound.cfg)));
             }
             break;
           }
@@ -219,9 +222,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 onConfigChange((cfg) => {
   for (const s of sessions.values()) {
     s.cfg = cfg;
-    if (!cfg.models.find((m) => m.id === s.modelId)) s.modelId = cfg.defaultModelId;
-    s.emit({ type: 'models', models: modelPicks(cfg), modelId: s.modelId });
-    pushUsage(s); // 计费可能已改动 → 重算成本
+    if (!cfg.bindings.find((b) => b.id === s.bindingId && isBindingEnabled(b))) s.bindingId = defaultEnabledBindingId(cfg);
+    s.emit({ type: 'bindings', bindings: bindingPicks(cfg), bindingId: s.bindingId });
   }
 });
 

@@ -276,11 +276,37 @@ for (const prov of MANUAL_PROVIDERS) {
 // Add manual models
 for (const m of MANUAL_MODELS) models.push(m);
 
+// 把“厂商提供的模型条目”拆成模型本体 + 接入绑定。
+// 价格属于绑定，能力与上下文属于模型本体。
+const modelMap = new Map();
+const bindings = models.map((entry) => {
+  const key = entry.model.toLowerCase();
+  const existing = modelMap.get(key);
+  const modelId = existing?.id || entry.model;
+  if (existing) {
+    existing.vision ||= entry.vision;
+    if ((entry.contextWindow || 0) > (existing.contextWindow || 0)) {
+      existing.contextWindow = entry.contextWindow;
+    }
+  } else {
+    const { pricing: _pricing, ...model } = entry;
+    modelMap.set(key, { ...model, id: modelId });
+  }
+  return {
+    id: entry.id,
+    modelId,
+    providerId: entry.providerId,
+    apiModelName: entry.model,
+    ...(entry.pricing ? { pricing: entry.pricing } : {}),
+  };
+});
+
 const registry = {
   version: 0,
   updatedAt: new Date().toISOString().slice(0, 10),
   providers,
-  models,
+  models: [...modelMap.values()],
+  bindings,
 };
 
 // Read current version to bump

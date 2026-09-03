@@ -43,7 +43,7 @@ export interface ToolOutput {
 }
 
 // ============================================================
-// 供应商 / 模型配置（全部为 OpenAI 兼容 endpoint）
+// 供应商、模型与接入绑定（全部为 OpenAI 兼容 endpoint）
 // ============================================================
 
 export interface ProviderConfig {
@@ -61,19 +61,28 @@ export interface ModelPricing {
   output: number;
 }
 
+/** 模型本体：描述模型自身的能力，不包含厂商、密钥或价格。 */
 export interface ModelConfig {
-  /** `${providerId}/${model}` */
   id: string;
-  providerId: string;
-  /** 传给 API 的模型名 */
-  model: string;
   label: string;
   /** 是否支持图像输入；false 时自动省略截图，改用 read_page */
   vision: boolean;
   /** 上下文窗口大小（token）；用于计算输入预算，缺省则回落到 advanced.maxContextTokens */
   contextWindow?: number;
+}
+
+/** 模型在某个厂商/端点上的接入配置。 */
+export interface ModelBinding {
+  /** 稳定的接入配置 ID；编辑厂商或 API 模型名时不应改变 */
+  id: string;
+  modelId: string;
+  providerId: string;
+  /** 传给 API 的模型名 */
+  apiModelName: string;
   /** 计费（美元 / 100 万 token）；填写后侧边栏显示累计成本 */
   pricing?: ModelPricing;
+  /** 是否允许在侧边栏选择并用于运行；旧配置缺失时按启用处理 */
+  enabled?: boolean;
 }
 
 export interface SafetySettings {
@@ -114,10 +123,11 @@ export interface SitePermissions {
 }
 
 export interface AppConfig {
-  version: 1;
+  version: 2;
   providers: ProviderConfig[];
   models: ModelConfig[];
-  defaultModelId: string;
+  bindings: ModelBinding[];
+  defaultBindingId: string;
   safety: SafetySettings;
   advanced: AdvancedSettings;
   sites: SitePermissions;
@@ -156,11 +166,18 @@ export type TimelineItem =
   | { kind: 'error'; id: string; text: string }
   | { kind: 'info'; id: string; text: string; action?: 'continue' };
 
-export interface ModelPick {
+export interface BindingPick {
   id: string;
   label: string;
   vision: boolean;
   providerName: string;
+  enabled?: boolean;
+}
+
+export interface DiscoveredModel {
+  id: string;
+  ownedBy?: string;
+  object?: string;
 }
 
 /** 会话列表项（轻量元数据，不含消息体） */
@@ -199,7 +216,7 @@ export type PanelToBg =
   | { type: 'new_chat' }
   | { type: 'switch_conv'; id: string }
   | { type: 'delete_conv'; id: string }
-  | { type: 'set_model'; modelId: string }
+  | { type: 'set_binding'; bindingId: string }
   | { type: 'set_vision'; enabled: boolean }
   | { type: 'approval'; id: string; decision: ApprovalDecision }
   | { type: 'detach' }
@@ -210,8 +227,8 @@ export type BgToPanel =
       type: 'snapshot';
       items: TimelineItem[];
       running: boolean;
-      modelId: string;
-      models: ModelPick[];
+      bindingId: string;
+      bindings: BindingPick[];
       /** 会话级视觉覆盖：null=跟随模型，false=本会话关闭，true=本会话强制开启 */
       visionOverride: boolean | null;
     }
@@ -219,7 +236,7 @@ export type BgToPanel =
   | { type: 'text_delta'; id: string; delta: string }
   | { type: 'run_state'; running: boolean }
   | { type: 'conversations'; list: ConvMeta[]; activeId: string }
-  | { type: 'models'; models: ModelPick[]; modelId: string }
+  | { type: 'bindings'; bindings: BindingPick[]; bindingId: string }
   | {
       type: 'usage';
       input: number;

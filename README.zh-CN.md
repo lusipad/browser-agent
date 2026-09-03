@@ -22,7 +22,8 @@
 
 ## 特性
 
-- **任意 OpenAI 兼容模型** — OpenAI / DeepSeek / OpenRouter / Ollama / vLLM / LM Studio…
+- **以服务商为中心管理模型** — 接入 OpenAI / DeepSeek / OpenRouter / Ollama / vLLM / LM Studio…，通过 `/models` 发现模型并批量管理
+- **同一模型支持多个 Endpoint** — 可通过不同服务商或网关使用同一个模型
 - **密钥只存本机** — 保存在 `chrome.storage.local`，不经任何中间服务器
 - **逐站授权** — 每个域名首次操作前需明确批准
 - **Set-of-marks** — 截图上叠加编号框，模型按编号精确定位元素
@@ -47,7 +48,7 @@ npm run build        # 产物输出到 dist/
 3. 首次安装自动打开设置页 — 填入 endpoint 和 API Key，点击**测试连接**
 4. 点击工具栏图标打开**侧边栏**，选好模型，开始对话
 
-> 大多数 OpenAI 兼容接口的 Base URL 需要以 `/v1` 结尾（例如 `https://provider.example/v1`）。**测试连接**会校验 `/models` 返回格式，并列出服务商未提供的已配置模型。
+> Base URL 可以带或不带末尾的 `/v1`（例如 `https://provider.example` 或 `https://provider.example/v1`）。**测试连接**用于验证 Endpoint，**同步模型**会读取 `/models`，随后可批量导入、启用、禁用或删除模型接入。
 >
 > 开发时用 `npm run watch` 监听 `src/`，改完刷新扩展即可。修改 `public/` 需重新 `npm run build`。
 

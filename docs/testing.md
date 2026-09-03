@@ -36,7 +36,7 @@ The automated tests cover perception and logic. The following protocol covers **
 npm install && npm run build
 ```
 
-`chrome://extensions` → Developer mode → Load unpacked → select `dist` → fill the Base URL (usually ending in `/v1`) and API key in Options → Test Connection → open sidebar, pick a visual model (e.g., GPT-5.6 Terra).
+`chrome://extensions` → Developer mode → Load unpacked → select `dist` → fill the Base URL (with or without a trailing `/v1`) and API key in Options → Test Connection → Sync Models → open sidebar, pick a visual model (e.g., GPT-5.6 Terra).
 
 > Debug: click the "Service Worker" link on the extension card to open the background console.
 
@@ -117,7 +117,7 @@ npm run bench:e2e     # 端到端 agent 评测（真实 LLM + Playwright）
 npm install && npm run build
 ```
 
-`chrome://extensions` → 开发者模式 → 加载已解压的扩展程序 → 选 `dist` → 设置页填写 Base URL（通常以 `/v1` 结尾）和 API Key → 测试连接 → 工具栏图标打开侧边栏，选视觉模型（如 GPT-5.6 Terra）。
+`chrome://extensions` → 开发者模式 → 加载已解压的扩展程序 → 选 `dist` → 设置页填写 Base URL（末尾可带或不带 `/v1`）和 API Key → 测试连接 → 同步模型 → 工具栏图标打开侧边栏，选视觉模型（如 GPT-5.6 Terra）。
 
 #### 0.5 一键诊断（最快的第一步，不花 API 钱）
 

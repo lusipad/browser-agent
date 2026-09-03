@@ -22,7 +22,8 @@ A Chrome extension (MV3) that lets you control your browser with natural languag
 
 ## Features
 
-- **Any OpenAI-compatible model** — OpenAI / DeepSeek / OpenRouter / Ollama / vLLM / LM Studio…
+- **Provider-centered model management** — connect OpenAI / DeepSeek / OpenRouter / Ollama / vLLM / LM Studio…, discover models from `/models`, and manage them in bulk
+- **Multiple endpoints per model** — use the same model through different providers or gateways
 - **Keys stay local** — stored in `chrome.storage.local`, never sent to any intermediary
 - **Per-site authorization** — each domain requires explicit approval before any interaction
 - **Set-of-marks** — numbered bounding boxes overlaid on screenshots for precise element targeting
@@ -47,7 +48,7 @@ npm run build        # outputs to dist/
 3. The Options page opens — enter your endpoint URL and API key, click **Test Connection**
 4. Click the toolbar icon to open the **sidebar**, pick a model, start chatting
 
-> Most OpenAI-compatible endpoints require a Base URL ending in `/v1` (for example, `https://provider.example/v1`). **Test Connection** verifies the `/models` response and reports configured models the provider does not offer.
+> Base URLs may be entered with or without a trailing `/v1` (for example, `https://provider.example` or `https://provider.example/v1`). **Test Connection** validates the endpoint, while **Sync Models** reads `/models` so you can import, enable, disable, or delete model access in bulk.
 >
 > Use `npm run watch` during development. Changes to `src/` are rebuilt automatically; changes to `public/` require a full `npm run build`.
 

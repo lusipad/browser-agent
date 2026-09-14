@@ -20,12 +20,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Sync model registry from LiteLLM
         run: node scripts/sync-registry.mjs
 
       - name: Verify unit tests
-        run: node test/run-unit.mjs
+        run: npm run test:unit
 
       - name: Commit and push changes to main
         run: |

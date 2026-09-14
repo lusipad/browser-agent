@@ -20,6 +20,16 @@ A Chrome extension (MV3) that lets you control your browser with natural languag
   <img src="docs/screenshots/options-en.png" width="400" alt="Options page">
 </p>
 
+## 🎯 Killer Use Cases
+
+Control your browser like a human assistant without writing brittle selectors or scripts:
+
+- 📊 **Smart Web Scraping & Data Extraction** — Extract table data, e-commerce pricing, product specs, or job posts into clean JSON/Markdown in one click.
+- ✍️ **Autonomous Multi-Step Form Filling** — Simply describe what to fill; the agent identifies fields, dropdowns, and checkboxes to complete forms accurately.
+- 🔍 **Deep Research & Cross-Tab Navigation** — Let AI open tabs, navigate search results, read long articles, and synthesize comparative summaries.
+- 🤖 **Routine Browser Workflow Automation** — Automate repetitive web tasks, click-through flows, and page monitoring directly from the side panel.
+- 🔒 **100% Private & Local-First (BYOK)** — Direct connection to your own model provider (DeepSeek, OpenAI, Claude, or local Ollama). API keys never leave your machine.
+
 ## Features
 
 - **Provider-centered model management** — connect OpenAI / DeepSeek / OpenRouter / Ollama / vLLM / LM Studio…, discover models from `/models`, and manage them in bulk

@@ -1,6 +1,6 @@
 {
-  "extName": { "message": "Browser Agent" },
+  "extName": { "message": "Browser Agent - AI 网页自动化与自动填表助手" },
   "extShortName": { "message": "Browser Agent" },
-  "extDesc": { "message": "在侧边栏运行的 AI 浏览器智能体：接任意 OpenAI 兼容模型，用自然语言自动完成网页操作。密钥只存本机。" },
+  "extDesc": { "message": "在侧边栏用自然语言操作浏览器：批量提取网页表格、自动填表、比价与研读。支持 DeepSeek、GPT、Claude、Ollama 本地模型，密钥仅存本机。" },
   "actionTitle": { "message": "打开 Browser Agent" }
 }

@@ -31,9 +31,9 @@ export const sidepanelDict = {
   'composer.stop': { zh: '停止', en: 'Stop' },
   // Welcome
   'welcome.sub': { zh: '用自然语言驱动浏览器。它会打开标签页、点击、填表、读取页面并汇报结果。', en: 'Drive your browser with natural language — it opens tabs, clicks, fills forms, reads pages and reports back.' },
-  'welcome.ex1': { zh: '打开 news.ycombinator.com，把前 5 条标题和链接整理给我', en: 'Open news.ycombinator.com and list the top 5 titles with links' },
-  'welcome.ex2': { zh: '在 GitHub 搜索 "browser agent"，告诉我 star 最多的仓库', en: 'Search GitHub for "browser agent" and tell me the most-starred repo' },
-  'welcome.ex3': { zh: '帮我在当前页面填写这个表单并截图确认', en: 'Fill in this form on the current page and screenshot to confirm' },
+  'welcome.ex1': { zh: '📊 提取当前页面的所有表格数据并整理汇报', en: '📊 Extract all table data from this page and summarize' },
+  'welcome.ex2': { zh: '📝 深度阅读当前网页，提炼核心论点与关键要点', en: '📝 Read and extract key takeaways from this page' },
+  'welcome.ex3': { zh: '🔍 在 GitHub 搜索 "browser agent"，找出 Star 最多的项目', en: '🔍 Search GitHub for "browser agent" and find top starred repos' },
   'welcome.tip': { zh: '首次操作某个网站时会请求你的授权。敏感操作（密码、上传、执行脚本）需要确认。', en: 'You approve each new site on first use. Sensitive actions (passwords, uploads, scripts) need confirmation.' },
   // Timeline / approval
   'timeline.continue': { zh: '继续执行 ↵', en: 'Continue ↵' },

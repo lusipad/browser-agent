@@ -1,6 +1,6 @@
 {
-  "extName": { "message": "Browser Agent" },
+  "extName": { "message": "Browser Agent - AI Automation & Form Filler" },
   "extShortName": { "message": "Browser Agent" },
-  "extDesc": { "message": "An AI browser agent in your side panel: connect any OpenAI-compatible model to automate web tasks with natural language. Keys stay on your machine." },
+  "extDesc": { "message": "Automate browser tasks with AI: scrape tables, auto-fill forms, research pages with DeepSeek, GPT, Claude or Ollama. 100% private." },
   "actionTitle": { "message": "Open Browser Agent" }
 }

@@ -9,11 +9,12 @@ interface Props {
   running: boolean;
   onApprove: (id: string, decision: ApprovalDecision) => void;
   onContinue: () => void;
+  onSelectExample?: (text: string) => void;
 }
 
-export function Timeline({ items, running, onApprove, onContinue }: Props) {
+export function Timeline({ items, running, onApprove, onContinue, onSelectExample }: Props) {
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
-  if (!items.length) return <Welcome />;
+  if (!items.length) return <Welcome onSelect={onSelectExample} />;
   // 只有最后一条「继续」提示可点，避免历史里多个按钮
   const lastContinueId = [...items].reverse().find((it) => it.kind === 'info' && it.action === 'continue')?.id;
   return (
@@ -35,7 +36,7 @@ export function Timeline({ items, running, onApprove, onContinue }: Props) {
   );
 }
 
-function Welcome() {
+function Welcome({ onSelect }: { onSelect?: (text: string) => void }) {
   const t = useT();
   const examples = [t('welcome.ex1'), t('welcome.ex2'), t('welcome.ex3')];
   return (
@@ -45,9 +46,15 @@ function Welcome() {
       <p className="welcome-sub">{t('welcome.sub')}</p>
       <div className="welcome-examples">
         {examples.map((e) => (
-          <div className="ex" key={e}>
+          <button
+            type="button"
+            className="ex"
+            key={e}
+            onClick={() => onSelect?.(e)}
+            title="点击直接执行"
+          >
             {e}
-          </div>
+          </button>
         ))}
       </div>
       <p className="welcome-tip">{t('welcome.tip')}</p>

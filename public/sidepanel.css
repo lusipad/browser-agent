@@ -648,10 +648,20 @@ body {
   background: var(--bg-soft);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 8px 11px;
+  padding: 9px 12px;
   font-size: 12.5px;
   text-align: left;
   color: var(--text);
+  cursor: pointer;
+  width: 100%;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.welcome-examples .ex:hover {
+  background: rgba(79, 70, 229, 0.08);
+  border-color: #4f46e5;
+  color: #4f46e5;
+  transform: translateY(-1px);
 }
 .welcome-tip {
   font-size: 11.5px;

@@ -154,6 +154,7 @@ export function App() {
           running={running}
           onApprove={(id, decision) => port.post({ type: 'approval', id, decision })}
           onContinue={() => port.post({ type: 'continue' })}
+          onSelectExample={(text) => port.post({ type: 'send', text })}
         />
       </div>
       <Composer

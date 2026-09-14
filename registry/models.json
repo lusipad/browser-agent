@@ -247,6 +247,18 @@
       "contextWindow": 1000000
     },
     {
+      "id": "deepseek-flash",
+      "label": "DeepSeek Flash（原生视觉）",
+      "vision": true,
+      "contextWindow": 1000000
+    },
+    {
+      "id": "deepseek-pro",
+      "label": "DeepSeek Pro",
+      "vision": false,
+      "contextWindow": 1000000
+    },
+    {
       "id": "grok-4.6",
       "label": "Grok 4.6",
       "vision": true,
@@ -958,6 +970,26 @@
       "pricing": {
         "input": 1.32,
         "output": 3.96
+      }
+    },
+    {
+      "id": "deepseek/deepseek-flash",
+      "modelId": "deepseek-flash",
+      "providerId": "deepseek",
+      "apiModelName": "deepseek-flash",
+      "pricing": {
+        "input": 0.15,
+        "output": 0.6
+      }
+    },
+    {
+      "id": "deepseek/deepseek-pro",
+      "modelId": "deepseek-pro",
+      "providerId": "deepseek",
+      "apiModelName": "deepseek-pro",
+      "pricing": {
+        "input": 0.28,
+        "output": 1.1
       }
     },
     {

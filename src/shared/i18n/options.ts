@@ -92,7 +92,7 @@ export const optionsDict = {
   'opt.models.label': { zh: '显示名称', en: 'Display name' },
   'opt.models.provider': { zh: '服务商', en: 'Provider' },
   'opt.models.modelName': { zh: '模型名（传给 API）', en: 'Model name (sent to API)' },
-  'opt.models.modelNameHint': { zh: '例如 gpt-5.6-sol、deepseek-v4-flash', en: 'e.g. gpt-5.6-sol, deepseek-v4-flash' },
+  'opt.models.modelNameHint': { zh: '例如 gpt-5.6-sol、deepseek-flash', en: 'e.g. gpt-5.6-sol, deepseek-flash' },
   'opt.models.vision': { zh: '支持视觉（截图）', en: 'Vision (screenshots)' },
   'opt.models.contextWindow': { zh: '上下文窗口 (token)', en: 'Context window (tokens)' },
   'opt.models.contextWindowHint': {

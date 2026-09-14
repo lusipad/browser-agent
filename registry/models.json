@@ -247,18 +247,6 @@
       "contextWindow": 1000000
     },
     {
-      "id": "deepseek-reasoner",
-      "label": "DeepSeek R1（深度推理）",
-      "vision": false,
-      "contextWindow": 131072
-    },
-    {
-      "id": "deepseek-chat",
-      "label": "DeepSeek V3（高性价比）",
-      "vision": false,
-      "contextWindow": 131072
-    },
-    {
       "id": "grok-4.6",
       "label": "Grok 4.6",
       "vision": true,
@@ -970,26 +958,6 @@
       "pricing": {
         "input": 1.32,
         "output": 3.96
-      }
-    },
-    {
-      "id": "deepseek/deepseek-reasoner",
-      "modelId": "deepseek-reasoner",
-      "providerId": "deepseek",
-      "apiModelName": "deepseek-reasoner",
-      "pricing": {
-        "input": 0.28,
-        "output": 0.42
-      }
-    },
-    {
-      "id": "deepseek/deepseek-chat",
-      "modelId": "deepseek-chat",
-      "providerId": "deepseek",
-      "apiModelName": "deepseek-chat",
-      "pricing": {
-        "input": 0.28,
-        "output": 0.42
       }
     },
     {

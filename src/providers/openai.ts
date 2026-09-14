@@ -148,7 +148,7 @@ export const openaiStream: ProviderImpl = async (p) => {
 };
 
 function buildMessages(system: string, msgs: ReturnType<typeof mergeConsecutive>, apiModelName?: string): unknown[] {
-  const isDeepSeekReasoner = /deepseek.*reasoner|deepseek-r1/i.test(apiModelName ?? '');
+  const isDeepSeek = /deepseek/i.test(apiModelName ?? '');
   const out: unknown[] = [{ role: 'system', content: system }];
   for (const m of msgs) {
     if (m.role === 'assistant') {
@@ -164,7 +164,7 @@ function buildMessages(system: string, msgs: ReturnType<typeof mergeConsecutive>
       if (toolCalls.length) msg.tool_calls = toolCalls;
       if (m.reasoning_content != null) {
         msg.reasoning_content = m.reasoning_content;
-      } else if (isDeepSeekReasoner && toolCalls.length) {
+      } else if (isDeepSeek && toolCalls.length) {
         msg.reasoning_content = '';
       }
       out.push(msg);

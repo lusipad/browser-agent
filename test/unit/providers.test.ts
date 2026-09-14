@@ -408,7 +408,7 @@ test('openaiStream: 解析 delta.reasoning_content 并回传 reasoningText', asy
   assert.equal(asstMsg.reasoning_content, 'prior thought', '发往 API 的 assistant 消息保留了 reasoning_content');
 });
 
-test('openaiStream: deepseek-reasoner 包含 tool_calls 但无 reasoning_content 时兜底空串', async () => {
+test('openaiStream: deepseek (如 deepseek-v4-pro) 包含 tool_calls 但无 reasoning_content 时兜底空串', async () => {
   let body: any = null;
   const server = http.createServer((req, res) => {
     let raw = '';
@@ -424,8 +424,8 @@ test('openaiStream: deepseek-reasoner 包含 tool_calls 但无 reasoning_content
   const port = await listenOn(server);
   await openaiStream({
     provider: { id: 'p', name: 'Mock', baseUrl: 'http://127.0.0.1:' + port, apiKey: 'k' },
-    model: { id: 'deepseek-reasoner', label: 'DeepSeek R1', vision: false },
-    binding: { id: 'b', modelId: 'deepseek-reasoner', providerId: 'p', apiModelName: 'deepseek-reasoner' },
+    model: { id: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro', vision: false },
+    binding: { id: 'b', modelId: 'deepseek-v4-pro', providerId: 'p', apiModelName: 'deepseek-v4-pro' },
     system: 'sys',
     messages: [
       { role: 'assistant', content: [{ type: 'tool_use', id: 'call_1', name: 'navi', input: {} }] },
@@ -442,5 +442,5 @@ test('openaiStream: deepseek-reasoner 包含 tool_calls 但无 reasoning_content
   server.close();
 
   const asstMsg = body.messages.find((m: any) => m.role === 'assistant');
-  assert.equal(asstMsg.reasoning_content, '', 'DeepSeek-reasoner 下带 tool_calls 的 assistant 消息若缺失 reasoning_content 则兜底为 ""');
+  assert.equal(asstMsg.reasoning_content, '', 'DeepSeek 下带 tool_calls 的 assistant 消息若缺失 reasoning_content 则兜底为 ""');
 });

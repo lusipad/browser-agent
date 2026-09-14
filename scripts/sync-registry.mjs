@@ -60,8 +60,6 @@ const CURATED = {
   deepseek: {
     'deepseek-v4-flash':    'DeepSeek V4 Flash',
     'deepseek-v4-pro':      'DeepSeek V4 Pro',
-    'deepseek-reasoner':    'DeepSeek R1（深度推理）',
-    'deepseek-chat':        'DeepSeek V3（高性价比）',
   },
   xai: {
     'xai/grok-4.6':                'Grok 4.6',

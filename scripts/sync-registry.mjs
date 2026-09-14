@@ -59,9 +59,7 @@ const CURATED = {
   },
   deepseek: {
     'deepseek-flash':       'DeepSeek Flash（原生视觉）',
-    'deepseek-pro':         'DeepSeek Pro',
-    'deepseek-v4-flash':    'DeepSeek V4 Flash (Legacy)',
-    'deepseek-v4-pro':      'DeepSeek V4 Pro (Legacy)',
+    'deepseek-v4-pro':      'DeepSeek V4 Pro',
   },
   xai: {
     'xai/grok-4.6':                'Grok 4.6',

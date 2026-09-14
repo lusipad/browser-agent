@@ -1,6 +1,6 @@
 {
-  "version": 6,
-  "updatedAt": "2026-08-31",
+  "version": 7,
+  "updatedAt": "2026-09-14",
   "providers": [
     {
       "id": "openai",
@@ -116,636 +116,832 @@
   "models": [
     {
       "id": "gpt-5.6-sol",
+      "providerId": "openai",
+      "model": "gpt-5.6-sol",
       "label": "GPT-5.6 Sol（高性能）",
       "vision": true,
       "contextWindow": 922000
     },
     {
       "id": "gpt-5.6-terra",
+      "providerId": "openai",
+      "model": "gpt-5.6-terra",
       "label": "GPT-5.6 Terra（均衡）",
       "vision": true,
       "contextWindow": 922000
     },
     {
       "id": "gpt-5.6-luna",
+      "providerId": "openai",
+      "model": "gpt-5.6-luna",
       "label": "GPT-5.6 Luna（快速）",
       "vision": true,
       "contextWindow": 922000
     },
     {
       "id": "o3",
+      "providerId": "openai",
+      "model": "o3",
       "label": "o3（深度推理）",
       "vision": true,
       "contextWindow": 200000
     },
     {
       "id": "o4-mini",
+      "providerId": "openai",
+      "model": "o4-mini",
       "label": "o4-mini（快速推理）",
       "vision": true,
       "contextWindow": 200000
     },
     {
       "id": "gpt-4.1",
+      "providerId": "openai",
+      "model": "gpt-4.1",
       "label": "GPT-4.1",
       "vision": true,
       "contextWindow": 1047576
     },
     {
       "id": "gpt-4.1-mini",
+      "providerId": "openai",
+      "model": "gpt-4.1-mini",
       "label": "GPT-4.1 Mini（轻量）",
       "vision": true,
       "contextWindow": 1047576
     },
     {
       "id": "gpt-4.1-nano",
+      "providerId": "openai",
+      "model": "gpt-4.1-nano",
       "label": "GPT-4.1 Nano（超轻量）",
       "vision": true,
       "contextWindow": 1047576
     },
     {
       "id": "gpt-4o",
+      "providerId": "openai",
+      "model": "gpt-4o",
       "label": "GPT-4o",
       "vision": true,
       "contextWindow": 128000
     },
     {
       "id": "gpt-4o-mini",
+      "providerId": "openai",
+      "model": "gpt-4o-mini",
       "label": "GPT-4o Mini",
       "vision": true,
       "contextWindow": 128000
     },
     {
       "id": "claude-opus-5",
+      "providerId": "anthropic",
+      "model": "claude-opus-5",
       "label": "Claude Opus 5",
       "vision": true,
       "contextWindow": 1000000
     },
     {
       "id": "claude-sonnet-5",
+      "providerId": "anthropic",
+      "model": "claude-sonnet-5",
       "label": "Claude Sonnet 5",
       "vision": true,
       "contextWindow": 1000000
     },
     {
       "id": "claude-opus-4-8",
+      "providerId": "anthropic",
+      "model": "claude-opus-4-8",
       "label": "Claude Opus 4.8",
       "vision": true,
       "contextWindow": 1000000
     },
     {
       "id": "claude-opus-4-7",
+      "providerId": "anthropic",
+      "model": "claude-opus-4-7",
       "label": "Claude Opus 4.7",
       "vision": true,
       "contextWindow": 1000000
     },
     {
       "id": "claude-opus-4-6",
+      "providerId": "anthropic",
+      "model": "claude-opus-4-6",
       "label": "Claude Opus 4.6",
       "vision": true,
       "contextWindow": 1000000
     },
     {
       "id": "claude-opus-4-5",
+      "providerId": "anthropic",
+      "model": "claude-opus-4-5",
       "label": "Claude Opus 4.5",
       "vision": true,
       "contextWindow": 200000
     },
     {
       "id": "claude-sonnet-4-6",
+      "providerId": "anthropic",
+      "model": "claude-sonnet-4-6",
       "label": "Claude Sonnet 4.6",
       "vision": true,
       "contextWindow": 1000000
     },
     {
       "id": "claude-sonnet-4-5",
+      "providerId": "anthropic",
+      "model": "claude-sonnet-4-5",
       "label": "Claude Sonnet 4.5",
       "vision": true,
       "contextWindow": 200000
     },
     {
       "id": "claude-haiku-4-5",
+      "providerId": "anthropic",
+      "model": "claude-haiku-4-5",
       "label": "Claude Haiku 4.5（快速）",
       "vision": true,
       "contextWindow": 200000
     },
     {
       "id": "claude-fable-5",
+      "providerId": "anthropic",
+      "model": "claude-fable-5",
       "label": "Claude Fable 5",
       "vision": true,
       "contextWindow": 1000000
     },
     {
-      "id": "deepseek-v4-flash",
-      "label": "DeepSeek V4 Flash",
-      "vision": false,
-      "contextWindow": 1000000
-    },
-    {
-      "id": "deepseek-v4-pro",
-      "label": "DeepSeek V4 Pro",
-      "vision": false,
-      "contextWindow": 1000000
-    },
-    {
       "id": "deepseek-flash",
+      "providerId": "deepseek",
+      "model": "deepseek-flash",
       "label": "DeepSeek Flash（原生视觉）",
       "vision": true,
       "contextWindow": 1000000
     },
     {
-      "id": "deepseek-pro",
-      "label": "DeepSeek Pro",
+      "id": "deepseek-v4-pro",
+      "providerId": "deepseek",
+      "model": "deepseek-v4-pro",
+      "label": "DeepSeek V4 Pro",
       "vision": false,
       "contextWindow": 1000000
     },
     {
       "id": "grok-4.6",
+      "providerId": "xai",
+      "model": "grok-4.6",
       "label": "Grok 4.6",
       "vision": true,
       "contextWindow": 500000
     },
     {
       "id": "grok-4.5",
+      "providerId": "xai",
+      "model": "grok-4.5",
       "label": "Grok 4.5",
       "vision": true,
       "contextWindow": 500000
     },
     {
       "id": "grok-4",
+      "providerId": "xai",
+      "model": "grok-4",
       "label": "Grok 4",
       "vision": false,
       "contextWindow": 256000
     },
     {
       "id": "grok-4-fast-reasoning",
+      "providerId": "xai",
+      "model": "grok-4-fast-reasoning",
       "label": "Grok 4 Fast（推理）",
       "vision": false,
       "contextWindow": 2000000
     },
     {
       "id": "grok-3",
+      "providerId": "xai",
+      "model": "grok-3",
       "label": "Grok 3",
       "vision": false,
       "contextWindow": 131072
     },
     {
       "id": "grok-3-mini",
+      "providerId": "xai",
+      "model": "grok-3-mini",
       "label": "Grok 3 Mini",
       "vision": false,
       "contextWindow": 131072
     },
     {
       "id": "grok-code-fast",
+      "providerId": "xai",
+      "model": "grok-code-fast",
       "label": "Grok Code（编程）",
       "vision": true,
       "contextWindow": 256000
     },
     {
       "id": "mistral-large-latest",
+      "providerId": "mistral",
+      "model": "mistral-large-latest",
       "label": "Mistral Large",
       "vision": true,
       "contextWindow": 262144
     },
     {
       "id": "mistral-medium-latest",
+      "providerId": "mistral",
+      "model": "mistral-medium-latest",
       "label": "Mistral Medium",
       "vision": true,
       "contextWindow": 262144
     },
     {
       "id": "mistral-small-latest",
+      "providerId": "mistral",
+      "model": "mistral-small-latest",
       "label": "Mistral Small",
       "vision": true,
       "contextWindow": 262144
     },
     {
       "id": "codestral-latest",
+      "providerId": "mistral",
+      "model": "codestral-latest",
       "label": "Codestral（编程）",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "pixtral-large-latest",
+      "providerId": "mistral",
+      "model": "pixtral-large-latest",
       "label": "Pixtral Large（视觉）",
       "vision": true,
       "contextWindow": 128000
     },
     {
       "id": "gemini-2.5-pro",
+      "providerId": "google",
+      "model": "gemini-2.5-pro",
       "label": "Gemini 2.5 Pro",
       "vision": true,
       "contextWindow": 1048576
     },
     {
       "id": "gemini-2.5-flash",
+      "providerId": "google",
+      "model": "gemini-2.5-flash",
       "label": "Gemini 2.5 Flash（快速）",
       "vision": true,
       "contextWindow": 1048576
     },
     {
       "id": "gemini-2.5-flash-lite",
+      "providerId": "google",
+      "model": "gemini-2.5-flash-lite",
       "label": "Gemini 2.5 Flash Lite（超轻量）",
       "vision": true,
       "contextWindow": 1048576
     },
     {
       "id": "gemini-2.0-flash",
+      "providerId": "google",
+      "model": "gemini-2.0-flash",
       "label": "Gemini 2.0 Flash",
       "vision": true,
       "contextWindow": 1048576
     },
     {
       "id": "llama-3.3-70b-versatile",
+      "providerId": "groq",
+      "model": "llama-3.3-70b-versatile",
       "label": "Llama 3.3 70B (Groq·超快)",
       "vision": false,
       "contextWindow": 131072
     },
     {
       "id": "meta-llama/llama-4-maverick-17b-128e-instruct",
+      "providerId": "groq",
+      "model": "meta-llama/llama-4-maverick-17b-128e-instruct",
       "label": "Llama 4 Maverick (Groq)",
       "vision": true,
       "contextWindow": 131072
     },
     {
       "id": "meta-llama/llama-4-scout-17b-16e-instruct",
+      "providerId": "groq",
+      "model": "meta-llama/llama-4-scout-17b-16e-instruct",
       "label": "Llama 4 Scout (Groq)",
       "vision": true,
       "contextWindow": 131072
     },
     {
       "id": "qwen/qwen3-32b",
+      "providerId": "groq",
+      "model": "qwen/qwen3-32b",
       "label": "Qwen3 32B (Groq)",
       "vision": false,
       "contextWindow": 131000
     },
     {
       "id": "anthropic/claude-sonnet-4.6",
+      "providerId": "openrouter",
+      "model": "anthropic/claude-sonnet-4.6",
       "label": "Claude Sonnet 4.6 (OR)",
       "vision": true,
       "contextWindow": 1000000
     },
     {
       "id": "anthropic/claude-opus-4",
+      "providerId": "openrouter",
+      "model": "anthropic/claude-opus-4",
       "label": "Claude Opus 4 (OR)",
       "vision": true,
       "contextWindow": 200000
     },
     {
       "id": "anthropic/claude-haiku-4.5",
+      "providerId": "openrouter",
+      "model": "anthropic/claude-haiku-4.5",
       "label": "Claude Haiku 4.5 (OR)",
       "vision": true,
       "contextWindow": 200000
     },
     {
       "id": "google/gemini-2.5-pro",
+      "providerId": "openrouter",
+      "model": "google/gemini-2.5-pro",
       "label": "Gemini 2.5 Pro (OR)",
       "vision": true,
       "contextWindow": 1048576
     },
     {
       "id": "google/gemini-2.5-flash",
+      "providerId": "openrouter",
+      "model": "google/gemini-2.5-flash",
       "label": "Gemini 2.5 Flash (OR)",
       "vision": true,
       "contextWindow": 1048576
     },
     {
       "id": "deepseek/deepseek-chat",
+      "providerId": "openrouter",
+      "model": "deepseek/deepseek-chat",
       "label": "DeepSeek V3 (OR)",
       "vision": false,
       "contextWindow": 65536
     },
     {
       "id": "qwen/qwen3-235b-a22b-2507",
+      "providerId": "openrouter",
+      "model": "qwen/qwen3-235b-a22b-2507",
       "label": "Qwen3 235B (OR)",
       "vision": false,
       "contextWindow": 262144
     },
     {
       "id": "mistralai/mistral-large",
+      "providerId": "openrouter",
+      "model": "mistralai/mistral-large",
       "label": "Mistral Large (OR)",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "qwen-max",
+      "providerId": "dashscope",
+      "model": "qwen-max",
       "label": "通义千问 Max（旗舰）",
       "vision": false,
       "contextWindow": 30720
     },
     {
       "id": "qwen-plus",
+      "providerId": "dashscope",
+      "model": "qwen-plus",
       "label": "通义千问 Plus（均衡）",
       "vision": false,
       "contextWindow": 129024
     },
     {
       "id": "qwen-flash",
+      "providerId": "dashscope",
+      "model": "qwen-flash",
       "label": "通义千问 Flash（极速低价）",
       "vision": false,
       "contextWindow": 997952
     },
     {
       "id": "qwen-coder",
+      "providerId": "dashscope",
+      "model": "qwen-coder",
       "label": "通义千问 Coder（编程）",
       "vision": false,
       "contextWindow": 1000000
     },
     {
       "id": "qwen3-vl-plus",
+      "providerId": "dashscope",
+      "model": "qwen3-vl-plus",
       "label": "通义千问 VL-Plus（视觉）",
       "vision": true,
       "contextWindow": 260096
     },
     {
       "id": "kimi-k3",
+      "providerId": "moonshot",
+      "model": "kimi-k3",
       "label": "Kimi K3（最新旗舰）",
       "vision": true,
       "contextWindow": 1048576
     },
     {
       "id": "kimi-k2.7-code",
+      "providerId": "moonshot",
+      "model": "kimi-k2.7-code",
       "label": "Kimi K2.7 Code（编程）",
       "vision": true,
       "contextWindow": 262144
     },
     {
       "id": "kimi-k2.6",
+      "providerId": "moonshot",
+      "model": "kimi-k2.6",
       "label": "Kimi K2.6",
       "vision": true,
       "contextWindow": 262144
     },
     {
       "id": "kimi-k2.5",
+      "providerId": "moonshot",
+      "model": "kimi-k2.5",
       "label": "Kimi K2.5",
       "vision": true,
       "contextWindow": 262144
     },
     {
       "id": "kimi-k2-thinking",
+      "providerId": "moonshot",
+      "model": "kimi-k2-thinking",
       "label": "Kimi K2 Thinking（推理）",
       "vision": false,
       "contextWindow": 262144
     },
     {
       "id": "moonshot-v1-128k",
+      "providerId": "moonshot",
+      "model": "moonshot-v1-128k",
       "label": "Moonshot V1 128K（经典）",
       "vision": false,
       "contextWindow": 131072
     },
     {
       "id": "MiniMax-M3",
+      "providerId": "minimax",
+      "model": "MiniMax-M3",
       "label": "MiniMax M3（最新）",
       "vision": true,
       "contextWindow": 1000000
     },
     {
       "id": "MiniMax-M2.5",
+      "providerId": "minimax",
+      "model": "MiniMax-M2.5",
       "label": "MiniMax M2.5",
       "vision": false,
       "contextWindow": 1000000
     },
     {
       "id": "MiniMax-M2.5-lightning",
+      "providerId": "minimax",
+      "model": "MiniMax-M2.5-lightning",
       "label": "MiniMax M2.5 Lightning（快速）",
       "vision": false,
       "contextWindow": 1000000
     },
     {
       "id": "MiniMax-M2.1",
+      "providerId": "minimax",
+      "model": "MiniMax-M2.1",
       "label": "MiniMax M2.1",
       "vision": false,
       "contextWindow": 1000000
     },
     {
       "id": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+      "providerId": "together",
+      "model": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
       "label": "Llama 4 Maverick (Together)",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "deepseek-ai/DeepSeek-R1",
+      "providerId": "together",
+      "model": "deepseek-ai/DeepSeek-R1",
       "label": "DeepSeek R1 (Together)",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "deepseek-ai/DeepSeek-V3",
+      "providerId": "together",
+      "model": "deepseek-ai/DeepSeek-V3",
       "label": "DeepSeek V3 (Together)",
       "vision": false,
       "contextWindow": 65536
     },
     {
       "id": "Qwen/Qwen3-235B-A22B-Thinking-2507",
+      "providerId": "together",
+      "model": "Qwen/Qwen3-235B-A22B-Thinking-2507",
       "label": "Qwen3 235B Thinking (Together)",
       "vision": false,
       "contextWindow": 256000
     },
     {
       "id": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      "providerId": "together",
+      "model": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
       "label": "Llama 3.3 70B (Together)",
       "vision": false,
       "contextWindow": 131072
     },
     {
       "id": "accounts/fireworks/models/deepseek-v4-flash",
+      "providerId": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4-flash",
       "label": "DeepSeek V4 Flash (Fireworks)",
       "vision": false,
       "contextWindow": 1048576
     },
     {
       "id": "accounts/fireworks/models/deepseek-v4-pro",
+      "providerId": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4-pro",
       "label": "DeepSeek V4 Pro (Fireworks)",
       "vision": false,
       "contextWindow": 1048576
     },
     {
       "id": "accounts/fireworks/models/deepseek-r1",
+      "providerId": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-r1",
       "label": "DeepSeek R1 (Fireworks)",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "accounts/fireworks/models/llama4-maverick-instruct-basic",
+      "providerId": "fireworks",
+      "model": "accounts/fireworks/models/llama4-maverick-instruct-basic",
       "label": "Llama 4 Maverick (Fireworks)",
       "vision": false,
       "contextWindow": 131072
     },
     {
       "id": "accounts/fireworks/models/qwen3-235b-a22b",
+      "providerId": "fireworks",
+      "model": "accounts/fireworks/models/qwen3-235b-a22b",
       "label": "Qwen3 235B (Fireworks)",
       "vision": false,
       "contextWindow": 131072
     },
     {
       "id": "llama-3.3-70b",
+      "providerId": "cerebras",
+      "model": "llama-3.3-70b",
       "label": "Llama 3.3 70B (Cerebras·超快)",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "qwen-3-32b",
+      "providerId": "cerebras",
+      "model": "qwen-3-32b",
       "label": "Qwen3 32B (Cerebras·超快)",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "DeepSeek-R1",
+      "providerId": "sambanova",
+      "model": "DeepSeek-R1",
       "label": "DeepSeek R1 (SambaNova)",
       "vision": false,
       "contextWindow": 32768
     },
     {
       "id": "Meta-Llama-3.3-70B-Instruct",
+      "providerId": "sambanova",
+      "model": "Meta-Llama-3.3-70B-Instruct",
       "label": "Llama 3.3 70B (SambaNova)",
       "vision": false,
       "contextWindow": 131072
     },
     {
       "id": "Qwen3-32B",
+      "providerId": "sambanova",
+      "model": "Qwen3-32B",
       "label": "Qwen3 32B (SambaNova)",
       "vision": false,
       "contextWindow": 8192
     },
     {
       "id": "doubao-seed-2-0-pro-260215",
+      "providerId": "volcengine",
+      "model": "doubao-seed-2-0-pro-260215",
       "label": "豆包 Seed 2.0 Pro（火山）",
       "vision": true,
       "contextWindow": 256000
     },
     {
       "id": "doubao-seed-2-0-lite-260215",
+      "providerId": "volcengine",
+      "model": "doubao-seed-2-0-lite-260215",
       "label": "豆包 Seed 2.0 Lite（火山）",
       "vision": true,
       "contextWindow": 256000
     },
     {
       "id": "Qwen/Qwen2.5-VL-72B-Instruct",
+      "providerId": "siliconflow",
+      "model": "Qwen/Qwen2.5-VL-72B-Instruct",
       "label": "Qwen2.5-VL 72B（硅基流动·视觉）",
       "vision": true,
       "contextWindow": 32000
     },
     {
       "id": "THUDM/GLM-4-Plus",
+      "providerId": "siliconflow",
+      "model": "THUDM/GLM-4-Plus",
       "label": "GLM-4 Plus（硅基流动）",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "Qwen/Qwen3-30B-A3B",
+      "providerId": "siliconflow",
+      "model": "Qwen/Qwen3-30B-A3B",
       "label": "Qwen3 30B MoE（硅基流动·轻快）",
       "vision": false,
       "contextWindow": 32000
     },
     {
       "id": "internlm/internlm3-8b-instruct",
+      "providerId": "siliconflow",
+      "model": "internlm/internlm3-8b-instruct",
       "label": "InternLM3 8B（���基流动·免费）",
       "vision": false,
       "contextWindow": 32000
     },
     {
       "id": "glm-4-plus",
+      "providerId": "zhipu",
+      "model": "glm-4-plus",
       "label": "GLM-4 Plus（智谱旗舰）",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "glm-4-flash",
+      "providerId": "zhipu",
+      "model": "glm-4-flash",
       "label": "GLM-4 Flash（智谱·极速免费）",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "glm-4v-plus",
+      "providerId": "zhipu",
+      "model": "glm-4v-plus",
       "label": "GLM-4V Plus（智谱·视觉）",
       "vision": true,
       "contextWindow": 8000
     },
     {
       "id": "glm-4-long",
+      "providerId": "zhipu",
+      "model": "glm-4-long",
       "label": "GLM-4 Long（智谱·百万上下文）",
       "vision": false,
       "contextWindow": 1000000
     },
     {
       "id": "step-2-16k",
+      "providerId": "stepfun",
+      "model": "step-2-16k",
       "label": "Step-2（阶跃·旗舰）",
       "vision": false,
       "contextWindow": 16000
     },
     {
       "id": "step-1v-32k",
+      "providerId": "stepfun",
+      "model": "step-1v-32k",
       "label": "Step-1V（阶跃·视觉）",
       "vision": true,
       "contextWindow": 32000
     },
     {
       "id": "step-1-flash",
+      "providerId": "stepfun",
+      "model": "step-1-flash",
       "label": "Step-1 Flash（阶跃·极速低价）",
       "vision": false,
       "contextWindow": 16000
     },
     {
       "id": "Baichuan4",
+      "providerId": "baichuan",
+      "model": "Baichuan4",
       "label": "百川 4（旗舰）",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "Baichuan3-Turbo",
+      "providerId": "baichuan",
+      "model": "Baichuan3-Turbo",
       "label": "百川 3 Turbo（快速）",
       "vision": false,
       "contextWindow": 32000
     },
     {
       "id": "generalv3.5",
+      "providerId": "spark",
+      "model": "generalv3.5",
       "label": "星火 3.5（讯飞）",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "4.0Ultra",
+      "providerId": "spark",
+      "model": "4.0Ultra",
       "label": "星火 4.0 Ultra（讯飞·旗舰）",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "qwen3-vl",
+      "providerId": "ollama",
+      "model": "qwen3-vl",
       "label": "Qwen3-VL（本地·视觉）",
       "vision": true,
       "contextWindow": 128000
     },
     {
       "id": "llama3.3",
+      "providerId": "ollama",
+      "model": "llama3.3",
       "label": "Llama 3.3（本地）",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "qwen3",
+      "providerId": "ollama",
+      "model": "qwen3",
       "label": "Qwen3（本地）",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "deepseek-r1:14b",
+      "providerId": "ollama",
+      "model": "deepseek-r1:14b",
       "label": "DeepSeek R1 14B（本地·推理）",
       "vision": false,
       "contextWindow": 64000
     },
     {
       "id": "gemma3",
+      "providerId": "ollama",
+      "model": "gemma3",
       "label": "Gemma 3（本地）",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "glm4",
+      "providerId": "ollama",
+      "model": "glm4",
       "label": "GLM-4（本地）",
       "vision": false,
       "contextWindow": 128000
     },
     {
       "id": "minicpm-v",
+      "providerId": "ollama",
+      "model": "minicpm-v",
       "label": "MiniCPM-V（本地·视觉·轻量）",
       "vision": true,
       "contextWindow": 8000
@@ -953,13 +1149,13 @@
       }
     },
     {
-      "id": "deepseek/deepseek-v4-flash",
-      "modelId": "deepseek-v4-flash",
+      "id": "deepseek/deepseek-flash",
+      "modelId": "deepseek-flash",
       "providerId": "deepseek",
-      "apiModelName": "deepseek-v4-flash",
+      "apiModelName": "deepseek-flash",
       "pricing": {
-        "input": 0.44,
-        "output": 1.32
+        "input": 0.3,
+        "output": 1.2
       }
     },
     {
@@ -970,26 +1166,6 @@
       "pricing": {
         "input": 1.32,
         "output": 3.96
-      }
-    },
-    {
-      "id": "deepseek/deepseek-flash",
-      "modelId": "deepseek-flash",
-      "providerId": "deepseek",
-      "apiModelName": "deepseek-flash",
-      "pricing": {
-        "input": 0.15,
-        "output": 0.6
-      }
-    },
-    {
-      "id": "deepseek/deepseek-pro",
-      "modelId": "deepseek-pro",
-      "providerId": "deepseek",
-      "apiModelName": "deepseek-pro",
-      "pricing": {
-        "input": 0.28,
-        "output": 1.1
       }
     },
     {
@@ -1248,8 +1424,8 @@
       "providerId": "openrouter",
       "apiModelName": "deepseek/deepseek-chat",
       "pricing": {
-        "input": 0.14,
-        "output": 0.28
+        "input": 0.32,
+        "output": 0.89
       }
     },
     {
@@ -1258,8 +1434,8 @@
       "providerId": "openrouter",
       "apiModelName": "qwen/qwen3-235b-a22b-2507",
       "pricing": {
-        "input": 0.07,
-        "output": 0.1
+        "input": 0.22,
+        "output": 0.88
       }
     },
     {
@@ -1268,8 +1444,8 @@
       "providerId": "openrouter",
       "apiModelName": "mistralai/mistral-large",
       "pricing": {
-        "input": 8,
-        "output": 24
+        "input": 2,
+        "output": 6
       }
     },
     {

@@ -6,6 +6,27 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 0.4.1 — 2026-09-15
+
+### Fixed / 修复
+
+- **CDP 网络监听死锁与动作延迟** — 修复 HTTP 30x 重定向导致 `inFlight` 请求计数重复累加的问题；监听 `Page.frameNavigated` 并在主 Frame 页面跳转时自动重置计数器，消除每次操作后非必要的 6 秒超时等待。
+- **标签页关闭内存清理** — 监听 `chrome.tabs.onRemoved` 自动释放截图像素映射缓存 `lastShot`，杜绝内存泄漏。
+- **OpenAI 流式工具调用解析** — 修复第三方反代网关或特定大模型服务在每个 chunk 重复发送完整函数名称导致工具名被多倍拼接（如 `computercomputer...`）的 Bug。
+- **`wait_for` 跨页跳转异常容错** — 为探测轮询增加单次异常保护，平滑容忍页面刷新或跳转瞬间的 `Frame removed` 状态，避免智能体任务意外中断。
+- **侧边栏截图放大预览** — 移除被 Chromium 拦截的 `window.open(dataUrl)`，新增侧边栏内置全屏 Lightbox 模态预览器，支持快捷键关闭，并支持生成安全 HTML Blob URL 在新标签页中无损查看大图。
+
+### Changed / 变更
+
+- **存储配额扩展** — 在 `manifest.json` 声明 `unlimitedStorage` 权限，彻底避免多会话历史积累超过默认 10MB 配额导致的保存失败。
+- **设置页数字输入体验优化** — 高级设置中的数值输入框采用解耦的本地状态管理，支持自由退格清空后重新输入，失焦时自动进行边界规整与合法性检验。
+
+### Testing / 测试
+
+- 96 个单元测试（新增流式工具名称去重测试）、11 个真实 Chromium Playwright E2E 测试、TypeScript 类型检查与生产构建全部通过。
+
+---
+
 ## 0.4.0 — 2026-09-04
 
 ### Added / 新增

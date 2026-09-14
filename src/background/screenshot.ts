@@ -110,3 +110,14 @@ export function imageToCss(tabId: number, x: number, y: number): { x: number; y:
   const s = lastShot.get(tabId)?.scale ?? 1;
   return { x: Math.round(x * s), y: Math.round(y * s) };
 }
+
+/** 标签页关闭时清理截图换算缓存 */
+export function clearScreenshotState(tabId: number): void {
+  lastShot.delete(tabId);
+}
+
+chrome.tabs?.onRemoved?.addListener?.((tabId) => {
+  clearScreenshotState(tabId);
+});
+
+

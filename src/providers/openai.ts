@@ -119,7 +119,9 @@ export const openaiStream: ProviderImpl = async (p) => {
         calls.set(idx, cur);
       }
       if (tc.id) cur.id = tc.id;
-      if (tc.function?.name) cur.name += tc.function.name;
+      if (tc.function?.name) {
+        cur.name = cur.name && cur.name === tc.function.name ? cur.name : cur.name + tc.function.name;
+      }
       if (tc.function?.arguments) cur.args += tc.function.arguments;
     }
     if (choice.finish_reason) finish = choice.finish_reason;

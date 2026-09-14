@@ -200,9 +200,19 @@ chrome.debugger.onEvent.addListener((source, method, params: any) => {
       pushConsole(s, String(e.level ?? 'log'), `[${e.source ?? 'log'}] ${e.text ?? ''}`);
       break;
     }
+    case 'Page.frameNavigated': {
+      // 顶层主 frame 导航跳转：重置在途请求计数，防止旧页面悬挂或未完成请求死锁
+      if (!params.frame?.parentId) {
+        s.inFlight = 0;
+        s.lastActivity = Date.now();
+      }
+      break;
+    }
     case 'Network.requestWillBeSent': {
       const id = String(params.requestId);
-      if (!s.network.has(id)) {
+      const isRedirect = !!params.redirectResponse;
+      const prev = s.network.get(id);
+      if (!prev) {
         s.netOrder.push(id);
         if (s.netOrder.length > NETWORK_CAP) {
           const evict = s.netOrder.shift();
@@ -216,7 +226,10 @@ chrome.debugger.onEvent.addListener((source, method, params: any) => {
         resourceType: String(params.type ?? 'Other'),
         finished: false,
       });
-      s.inFlight++;
+      // 仅当这是全新的在途请求，且不是 30x 重定向更新时才累加 inFlight
+      if (!isRedirect && (!prev || prev.finished)) {
+        s.inFlight++;
+      }
       s.lastActivity = Date.now();
       break;
     }

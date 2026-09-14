@@ -1,6 +1,67 @@
+import { useEffect, useState } from 'react';
 import type { AdvancedSettings } from '../../shared/types';
 import { useT } from '../../shared/i18nReact';
 import { Field, Toggle, type PanelProps } from './common';
+
+function NumberInput({
+  value,
+  min,
+  max,
+  step,
+  fallback,
+  placeholder,
+  onChange,
+}: {
+  value: number | null | undefined;
+  min: number;
+  max: number;
+  step?: number;
+  fallback: number | null;
+  placeholder?: string;
+  onChange: (val: number | null) => void;
+}) {
+  const [localVal, setLocalVal] = useState<string>(value == null ? '' : String(value));
+
+  useEffect(() => {
+    setLocalVal(value == null ? '' : String(value));
+  }, [value]);
+
+  function commit() {
+    const trimmed = localVal.trim();
+    if (trimmed === '') {
+      onChange(fallback);
+      setLocalVal(fallback == null ? '' : String(fallback));
+      return;
+    }
+    const n = Number(trimmed);
+    if (!Number.isFinite(n)) {
+      onChange(fallback);
+      setLocalVal(fallback == null ? '' : String(fallback));
+      return;
+    }
+    const clamped = Math.min(max, Math.max(min, n));
+    onChange(clamped);
+    setLocalVal(String(clamped));
+  }
+
+  return (
+    <input
+      type="number"
+      value={localVal}
+      min={min}
+      max={max}
+      step={step}
+      placeholder={placeholder}
+      onChange={(e) => setLocalVal(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.currentTarget.blur();
+        }
+      }}
+    />
+  );
+}
 
 export function AdvancedPanel({ cfg, onChange }: PanelProps) {
   const t = useT();
@@ -8,10 +69,6 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
   function patch(p: Partial<AdvancedSettings>) {
     onChange({ ...cfg, advanced: { ...a, ...p } });
   }
-  const num = (v: string, min: number, max: number, fallback: number) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
-  };
 
   return (
     <div className="panel">
@@ -34,52 +91,52 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
       <div className="card">
         <div className="card-row">
           <Field label={t('opt.advanced.maxIterations')} hint={t('opt.advanced.maxIterationsHint')}>
-            <input
-              type="number"
+            <NumberInput
               value={a.maxIterations}
               min={1}
               max={100}
-              onChange={(e) => patch({ maxIterations: num(e.target.value, 1, 100, 100) })}
+              fallback={100}
+              onChange={(val) => patch({ maxIterations: val ?? 100 })}
             />
           </Field>
           <Field label={t('opt.advanced.maxImagesKept')} hint={t('opt.advanced.maxImagesKeptHint')}>
-            <input
-              type="number"
+            <NumberInput
               value={a.maxImagesKept}
               min={0}
               max={20}
-              onChange={(e) => patch({ maxImagesKept: num(e.target.value, 0, 20, 4) })}
+              fallback={4}
+              onChange={(val) => patch({ maxImagesKept: val ?? 4 })}
             />
           </Field>
         </div>
         <Field label={t('opt.advanced.maxContextTokens')} hint={t('opt.advanced.maxContextTokensHint')}>
-          <input
-            type="number"
+          <NumberInput
             value={a.maxContextTokens}
             min={8000}
             max={1000000}
             step={4000}
-            onChange={(e) => patch({ maxContextTokens: num(e.target.value, 8000, 1000000, 96000) })}
+            fallback={96000}
+            onChange={(val) => patch({ maxContextTokens: val ?? 96000 })}
           />
         </Field>
         <div className="card-row">
           <Field label={t('opt.advanced.screenshotMaxWidth')} hint={t('opt.advanced.screenshotMaxWidthHint')}>
-            <input
-              type="number"
+            <NumberInput
               value={a.screenshotMaxWidth}
               min={640}
               max={2560}
               step={64}
-              onChange={(e) => patch({ screenshotMaxWidth: num(e.target.value, 640, 2560, 1366) })}
+              fallback={1366}
+              onChange={(val) => patch({ screenshotMaxWidth: val ?? 1366 })}
             />
           </Field>
           <Field label={t('opt.advanced.jpegQuality')}>
-            <input
-              type="number"
+            <NumberInput
               value={a.jpegQuality}
               min={30}
               max={100}
-              onChange={(e) => patch({ jpegQuality: num(e.target.value, 30, 100, 80) })}
+              fallback={80}
+              onChange={(val) => patch({ jpegQuality: val ?? 80 })}
             />
           </Field>
         </div>
@@ -88,45 +145,45 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
       <div className="card">
         <div className="card-row">
           <Field label={t('opt.advanced.maxTokens')}>
-            <input
-              type="number"
+            <NumberInput
               value={a.maxTokens}
               min={256}
               max={32000}
               step={256}
-              onChange={(e) => patch({ maxTokens: num(e.target.value, 256, 32000, 4096) })}
+              fallback={4096}
+              onChange={(val) => patch({ maxTokens: val ?? 4096 })}
             />
           </Field>
           <Field label={t('opt.advanced.temperature')} hint={t('opt.advanced.temperatureHint')}>
-            <input
-              type="number"
-              value={a.temperature ?? ''}
+            <NumberInput
+              value={a.temperature}
               min={0}
               max={2}
               step={0.1}
+              fallback={null}
               placeholder={t('opt.advanced.temperaturePlaceholder')}
-              onChange={(e) => patch({ temperature: e.target.value === '' ? null : num(e.target.value, 0, 2, 0) })}
+              onChange={(val) => patch({ temperature: val })}
             />
           </Field>
         </div>
         <div className="card-row">
           <Field label={t('opt.advanced.requestTimeout')}>
-            <input
-              type="number"
+            <NumberInput
               value={Math.round(a.requestTimeoutMs / 1000)}
               min={30}
               max={600}
               step={10}
-              onChange={(e) => patch({ requestTimeoutMs: num(e.target.value, 30, 600, 180) * 1000 })}
+              fallback={180}
+              onChange={(val) => patch({ requestTimeoutMs: (val ?? 180) * 1000 })}
             />
           </Field>
           <Field label={t('opt.advanced.maxRetries')} hint={t('opt.advanced.maxRetriesHint')}>
-            <input
-              type="number"
+            <NumberInput
               value={a.maxRetries}
               min={0}
               max={6}
-              onChange={(e) => patch({ maxRetries: num(e.target.value, 0, 6, 2) })}
+              fallback={2}
+              onChange={(val) => patch({ maxRetries: val ?? 2 })}
             />
           </Field>
         </div>

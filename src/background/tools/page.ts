@@ -238,9 +238,14 @@ export const pageTools: ToolDef[] = [
       let polls = 0;
       while (Date.now() - start < timeout) {
         if (ctx.session.aborted) throw new Error('Cancelled by user.');
-        const r = await runInPage(ctx.tabId, 'probe', { query, text });
+        let r: { matchCount?: number; textFound?: boolean } | null = null;
+        try {
+          r = await runInPage(ctx.tabId, 'probe', { query, text });
+        } catch {
+          // 页面可能正处于导航跳转或脚本上下文重置中，允许单次探测失败并在下轮重试
+        }
         polls++;
-        if (conditionMet(condition, { matchCount: Number(r?.matchCount ?? 0), textFound: !!r?.textFound })) {
+        if (r && conditionMet(condition, { matchCount: Number(r.matchCount ?? 0), textFound: !!r.textFound })) {
           const waited = ((Date.now() - start) / 1000).toFixed(1);
           const what = condition === 'text' ? `text "${text}"` : `"${query}"`;
           return withAutoShot(ctx.session, ctx.tabId, `Condition met: ${condition} ${what} after ${waited}s.`);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ApprovalDecision, TimelineItem } from '../../shared/types';
 import { useT } from '../../shared/i18nReact';
 import { renderMarkdown } from '../markdown';
@@ -12,21 +12,26 @@ interface Props {
 }
 
 export function Timeline({ items, running, onApprove, onContinue }: Props) {
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   if (!items.length) return <Welcome />;
   // 只有最后一条「继续」提示可点，避免历史里多个按钮
   const lastContinueId = [...items].reverse().find((it) => it.kind === 'info' && it.action === 'continue')?.id;
   return (
-    <div className="timeline">
-      {items.map((it) => (
-        <Row
-          key={it.id}
-          item={it}
-          onApprove={onApprove}
-          onContinue={onContinue}
-          canContinue={!running && it.id === lastContinueId}
-        />
-      ))}
-    </div>
+    <>
+      <div className="timeline">
+        {items.map((it) => (
+          <Row
+            key={it.id}
+            item={it}
+            onApprove={onApprove}
+            onContinue={onContinue}
+            onPreview={setPreviewSrc}
+            canContinue={!running && it.id === lastContinueId}
+          />
+        ))}
+      </div>
+      <Lightbox src={previewSrc} onClose={() => setPreviewSrc(null)} />
+    </>
   );
 }
 
@@ -54,11 +59,13 @@ function Row({
   item,
   onApprove,
   onContinue,
+  onPreview,
   canContinue,
 }: {
   item: TimelineItem;
   onApprove: Props['onApprove'];
   onContinue: Props['onContinue'];
+  onPreview: (src: string) => void;
   canContinue: boolean;
 }) {
   const t = useT();
@@ -79,7 +86,7 @@ function Row({
         </div>
       );
     case 'tool':
-      return <ToolRow item={item} />;
+      return <ToolRow item={item} onPreview={onPreview} />;
     case 'approval':
       return <ApprovalRow item={item} onApprove={onApprove} />;
     case 'error':
@@ -104,7 +111,13 @@ function Row({
   }
 }
 
-function ToolRow({ item }: { item: Extract<TimelineItem, { kind: 'tool' }> }) {
+function ToolRow({
+  item,
+  onPreview,
+}: {
+  item: Extract<TimelineItem, { kind: 'tool' }>;
+  onPreview: (src: string) => void;
+}) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const images = (item.images ?? []).filter((x): x is string => !!x);
@@ -121,7 +134,7 @@ function ToolRow({ item }: { item: Extract<TimelineItem, { kind: 'tool' }> }) {
       {images.length > 0 && (
         <div className="tool-shots">
           {images.map((src, i) => (
-            <img key={i} src={src} alt="screenshot" onClick={() => window.open(src, '_blank')} />
+            <img key={i} src={src} alt="screenshot" onClick={() => onPreview(src)} />
           ))}
         </div>
       )}
@@ -172,3 +185,45 @@ function ApprovalRow({
     </div>
   );
 }
+
+function openImageInNewTab(src: string) {
+  try {
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Screenshot Preview</title><style>body{margin:0;background:#0d1117;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:96%;height:auto;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,0.6)}</style></head><body><img src="${src}"></body></html>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    void chrome.tabs.create({ url });
+  } catch {
+    /* ignore */
+  }
+}
+
+function Lightbox({ src, onClose }: { src: string | null; onClose: () => void }) {
+  const t = useT();
+  useEffect(() => {
+    if (!src) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [src, onClose]);
+
+  if (!src) return null;
+
+  return (
+    <div className="lightbox-backdrop" onClick={onClose}>
+      <div className="lightbox-toolbar" onClick={(e) => e.stopPropagation()}>
+        <button className="lightbox-btn" onClick={() => openImageInNewTab(src)}>
+          {t('timeline.openNewTab')}
+        </button>
+        <button className="lightbox-btn" onClick={onClose} title="Close">
+          ✕
+        </button>
+      </div>
+      <div className="lightbox-img-wrap" onClick={(e) => e.stopPropagation()}>
+        <img className="lightbox-img" src={src} alt="screenshot zoom" onClick={onClose} />
+      </div>
+    </div>
+  );
+}
+

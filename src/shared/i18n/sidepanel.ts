@@ -37,6 +37,7 @@ export const sidepanelDict = {
   'welcome.tip': { zh: '首次操作某个网站时会请求你的授权。敏感操作（密码、上传、执行脚本）需要确认。', en: 'You approve each new site on first use. Sensitive actions (passwords, uploads, scripts) need confirmation.' },
   // Timeline / approval
   'timeline.continue': { zh: '继续执行 ↵', en: 'Continue ↵' },
+  'timeline.openNewTab': { zh: '在新标签页打开', en: 'Open in new tab' },
   'approval.allowOnce': { zh: '仅本次', en: 'Allow once' },
   'approval.allowSite': { zh: '始终允许此站点', en: 'Always allow this site' },
   'approval.deny': { zh: '拒绝', en: 'Deny' },

@@ -318,3 +318,39 @@ test('classifyProviderError: 取消/超时返回空串，网络错误提示连�
   assert.equal(classifyProviderError(new DOMException('t', 'TimeoutError')), '');
   assert.match(classifyProviderError(new TypeError('Failed to fetch')), /无法连接/);
 });
+
+test('openaiStream: tool 结果在多个 chunk 重复全量 name 时不被重复拼接', async () => {
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'content-type': 'text/event-stream' });
+    const chunks = [
+      { choices: [{ delta: { tool_calls: [{ index: 0, id: 'call_1', function: { name: 'navigate', arguments: '{"url":' } }] } }] },
+      { choices: [{ delta: { tool_calls: [{ index: 0, function: { name: 'navigate', arguments: '"https://x.com"}' } }] } }] },
+      { choices: [{ finish_reason: 'tool_calls' }] },
+    ];
+    for (const c of chunks) res.write('data: ' + JSON.stringify(c) + '\n\n');
+    res.write('data: [DONE]\n\n');
+    res.end();
+  });
+  const port = await listenOn(server);
+  const res = await openaiStream({
+    provider: { id: 'p', name: 'Mock', baseUrl: 'http://127.0.0.1:' + port, apiKey: 'k' },
+    model: { id: 'm', label: 'M', vision: true },
+    binding: { id: 'b', modelId: 'm', providerId: 'p', apiModelName: 'mock' },
+    system: 'sys',
+    messages: [],
+    tools: [{ name: 'navigate', description: 'nav', schema: {} }],
+    temperature: 0.7,
+    maxTokens: 1000,
+    signal: new AbortController().signal,
+    timeoutMs: 5000,
+    retries: 0,
+    onText: () => {},
+  });
+  assert.equal(res.blocks.length, 1);
+  assert.equal(res.blocks[0].type, 'tool_use');
+  if (res.blocks[0].type === 'tool_use') {
+    assert.equal(res.blocks[0].name, 'navigate');
+    assert.deepEqual(res.blocks[0].input, { url: 'https://x.com' });
+  }
+  server.close();
+});

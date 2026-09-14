@@ -32,7 +32,7 @@ export const openaiStream: ProviderImpl = async (p) => {
   if (!urls.length) throw new Error('服务商 Base URL 为空');
   const body: Record<string, unknown> = {
     model: p.binding.apiModelName,
-    messages: buildMessages(p.system, mergeConsecutive(p.messages)),
+    messages: buildMessages(p.system, mergeConsecutive(p.messages), p.binding.apiModelName),
     stream: true,
     stream_options: { include_usage: true },
   };
@@ -81,6 +81,7 @@ export const openaiStream: ProviderImpl = async (p) => {
   }
 
   let text = '';
+  let reasoningText = '';
   const calls = new Map<number, { id: string; name: string; args: string }>();
   let finish = 'stop';
   let usage: { input: number; output: number } | undefined;
@@ -106,6 +107,11 @@ export const openaiStream: ProviderImpl = async (p) => {
     const choice = j.choices?.[0];
     if (!choice) continue;
     const d = choice.delta ?? {};
+    if (typeof d.reasoning_content === 'string') {
+      reasoningText += d.reasoning_content;
+    } else if (typeof d.reasoning === 'string') {
+      reasoningText += d.reasoning;
+    }
     const chunk = extractDeltaText(d);
     if (chunk) {
       text += chunk;
@@ -138,10 +144,11 @@ export const openaiStream: ProviderImpl = async (p) => {
     }
     blocks.push({ type: 'tool_use', id: c.id || uid('call'), name: c.name, input });
   }
-  return { blocks, stopReason: finish, usage };
+  return { blocks, stopReason: finish, usage, reasoningText: reasoningText || undefined };
 };
 
-function buildMessages(system: string, msgs: ReturnType<typeof mergeConsecutive>): unknown[] {
+function buildMessages(system: string, msgs: ReturnType<typeof mergeConsecutive>, apiModelName?: string): unknown[] {
+  const isDeepSeekReasoner = /deepseek.*reasoner|deepseek-r1/i.test(apiModelName ?? '');
   const out: unknown[] = [{ role: 'system', content: system }];
   for (const m of msgs) {
     if (m.role === 'assistant') {
@@ -155,6 +162,11 @@ function buildMessages(system: string, msgs: ReturnType<typeof mergeConsecutive>
         }));
       const msg: Record<string, unknown> = { role: 'assistant', content: text || null };
       if (toolCalls.length) msg.tool_calls = toolCalls;
+      if (m.reasoning_content != null) {
+        msg.reasoning_content = m.reasoning_content;
+      } else if (isDeepSeekReasoner && toolCalls.length) {
+        msg.reasoning_content = '';
+      }
       out.push(msg);
       continue;
     }

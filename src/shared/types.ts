@@ -34,6 +34,7 @@ export type ContentBlock = TextBlock | ImageBlock | ToolUseBlock | ToolResultBlo
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: ContentBlock[];
+  reasoning_content?: string;
 }
 
 /** 工具执行结果 */

@@ -201,3 +201,13 @@ test('inputBudgetFor: 无窗口时回落兜底预算', () => {
   assert.equal(inputBudgetFor(undefined, 4096, 96000), 96000);
   assert.equal(inputBudgetFor(0, 4096, 96000), 96000);
 });
+
+test('governContext: 保留 assistant 的 reasoning_content 字段', () => {
+  const msgs: ChatMessage[] = [
+    { role: 'user', content: [txt('task')] },
+    { role: 'assistant', content: [txt('answer')], reasoning_content: 'thought process' },
+  ];
+  const r = governContext(msgs, { vision: true, maxImages: 4, maxInputTokens: 100000 });
+  const asst = r.messages.find((m) => m.role === 'assistant');
+  assert.equal(asst?.reasoning_content, 'thought process');
+});

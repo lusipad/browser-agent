@@ -27,6 +27,7 @@ export interface StreamResult {
   blocks: ContentBlock[];
   stopReason: string;
   usage?: { input: number; output: number };
+  reasoningText?: string;
 }
 
 export type ProviderImpl = (p: StreamParams) => Promise<StreamResult>;
@@ -38,8 +39,15 @@ export function mergeConsecutive(messages: ChatMessage[]): ChatMessage[] {
     const last = out[out.length - 1];
     if (last && last.role === m.role) {
       last.content = [...last.content, ...m.content];
+      if (m.reasoning_content) {
+        last.reasoning_content = (last.reasoning_content ?? '') + m.reasoning_content;
+      }
     } else {
-      out.push({ role: m.role, content: [...m.content] });
+      out.push({
+        role: m.role,
+        content: [...m.content],
+        ...(m.reasoning_content ? { reasoning_content: m.reasoning_content } : {}),
+      });
     }
   }
   return out;

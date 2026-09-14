@@ -103,6 +103,7 @@ export async function runTurn(
       session.messages.push({
         role: 'assistant',
         content: result.blocks.length ? result.blocks : [{ type: 'text', text: finalText || '(empty)' }],
+        reasoning_content: result.reasoningText || undefined,
       });
 
       const toolUses = result.blocks.filter((b): b is ToolUseBlock => b.type === 'tool_use');
@@ -272,11 +273,13 @@ async function runPlanner(
   const id = uid('a');
   session.upsert({ kind: 'assistant', id, text: '', done: false });
   let text = '';
+  let reasoningText: string | undefined;
   try {
     const res = await streamOnce(session, provider, model, binding, sys, [{ role: 'user', content: [{ type: 'text', text: task }] }], [], (d) => {
       text += d;
       session.emit({ type: 'text_delta', id, delta: d });
     });
+    reasoningText = res.reasoningText;
     accrueUsage(session, res.usage, binding.pricing);
     emitUsage(session);
     text = textOfBlocks(res.blocks) || text;
@@ -297,7 +300,7 @@ async function runPlanner(
   }
   session.upsert({ kind: 'assistant', id, text: text || '(无计划输出)', done: true });
   // 计划也进入历史，让 navigator 看到自己的计划
-  session.messages.push({ role: 'assistant', content: [{ type: 'text', text: text || '(plan)' }] });
+  session.messages.push({ role: 'assistant', content: [{ type: 'text', text: text || '(plan)' }], reasoning_content: reasoningText || undefined });
   const m = text.match(/SUCCESS:\s*(.+)\s*$/im);
   return m ? m[1].trim() : null;
 }

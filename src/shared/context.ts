@@ -65,6 +65,7 @@ export function estimateTokens(messages: ChatMessage[], opts: TokenOpts = {}): n
 function cloneMessages(messages: ChatMessage[]): ChatMessage[] {
   return messages.map((m) => ({
     role: m.role,
+    reasoning_content: m.reasoning_content,
     content: m.content.map((b) =>
       b.type === 'tool_result' ? { ...b, content: b.content.map((c) => ({ ...c })) } : { ...b },
     ),

@@ -354,3 +354,93 @@ test('openaiStream: tool 结果在多个 chunk 重复全量 name 时不被重复
   }
   server.close();
 });
+
+test('mergeConsecutive: 合并 assistant 消息时合并 reasoning_content', () => {
+  const msgs: ChatMessage[] = [
+    { role: 'assistant', content: [{ type: 'text', text: 'part 1' }], reasoning_content: 'think 1; ' },
+    { role: 'assistant', content: [{ type: 'text', text: 'part 2' }], reasoning_content: 'think 2' },
+  ];
+  const out = mergeConsecutive(msgs);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].reasoning_content, 'think 1; think 2');
+});
+
+test('openaiStream: 解析 delta.reasoning_content 并回传 reasoningText', async () => {
+  let body: any = null;
+  const server = http.createServer((req, res) => {
+    let raw = '';
+    req.on('data', (c) => (raw += c));
+    req.on('end', () => {
+      body = JSON.parse(raw);
+      res.writeHead(200, { 'content-type': 'text/event-stream' });
+      const chunks = [
+        { choices: [{ delta: { reasoning_content: '思考中...' } }] },
+        { choices: [{ delta: { content: '回答内容' } }] },
+        { choices: [{ delta: {}, finish_reason: 'stop' }] },
+      ];
+      for (const c of chunks) res.write('data: ' + JSON.stringify(c) + '\n\n');
+      res.write('data: [DONE]\n\n');
+      res.end();
+    });
+  });
+  const port = await listenOn(server);
+  const res = await openaiStream({
+    provider: { id: 'p', name: 'Mock', baseUrl: 'http://127.0.0.1:' + port, apiKey: 'k' },
+    model: { id: 'deepseek-reasoner', label: 'DeepSeek R1', vision: false },
+    binding: { id: 'b', modelId: 'deepseek-reasoner', providerId: 'p', apiModelName: 'deepseek-reasoner' },
+    system: 'sys',
+    messages: [
+      { role: 'assistant', content: [{ type: 'text', text: 'previous answer' }], reasoning_content: 'prior thought' },
+      { role: 'user', content: [{ type: 'text', text: 'next question' }] },
+    ],
+    tools: [],
+    temperature: 0,
+    maxTokens: 1000,
+    signal: new AbortController().signal,
+    timeoutMs: 5000,
+    retries: 0,
+    onText: () => {},
+  });
+  server.close();
+
+  assert.equal(res.reasoningText, '思考中...');
+  const asstMsg = body.messages.find((m: any) => m.role === 'assistant');
+  assert.equal(asstMsg.reasoning_content, 'prior thought', '发往 API 的 assistant 消息保留了 reasoning_content');
+});
+
+test('openaiStream: deepseek-reasoner 包含 tool_calls 但无 reasoning_content 时兜底空串', async () => {
+  let body: any = null;
+  const server = http.createServer((req, res) => {
+    let raw = '';
+    req.on('data', (c) => (raw += c));
+    req.on('end', () => {
+      body = JSON.parse(raw);
+      res.writeHead(200, { 'content-type': 'text/event-stream' });
+      res.write('data: ' + JSON.stringify({ choices: [{ delta: { content: 'ok' }, finish_reason: 'stop' }] }) + '\n\n');
+      res.write('data: [DONE]\n\n');
+      res.end();
+    });
+  });
+  const port = await listenOn(server);
+  await openaiStream({
+    provider: { id: 'p', name: 'Mock', baseUrl: 'http://127.0.0.1:' + port, apiKey: 'k' },
+    model: { id: 'deepseek-reasoner', label: 'DeepSeek R1', vision: false },
+    binding: { id: 'b', modelId: 'deepseek-reasoner', providerId: 'p', apiModelName: 'deepseek-reasoner' },
+    system: 'sys',
+    messages: [
+      { role: 'assistant', content: [{ type: 'tool_use', id: 'call_1', name: 'navi', input: {} }] },
+      { role: 'user', content: [{ type: 'tool_result', toolUseId: 'call_1', toolName: 'navi', content: [{ type: 'text', text: 'done' }] }] },
+    ],
+    tools: [],
+    temperature: 0,
+    maxTokens: 1000,
+    signal: new AbortController().signal,
+    timeoutMs: 5000,
+    retries: 0,
+    onText: () => {},
+  });
+  server.close();
+
+  const asstMsg = body.messages.find((m: any) => m.role === 'assistant');
+  assert.equal(asstMsg.reasoning_content, '', 'DeepSeek-reasoner 下带 tool_calls 的 assistant 消息若缺失 reasoning_content 则兜底为 ""');
+});

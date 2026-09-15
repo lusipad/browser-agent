@@ -8,3 +8,4 @@ public/icons/
 .gstack/
 .playwright-mcp/
 .release/
+*.zip

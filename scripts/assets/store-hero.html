@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Browser Agent Store Hero</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+    body {
+      width: 1280px;
+      height: 800px;
+      background: radial-gradient(120% 120% at 50% 10%, #1e1e38 0%, #0d0f1d 100%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Ambient glow elements */
+    .glow-1 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -150px;
+      left: 100px;
+      pointer-events: none;
+    }
+    .glow-2 {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
+      bottom: -100px;
+      right: 100px;
+      pointer-events: none;
+    }
+
+    /* Header text */
+    .header-bar {
+      width: 1180px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 16px;
+    }
+    .main-title-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-badge {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+      font-size: 28px;
+    }
+    .title-text h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title-text p {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .pill-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #3b82f6;
+      color: #fff;
+    }
+    .feature-chips {
+      display: flex;
+      gap: 10px;
+    }
+    .chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Browser Mockup Window */
+    .browser-frame {
+      width: 1180px;
+      height: 640px;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.12);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Chrome Title bar */
+    .chrome-titlebar {
+      height: 42px;
+      background: #dfe3e8;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 10px;
+    }
+    .window-dots {
+      display: flex;
+      gap: 6px;
+      margin-right: 8px;
+    }
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+    .dot.red { background: #ff5f56; }
+    .dot.yellow { background: #ffbd2e; }
+    .dot.green { background: #27c93f; }
+
+    /* Chrome Tabs */
+    .tabs-container {
+      display: flex;
+      align-items: flex-end;
+      height: 100%;
+      flex: 1;
+      gap: 4px;
+    }
+    .agent-group-tag {
+      background: #2563eb;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .chrome-tab {
+      background: #ffffff;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #1e293b;
+      max-width: 240px;
+      box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .chrome-tab.secondary {
+      background: transparent;
+      color: #64748b;
+      box-shadow: none;
+    }
+
+    /* Navigation / Address bar */
+    .chrome-addressbar {
+      height: 38px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 12px;
+    }
+    .nav-icons {
+      display: flex;
+      gap: 10px;
+      color: #64748b;
+      font-size: 13px;
+    }
+    .url-input {
+      flex: 1;
+      height: 28px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 0 14px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #0f172a;
+    }
+    .url-input span.protocol { color: #10b981; font-weight: 600; }
+    .url-input span.domain { font-weight: 500; }
+
+    /* Chrome Debug Banner */
+    .debug-banner {
+      background: #fef3c7;
+      border-bottom: 1px solid #fde68a;
+      padding: 4px 16px;
+      font-size: 11px;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .debug-banner strong { font-weight: 700; color: #78350f; }
+
+    /* Main View Area: Webpage + Sidepanel */
+    .main-view {
+      flex: 1;
+      display: flex;
+      background: #f1f5f9;
+      overflow: hidden;
+    }
+
+    /* Left: The Target Webpage with Set-of-Marks */
+    .webpage-area {
+      flex: 1;
+      background: #ffffff;
+      padding: 20px 24px;
+      overflow: hidden;
+      position: relative;
+      border-right: 1px solid #e2e8f0;
+    }
+    .site-header {
+      border-bottom: 2px solid #ff6600;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .site-logo {
+      font-weight: 800;
+      color: #ff6600;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .site-nav {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    /* Webpage content rows */
+    .news-item {
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      position: relative;
+    }
+    .news-rank {
+      color: #94a3b8;
+      font-weight: 700;
+      font-size: 14px;
+      width: 22px;
+    }
+    .news-body {
+      flex: 1;
+    }
+    .news-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f172a;
+      line-height: 1.4;
+    }
+    .news-meta {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    /* Set-of-Marks Visual Badges */
+    .som-tag {
+      position: absolute;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+      z-index: 10;
+      border: 1px solid #ffffff;
+    }
+    .som-tag.blue {
+      background: #2563eb;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+    }
+    .som-tag.green {
+      background: #10b981;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+    }
+    .som-box {
+      border: 2px dashed #ef4444;
+      background: rgba(239, 68, 68, 0.05);
+      border-radius: 6px;
+      position: absolute;
+      pointer-events: none;
+    }
+
+    /* Right: Side Panel */
+    .sidepanel-area {
+      width: 440px;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #cbd5e1;
+    }
+    .sidepanel-header {
+      height: 48px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+    .model-selector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .model-selector .dot-active {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+    .usage-stats {
+      font-size: 11px;
+      color: #64748b;
+      display: flex;
+      gap: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .usage-stats span.cost { color: #10b981; font-weight: 700; }
+
+    /* Conversation timeline */
+    .sidepanel-chat {
+      flex: 1;
+      padding: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .user-bubble {
+      align-self: flex-end;
+      background: #2563eb;
+      color: #ffffff;
+      padding: 9px 14px;
+      border-radius: 12px 12px 2px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      max-width: 90%;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+    }
+    .agent-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .step-item {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #334155;
+    }
+    .step-item.success {
+      border-color: #bbf7d0;
+      background: #f0fdf4;
+      color: #166534;
+      font-weight: 600;
+    }
+
+    /* Result Table */
+    .result-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+    .result-table th {
+      background: #f1f5f9;
+      padding: 5px 6px;
+      text-align: left;
+      color: #475569;
+      font-weight: 700;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .result-table td {
+      padding: 5px 6px;
+      border-bottom: 1px solid #f8fafc;
+      color: #1e293b;
+    }
+    .export-btn {
+      margin-top: 8px;
+      width: 100%;
+      padding: 6px 0;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+
+  <!-- Header branding bar -->
+  <div class="header-bar">
+    <div class="main-title-box">
+      <div class="logo-badge">🤖</div>
+      <div class="title-text">
+        <h1>Browser Agent <span class="pill-tag">v0.4.1</span></h1>
+        <p>让 DeepSeek 进驻 Chrome 侧边栏 · 像真人一样自动浏览、抓取与自动填表</p>
+      </div>
+    </div>
+    <div class="feature-chips">
+      <div class="chip">✨ 原生 DeepSeek 思考模型</div>
+      <div class="chip">🎯 视觉 Set-of-Marks 定位</div>
+      <div class="chip">🔒 100% 隐私零中转 (BYOK)</div>
+    </div>
+  </div>
+
+  <!-- Browser Frame -->
+  <div class="browser-frame">
+    <!-- Chrome Titlebar -->
+    <div class="chrome-titlebar">
+      <div class="window-dots">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+      </div>
+      <div class="tabs-container">
+        <div class="agent-group-tag">🤖 Agent 标签组</div>
+        <div class="chrome-tab">
+          <span>📰</span> Hacker News 实时热搜
+        </div>
+        <div class="chrome-tab secondary">
+          <span>⚙️</span> 设置 (API Key & 本地模型)
+        </div>
+      </div>
+    </div>
+
+    <!-- Chrome Address Bar -->
+    <div class="chrome-addressbar">
+      <div class="nav-icons">
+        <span>←</span> <span>→</span> <span>↻</span>
+      </div>
+      <div class="url-input">
+        <span class="protocol">🔒 https://</span><span class="domain">news.ycombinator.com</span>
+      </div>
+      <div style="font-size: 13px; color: #2563eb; font-weight: 700;">🧩 🤖</div>
+    </div>
+
+    <!-- Debug Banner -->
+    <div class="debug-banner">
+      <div>⚠️ <strong>“Browser Agent”正在调试此浏览器</strong>（通过官方 CDP 真实模拟鼠标键盘事件）</div>
+      <div style="font-weight: 600; text-decoration: underline;">取消</div>
+    </div>
+
+    <!-- Main View: Webpage (Left) + Side Panel (Right) -->
+    <div class="main-view">
+      <!-- Target Webpage -->
+      <div class="webpage-area">
+        <div class="site-header">
+          <div class="site-logo">
+            <span>Y</span> Hacker News Top Stories
+          </div>
+          <div class="site-nav">
+            <span>new</span> | <span>past</span> | <span>comments</span> | <span>ask</span> | <span>show</span> | <span>jobs</span>
+          </div>
+        </div>
+
+        <!-- News Item 1 -->
+        <div class="news-item">
+          <div class="som-tag" style="top: 6px; left: 16px;">1</div>
+          <div class="som-box" style="top: 4px; left: 34px; width: 380px; height: 24px;"></div>
+          <div class="news-rank">1.</div>
+          <div class="news-body">
+            <div class="news-title">DeepSeek-V3 架构深度解析与生产级多模态评测</div>
+            <div class="news-meta">
+              <span class="som-tag blue" style="position: relative; top: -1px; margin-right: 4px;">2</span> 682 points by techgeek 3 hours ago | 
+              <span class="som-tag blue" style="position: relative; top: -1px; margin-right: 4px;">3</span> 214 comments
+            </div>
+          </div>
+        </div>
+
+        <!-- News Item 2 -->
+        <div class="news-item">
+          <div class="som-tag" style="top: 6px; left: 16px;">4</div>
+          <div class="som-box" style="top: 4px; left: 34px; width: 340px; height: 24px;"></div>
+          <div class="news-rank">2.</div>
+          <div class="news-body">
+            <div class="news-title">SQLite in Production: Local-first Architecture Lessons</div>
+            <div class="news-meta">
+              <span class="som-tag blue" style="position: relative; top: -1px; margin-right: 4px;">5</span> 418 points by db_pro 5 hours ago | 165 comments
+            </div>
+          </div>
+        </div>
+
+        <!-- News Item 3 -->
+        <div class="news-item">
+          <div class="som-tag" style="top: 6px; left: 16px;">6</div>
+          <div class="som-box" style="top: 4px; left: 34px; width: 420px; height: 24px;"></div>
+          <div class="news-rank">3.</div>
+          <div class="news-body">
+            <div class="news-title">Building Autonomous Browser Agents with Chrome MV3 & CDP</div>
+            <div class="news-meta">
+              <span class="som-tag blue" style="position: relative; top: -1px; margin-right: 4px;">7</span> 329 points by webhacker 7 hours ago | 88 comments
+            </div>
+          </div>
+        </div>
+
+        <!-- News Item 4 -->
+        <div class="news-item" style="opacity: 0.6;">
+          <div class="news-rank">4.</div>
+          <div class="news-body">
+            <div class="news-title">Show HN: An Open-Source Local Agent Sidekick</div>
+            <div class="news-meta">205 points by dev_lus 9 hours ago | 52 comments</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side Panel -->
+      <div class="sidepanel-area">
+        <div class="sidepanel-header">
+          <div class="model-selector">
+            <div class="dot-active"></div>
+            <span>DeepSeek (deepseek-chat)</span>
+            <span style="color:#64748b; font-size:10px;">▾</span>
+          </div>
+          <div class="usage-stats">
+            <span class="cost">$0.002</span>
+            <span>·</span>
+            <span>1.4k tk</span>
+          </div>
+        </div>
+
+        <div class="sidepanel-chat">
+          <div class="user-bubble">
+            提取前 3 条热门文章的标题、分数与评论数，整理成表格
+          </div>
+
+          <div class="agent-steps">
+            <div class="step-item">
+              <span>🧭</span> 已导航至 news.ycombinator.com
+            </div>
+            <div class="step-item">
+              <span>👁️</span> 视觉感知：检测到 14 个可交互元素 (Set-of-Marks)
+            </div>
+            <div class="step-item success">
+              <span>✔</span> 结构化数据抽取完成 (3 条记录)
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div style="font-size: 11px; font-weight: 700; color: #334155; display: flex; justify-content: space-between;">
+              <span>📊 网页数据提取结果</span>
+              <span style="color: #10b981; font-weight: 600;">已格式化</span>
+            </div>
+            <table class="result-table">
+              <thead>
+                <tr>
+                  <th style="width: 20px;">#</th>
+                  <th>标题</th>
+                  <th style="width: 45px;">分数</th>
+                  <th style="width: 45px;">评论</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>DeepSeek-V3 架构解析</td>
+                  <td>682</td>
+                  <td>214</td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>SQLite in Production</td>
+                  <td>418</td>
+                  <td>165</td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>Building Browser Agents</td>
+                  <td>329</td>
+                  <td>88</td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="export-btn">📥 导出为 Markdown / JSON / CSV</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Browser Agent Promo Tile 440x280</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    body {
+      width: 440px;
+      height: 280px;
+      background: radial-gradient(140% 140% at 50% 0%, #1e293b 0%, #090d16 100%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 26px;
+      position: relative;
+    }
+
+    .glow-bg {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.35) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -80px;
+      right: -60px;
+      pointer-events: none;
+    }
+
+    .top-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 2;
+    }
+    .icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2563eb, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+    }
+    .brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.3px;
+    }
+    .brand-desc {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    .middle-section {
+      z-index: 2;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 10px 14px;
+      backdrop-filter: blur(10px);
+    }
+    .scenario-title {
+      font-size: 11px;
+      color: #38bdf8;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .scenario-text {
+      font-size: 12px;
+      color: #e2e8f0;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+
+    .bottom-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 2;
+    }
+    .chips-group {
+      display: flex;
+      gap: 6px;
+    }
+    .pill {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      color: #93c5fd;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 6px;
+    }
+    .free-badge {
+      font-size: 11px;
+      color: #10b981;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-bg"></div>
+
+  <div class="top-section">
+    <div class="icon-box">🤖</div>
+    <div>
+      <div class="brand-title">Browser Agent</div>
+      <div class="brand-desc">AI 网页自动化与自动填表助手</div>
+    </div>
+  </div>
+
+  <div class="middle-section">
+    <div class="scenario-title">⚡ 杀手级场景</div>
+    <div class="scenario-text">
+      在侧边栏用大白话操控浏览器：批量提取表格导出 Excel、自动填写复杂表单、跨网页深度研读。
+    </div>
+  </div>
+
+  <div class="bottom-section">
+    <div class="chips-group">
+      <div class="pill">DeepSeek 驱动</div>
+      <div class="pill">本地 BYOK</div>
+      <div class="pill">一键导出</div>
+    </div>
+    <div class="free-badge">
+      <span>●</span> 100% 开源免费
+    </div>
+  </div>
+</body>
+</html>

@@ -10,14 +10,25 @@
   <a href="README.zh-CN.md">中文文档</a> · <a href="https://github.com/lusipad/browser-agent/releases">Releases</a> · <a href="PRIVACY.md">Privacy Policy</a>
 </p>
 
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-v0.4.1-blue?logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
+  <a href="https://github.com/lusipad/browser-agent/releases"><img src="https://img.shields.io/github/v/release/lusipad/browser-agent?color=success" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
+  <img src="https://img.shields.io/badge/Manifest-V3-orange" alt="Manifest V3">
+  <img src="https://img.shields.io/badge/DeepSeek-Supported-blueviolet" alt="DeepSeek">
+</p>
+
 ---
 
 A Chrome extension (MV3) that lets you control your browser with natural language. Type a task in the sidebar, and the AI agent opens tabs, clicks, fills forms, reads pages, and reports back — all with your own model and API key.
 
 <p align="center">
-  <img src="docs/screenshots/sidepanel-en.png" width="260" alt="Sidebar">
+  <img src="docs/screenshots/demo.gif" width="700" alt="Browser Agent Live Demo">
+</p>
+<p align="center">
+  <img src="docs/screenshots/store-hero.png" width="480" alt="Browser Agent UI">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/options-en.png" width="400" alt="Options page">
+  <img src="docs/screenshots/form-filling.png" width="480" alt="Form filling scenario">
 </p>
 
 ## 🎯 Killer Use Cases
@@ -130,6 +141,8 @@ See [docs/testing.md](docs/testing.md) for the full manual verification protocol
 | [docs/architecture.md](docs/architecture.md) | Detailed architecture & design decisions |
 | [docs/testing.md](docs/testing.md) | Manual testing protocol for full extension verification |
 | [docs/store/](docs/store/) | Chrome Web Store submission materials |
+| [docs/PROMOTION_GUIDE.md](docs/PROMOTION_GUIDE.md) | Promotion & growth playbook |
+| [docs/VIDEO_STORYBOARD.md](docs/VIDEO_STORYBOARD.md) | 30s video demo script & storyboard |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
 | [PRIVACY.md](PRIVACY.md) | Privacy policy |
 
@@ -143,6 +156,10 @@ See [docs/testing.md](docs/testing.md) for the full manual verification protocol
 ## Credits
 
 Inspired by: [browser-use](https://github.com/browser-use/browser-use) (DOM serialization + set-of-marks), [Nanobrowser](https://github.com/nanobrowser/nanobrowser) (multi-agent Planner/Navigator/Validator), [BrowserBee](https://github.com/parsaghaffari/browserbee) (in-extension CDP). No code forked — implementation written independently.
+
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=lusipad/browser-agent&type=Date)](https://star-history.com/#lusipad/browser-agent&Date)
 
 ## License
 

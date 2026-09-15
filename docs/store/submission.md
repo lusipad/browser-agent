@@ -17,19 +17,15 @@
 
 | 用途 | 尺寸 | 文件 |
 |---|---|---|
-| 扩展包 | — | [browser-agent-0.4.0.zip](https://github.com/lusipad/browser-agent/releases/download/v0.4.0/browser-agent-0.4.0.zip) |
+| 扩展包 | — | `browser-agent-0.4.1.zip` |
 | 商店图标 128×128 | 128×128 | 已在 manifest（`icons/icon128.png`），无需单独传 |
 | 截图（≥1，最多 5） | 1280×800 | `docs/screenshots/store-hero.png`、`docs/screenshots/options.png` |
 | 小宣传图（列表卡片用） | 440×280 | `docs/screenshots/promo-tile-440x280.png` |
-| 大横幅宣传图（可选） | 1400×560 | 暂无（可选，想要我再生成） |
-| 宣传视频（可选） | YouTube | 无 |
-
-> `sidepanel-convo.png` 是竖图 800×1624，**不符合商店尺寸，不要传**。
 
 ---
 
 ## 1. 上传
-Add new item → 上传 `browser-agent-0.4.0.zip`。名称/描述会自动读 manifest 的 `_locales`（中英）。
+Add new item / Upload new package → 上传 `browser-agent-0.4.1.zip`。名称/描述会自动读 manifest 的 `_locales`（中英）。
 
 ## 2. 商店发布信息（Store listing）
 
@@ -37,30 +33,6 @@ Add new item → 上传 `browser-agent-0.4.0.zip`。名称/描述会自动读 ma
 ```
 Productivity（工作效率）
 ```
-
-**语言（Languages）**：勾选 `简体中文` + `English`
-
-**简短说明 / Summary（≤132 字符）**
-```
-侧边栏 AI 浏览器助手：用自然语言驱动浏览器完成网页操作，接任意 OpenAI 兼容模型，密钥只存本机，逐站授权。
-```
-```
-Side-panel AI browser agent: control your browser in natural language with any OpenAI-compatible model. Keys stay local.
-```
-
-**详细说明 / Description**
-```
-Browser Agent 让你在侧边栏用自然语言指挥浏览器：它会打开标签页、点击、填表、读取页面、调试网页并汇报结果。
-
-• 接任意 OpenAI 兼容端点（OpenAI / DeepSeek / OpenRouter / Ollama / vLLM / LM Studio…），API Key 只存本机，不经任何中间服务器。
-• 安全优先：逐站授权（每个站点首次操作需你批准）、预置金融/支付/交易所黑名单、密码输入 / 执行脚本 / 上传文件均需逐次确认、反 prompt-injection 防护。
-• 可靠感知：截图叠加编号框（set-of-marks）、穿透 Shadow DOM 与同源 iframe、结构化数据抽取、网络静默等待。
-• 透明可控：实时展示每一步动作与成本，agent 操作过的标签归入蓝色「🤖 Agent」标签组，多会话历史可切换/导出，随时中止。
-
-你需要自备一个大模型服务的 API Key。扩展不提供模型，也没有开发者后端——你的数据只按你的配置发往你选择的模型接口。
-```
-
-**截图**：上传 `store-hero.png`（首图）、`options.png`
 
 **隐私政策 URL**
 ```
@@ -79,6 +51,10 @@ https://github.com/lusipad/browser-agent/blob/main/PRIVACY.md
 `debugger`（**最关键，务必贴完整**）
 ```
 通过 Chrome DevTools Protocol 生成可信的输入事件（鼠标点击、键盘输入）与截图，这是可靠代表用户操作网页所必需的——普通合成事件会被许多站点的框架/防护忽略。附加调试器时 Chrome 会在页面顶部显示调试横幅，用户始终可见扩展正在操作哪个标签页。仅在用户下达任务且站点被授权后使用，绝不用于监视用户。
+```
+`unlimitedStorage`（**0.4.1 新增存储权限**）
+```
+扩展在用户的本机（chrome.storage.local）保存智能体的任务执行历史、思维过程、多轮交互记录以及关键步骤的截图预览。随着用户使用次数和多会话历史的积累，默认的 10MB 配额容易溢出导致数据丢失。因此需要 unlimitedStorage 权限以确保用户的大量历史对话与本地操作记录可以可靠持久化保存。所有数据仅存本机，不上传任何远程服务器。
 ```
 `scripting`
 ```
@@ -112,7 +88,6 @@ https://github.com/lusipad/browser-agent/blob/main/PRIVACY.md
 **远程代码（Remote code）**
 - 选 **「No, I am not using remote code」**。
 - 理由：扩展所有代码都打包在扩展内，**不加载任何远程托管的脚本/Wasm 文件**（MV3 也禁止）。
-- ⚠️ 需你知情的细节：`javascript_tool` 会把模型生成的 JS 在**页面主世界**执行——但它**默认关闭**、每次执行都要你确认、且不是「加载远程托管代码文件」。若审核追问，如实说明这点即可（默认关闭 + 逐次确认 + 运行于页面上下文而非扩展上下文）。
 
 **数据用途申报（勾选）**
 - 是否收集/使用用户数据？→ **是**
@@ -128,25 +103,10 @@ https://github.com/lusipad/browser-agent/blob/main/PRIVACY.md
 - ☑ 传输经加密（HTTPS 到模型端点）
 
 ## 4. 分发设置（Distribution 标签页）
-- **可见性 Visibility**：`Public`（公开，任何人可搜到安装）——如只想先小范围测试，可选 `Unlisted`（有链接才能装）
+- **可见性 Visibility**：`Public`（公开，任何人可搜到安装）
 - **地区 Regions**：`All regions`（全部）
 - **定价 Pricing**：`Free`（免费）
 
-## 5. 其他字段（Additional fields，可选但建议填）
-- **主页 URL（Homepage）**：`https://github.com/lusipad/browser-agent`
-- **支持 URL（Support）**：`https://github.com/lusipad/browser-agent/issues`
-- **内容分级（Content rating）**：如实填问卷——本扩展是效率工具，无暴力/成人/赌博等内容，结果应为「适合所有人 / Everyone」
-
-## 6. 提交
+## 5. 提交
 点 **Submit for review / 提请审核**。
-
-**会弹「发布将被推迟」警告（`<all_urls>` + `debugger` → 深入审核）——这是预期，不是拒绝。** 直接点「提请审核」继续即可：
-- `<all_urls>` 是通用浏览器 agent 的核心需要（activeTab 撑不起连续跨标签操作），辩护材料见上面权限说明。
-- 带 `debugger` 本就走深入审核，审核**通常数天到数周**，期间状态不动属正常，别反复戳。
-- 等待期**不要改动扩展再重交**，否则重置审核队列。
-
-审核结果发到你验证过的联系邮箱。被追问/拒绝时把原文贴回来，用上面 `debugger` / `<all_urls>` 的说明回复。
-
----
-
-> 卡在任何一步，或收到审核方的问题，把原文贴回来，我帮你写答复。
+会弹「发布将被推迟」警告（`<all_urls>` + `debugger` → 深入审核）——这是预期，直接点确认提交即可。

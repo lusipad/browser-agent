@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Browser Agent Form Filling Scenario</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    body {
+      width: 1280px;
+      height: 800px;
+      background: radial-gradient(120% 120% at 50% 10%, #171d33 0%, #0a0d18 100%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .glow-1 {
+      position: absolute;
+      width: 550px;
+      height: 550px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -120px;
+      left: 150px;
+      pointer-events: none;
+    }
+
+    .header-bar {
+      width: 1180px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 16px;
+    }
+    .main-title-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-badge {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #10b981, #0284c7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+      font-size: 28px;
+    }
+    .title-text h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title-text p {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .pill-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #10b981;
+      color: #fff;
+    }
+    .feature-chips {
+      display: flex;
+      gap: 10px;
+    }
+    .chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .browser-frame {
+      width: 1180px;
+      height: 640px;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.12);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chrome-titlebar {
+      height: 42px;
+      background: #dfe3e8;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 10px;
+    }
+    .window-dots {
+      display: flex;
+      gap: 6px;
+      margin-right: 8px;
+    }
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+    .dot.red { background: #ff5f56; }
+    .dot.yellow { background: #ffbd2e; }
+    .dot.green { background: #27c93f; }
+
+    .tabs-container {
+      display: flex;
+      align-items: flex-end;
+      height: 100%;
+      flex: 1;
+      gap: 4px;
+    }
+    .agent-group-tag {
+      background: #059669;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+    .chrome-tab {
+      background: #ffffff;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .chrome-addressbar {
+      height: 38px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 12px;
+    }
+    .url-input {
+      flex: 1;
+      height: 28px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 0 14px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #0f172a;
+    }
+
+    .debug-banner {
+      background: #fef3c7;
+      border-bottom: 1px solid #fde68a;
+      padding: 4px 16px;
+      font-size: 11px;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .main-view {
+      flex: 1;
+      display: flex;
+      background: #f8fafc;
+    }
+
+    /* Webpage Form Area */
+    .form-webpage {
+      flex: 1;
+      background: #ffffff;
+      padding: 24px 32px;
+      overflow: hidden;
+      border-right: 1px solid #e2e8f0;
+    }
+    .form-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+    .form-subtitle {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+    .field-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+    }
+    .field-input {
+      height: 36px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 0 12px;
+      font-size: 13px;
+      color: #0f172a;
+      background: #fff;
+    }
+    .field-input.autofilled {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+    .field-textarea {
+      height: 72px;
+      border: 1.5px solid #10b981;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #0f172a;
+      background: #f0fdf4;
+      resize: none;
+    }
+
+    .som-tag {
+      position: absolute;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 3px;
+      z-index: 10;
+      border: 1px solid #ffffff;
+    }
+
+    /* Sidepanel */
+    .sidepanel-area {
+      width: 440px;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidepanel-header {
+      height: 48px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+    .sidepanel-chat {
+      flex: 1;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .user-bubble {
+      align-self: flex-end;
+      background: #059669;
+      color: #ffffff;
+      padding: 9px 14px;
+      border-radius: 12px 12px 2px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      max-width: 90%;
+    }
+    .step-item {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #334155;
+    }
+    .step-item.success {
+      border-color: #bbf7d0;
+      background: #f0fdf4;
+      color: #166534;
+      font-weight: 600;
+    }
+    .auth-banner {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 11px;
+      color: #065f46;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow-1"></div>
+
+  <div class="header-bar">
+    <div class="main-title-box">
+      <div class="logo-badge">✍️</div>
+      <div class="title-text">
+        <h1>Browser Agent · 智能自动填表 <span class="pill-tag">场景实测</span></h1>
+        <p>多步骤表单自动感知 · 逐项定位填入 · 截图复核确认</p>
+      </div>
+    </div>
+    <div class="feature-chips">
+      <div class="chip">🛡️ 逐站授权安全门控</div>
+      <div class="chip">🔍 自动穿透复杂表单</div>
+      <div class="chip">📸 填表完成附带截图</div>
+    </div>
+  </div>
+
+  <div class="browser-frame">
+    <div class="chrome-titlebar">
+      <div class="window-dots">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+      </div>
+      <div class="tabs-container">
+        <div class="agent-group-tag">🤖 Agent 标签组</div>
+        <div class="chrome-tab">
+          <span>📝</span> 研发人才申请系统 - 步骤 2/3
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-addressbar">
+      <div class="url-input">
+        <span style="color:#10b981; font-weight:700;">🔒 https://</span><span>careers.techcorp.internal/apply/step-2</span>
+      </div>
+    </div>
+
+    <div class="debug-banner">
+      <div>⚠️ <strong>“Browser Agent”正在调试此浏览器</strong>（生成可信物理输入，非合成脚本）</div>
+      <div style="font-weight: 600; text-decoration: underline;">取消</div>
+    </div>
+
+    <div class="main-view">
+      <!-- Form Page -->
+      <div class="form-webpage">
+        <div class="form-title">候选人基本信息与工作意向表</div>
+        <div class="form-subtitle">AI 已定位 5 个目标输入框，正在执行精准物理输入</div>
+
+        <div class="form-grid">
+          <div class="field-group">
+            <div class="som-tag" style="top: -6px; left: -6px;">1</div>
+            <label class="field-label">申请人姓名 *</label>
+            <input class="field-input autofilled" value="张明 (Ming Zhang)" readonly>
+          </div>
+          <div class="field-group">
+            <div class="som-tag" style="top: -6px; left: -6px;">2</div>
+            <label class="field-label">联系邮箱 *</label>
+            <input class="field-input autofilled" value="zhangming.dev@gmail.com" readonly>
+          </div>
+          <div class="field-group">
+            <div class="som-tag" style="top: -6px; left: -6px;">3</div>
+            <label class="field-label">意向岗位 *</label>
+            <input class="field-input autofilled" value="AI Agent 全栈架构师" readonly>
+          </div>
+          <div class="field-group">
+            <div class="som-tag" style="top: -6px; left: -6px;">4</div>
+            <label class="field-label">期望工作城市 *</label>
+            <input class="field-input autofilled" value="北京 / 远程 (Remote)" readonly>
+          </div>
+        </div>
+
+        <div class="field-group" style="margin-top: 14px;">
+          <div class="som-tag" style="top: -6px; left: -6px;">5</div>
+          <label class="field-label">核心技能与代表作简介 *</label>
+          <textarea class="field-textarea" readonly>精通 TypeScript 与 Chrome MV3 架构，主导构建基于 CDP 的浏览器智能体扩展，深度适配 DeepSeek 多模态模型与视觉 Set-of-Marks 定位算法。</textarea>
+        </div>
+
+        <div style="margin-top: 16px; display: flex; gap: 10px;">
+          <button style="padding: 8px 18px; background: #059669; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+            <span>✔</span> 下一步：核对并提交 (AI 已就绪)
+          </button>
+        </div>
+      </div>
+
+      <!-- Sidepanel -->
+      <div class="sidepanel-area">
+        <div class="sidepanel-header">
+          <div style="font-size: 12px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+            <div style="width: 7px; height: 7px; background: #10b981; border-radius: 50%;"></div>
+            <span>DeepSeek (deepseek-chat)</span>
+          </div>
+          <div style="font-size: 11px; color: #64748b; font-family: monospace;">$0.003 · 2.1k tk</div>
+        </div>
+
+        <div class="sidepanel-chat">
+          <div class="user-bubble">
+            根据我的背景信息，帮我把这个人才申请表单填完，包含姓名、邮箱、岗位和项目经验
+          </div>
+
+          <div class="auth-banner">
+            <div style="font-weight: 700; margin-bottom: 2px;">🔒 站点操作已授权</div>
+            <div>允许在 careers.techcorp.internal 模拟真实点击与输入</div>
+          </div>
+
+          <div class="step-item">
+            <span>🔍</span> 视觉扫描：定位 5 个输入字段与提交按钮
+          </div>
+          <div class="step-item">
+            <span>⌨️</span> 模拟物理键盘依次输入张明、邮箱及岗位
+          </div>
+          <div class="step-item success">
+            <span>✔</span> 表单字段全部填充完成，已生成截图预览
+          </div>
+
+          <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; font-size: 11px;">
+            <div style="font-weight: 700; color: #334155; margin-bottom: 4px;">📸 自动化复核截图</div>
+            <div style="background: #f1f5f9; height: 110px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #64748b; font-weight: 600;">
+              [页面截图预览：所有必填项已正确填入]
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

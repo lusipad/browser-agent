@@ -10,14 +10,25 @@
   <a href="README.md">English</a> · <a href="https://github.com/lusipad/browser-agent/releases">Releases</a> · <a href="PRIVACY.md">隐私政策</a>
 </p>
 
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-v0.4.1-blue?logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
+  <a href="https://github.com/lusipad/browser-agent/releases"><img src="https://img.shields.io/github/v/release/lusipad/browser-agent?color=success" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
+  <img src="https://img.shields.io/badge/Manifest-V3-orange" alt="Manifest V3">
+  <img src="https://img.shields.io/badge/DeepSeek-Supported-blueviolet" alt="DeepSeek">
+</p>
+
 ---
 
 一个 Chrome 扩展（MV3）：在侧边栏用自然语言驱动浏览器。输入任务，AI 自动打开标签页、点击、填表、读取页面并汇报结果 — 用你自己的模型和 API Key。
 
 <p align="center">
-  <img src="docs/screenshots/sidepanel.png" width="260" alt="侧边栏">
+  <img src="docs/screenshots/demo.gif" width="700" alt="Browser Agent Live Demo">
+</p>
+<p align="center">
+  <img src="docs/screenshots/store-hero.png" width="480" alt="Browser Agent UI">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/options.png" width="400" alt="设置页">
+  <img src="docs/screenshots/form-filling.png" width="480" alt="自动填表场景">
 </p>
 
 ## 🎯 核心使用场景 (Killer Use Cases)
@@ -130,6 +141,8 @@ npm run bench:e2e     # 端到端 agent 评测（真实 LLM + Playwright + 本�
 | [docs/architecture.md](docs/architecture.md) | 详细架构与设计决策 |
 | [docs/testing.md](docs/testing.md) | 扩展全链路手动验证协议 |
 | [docs/store/](docs/store/) | Chrome Web Store 上架资料 |
+| [docs/PROMOTION_GUIDE.md](docs/PROMOTION_GUIDE.md) | 推广与社区冷启动手册 |
+| [docs/VIDEO_STORYBOARD.md](docs/VIDEO_STORYBOARD.md) | 短视频实操分镜与脚本 |
 | [CHANGELOG.md](CHANGELOG.md) | 版本历史 |
 | [PRIVACY.md](PRIVACY.md) | 隐私政策 |
 
@@ -143,6 +156,10 @@ npm run bench:e2e     # 端到端 agent 评测（真实 LLM + Playwright + 本�
 ## 参考与致谢
 
 技术思路参考：[browser-use](https://github.com/browser-use/browser-use)（DOM 序列化 + set-of-marks）、[Nanobrowser](https://github.com/nanobrowser/nanobrowser)（多智能体 Planner/Navigator/Validator）、[BrowserBee](https://github.com/parsaghaffari/browserbee)（扩展内 CDP 驱动）。未 fork 任何项目，实现独立编写。
+
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=lusipad/browser-agent&type=Date)](https://star-history.com/#lusipad/browser-agent&Date)
 
 ## 许可证
 

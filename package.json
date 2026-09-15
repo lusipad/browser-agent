@@ -1,6 +1,6 @@
 {
   "name": "browser-agent",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "type": "module",
   "description": "新一代开源 Chrome 侧边栏自主 AI 浏览器智能体：目标驱动、长程规划与物理级操控 (BYOK)",

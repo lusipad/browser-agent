@@ -1,6 +1,6 @@
 {
-  "version": 8,
-  "updatedAt": "2026-09-14",
+  "version": 9,
+  "updatedAt": "2026-09-15",
   "providers": [
     {
       "id": "openai",
@@ -1666,8 +1666,8 @@
       "providerId": "fireworks",
       "apiModelName": "accounts/fireworks/models/deepseek-v4-pro",
       "pricing": {
-        "input": 1.74,
-        "output": 3.48
+        "input": 1.2,
+        "output": 1.2
       }
     },
     {

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Browser Agent - 4 Distinct Icon Directions</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #070a11;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+    }
+    .header {
+      text-align: center;
+      max-width: 720px;
+    }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 230px);
+      gap: 24px;
+      margin-top: 8px;
+    }
+    .card {
+      background: #0f1422;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+    .icon-box {
+      width: 140px;
+      height: 140px;
+      margin-bottom: 18px;
+      position: relative;
+    }
+    .icon-box svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.65));
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+    .card-tag {
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+    .card-desc {
+      font-size: 12px;
+      line-height: 1.55;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Browser Agent 品牌图标 4 种硬核设计方向</h1>
+    <p>完全脱离卡通与抽象打结，对标顶级 AI 生产力工具（Cursor / Raycast / Claude / Copilot）的极简工业质感</p>
+  </div>
+
+  <div class="grid">
+    <!-- Direction 1: Minimalist Browser Window + AI Spark -->
+    <div class="card">
+      <div class="icon-box">
+        <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg1" x1="0" y1="0" x2="512" y2="512">
+              <stop offset="0%" stop-color="#0a0e1a" />
+              <stop offset="60%" stop-color="#0f1629" />
+              <stop offset="100%" stop-color="#181e36" />
+            </linearGradient>
+            <radialGradient id="sparkHalo" cx="256" cy="285" r="160">
+              <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.45" />
+              <stop offset="50%" stop-color="#6366f1" stop-opacity="0.2" />
+              <stop offset="100%" stop-color="#0a0e1a" stop-opacity="0" />
+            </radialGradient>
+            <linearGradient id="sparkGrad1" x1="160" y1="180" x2="352" y2="380">
+              <stop offset="0%" stop-color="#ffffff" />
+              <stop offset="35%" stop-color="#7dd3fc" />
+              <stop offset="70%" stop-color="#38bdf8" />
+              <stop offset="100%" stop-color="#6366f1" />
+            </linearGradient>
+            <filter id="glow1" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="10" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          <!-- Squircle Base -->
+          <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg1)" />
+          <rect x="16.5" y="16.5" width="479" height="479" rx="111.5" stroke="rgba(255,255,255,0.18)" stroke-width="2.5" />
+
+          <!-- Browser Window Frame -->
+          <rect x="72" y="96" width="368" height="320" rx="24" fill="#090d16" stroke="rgba(255,255,255,0.14)" stroke-width="2.5" />
+          <!-- Window Header Bar -->
+          <path d="M 72 148 L 440 148" stroke="rgba(255,255,255,0.1)" stroke-width="2" />
+          
+          <!-- Traffic Light Dots -->
+          <circle cx="106" cy="122" r="6" fill="#f43f5e" opacity="0.85" />
+          <circle cx="126" cy="122" r="6" fill="#fbbf24" opacity="0.85" />
+          <circle cx="146" cy="122" r="6" fill="#10b981" opacity="0.85" />
+
+          <!-- Active Tab Bar -->
+          <rect x="176" y="110" width="120" height="24" rx="6" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
+
+          <!-- Central Ambient Spark Halo -->
+          <circle cx="256" cy="285" r="130" fill="url(#sparkHalo)" />
+
+          <!-- The Central AI Intelligence Spark (Bursting from viewport) -->
+          <g filter="url(#glow1)">
+            <path d="M 256 195 
+                     C 256 250, 275 285, 346 285 
+                     C 275 285, 256 320, 256 375 
+                     C 256 320, 237 285, 166 285 
+                     C 237 285, 256 250, 256 195 Z" 
+                  fill="url(#sparkGrad1)" />
+            <!-- Hot-white Core -->
+            <circle cx="256" cy="285" r="10" fill="#ffffff" />
+          </g>
+
+          <!-- Subtle Diagonal Beam / Optical Ray -->
+          <line x1="190" y1="219" x2="322" y2="351" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round" />
+          <line x1="322" y1="219" x2="190" y2="351" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </div>
+      <div class="card-title">方案 1：视窗星标</div>
+      <div class="card-tag">BROWSER + AI SPARK</div>
+      <div class="card-desc">
+        直接且经典：暗夜质感的 Chrome 浏览器视窗中，爆发出一颗代表 AI 自主思考的耀眼奇点星标（✦）。对标 Raycast / Claude 风格，语义最清晰。
+      </div>
+    </div>
+
+    <!-- Direction 2: The Geometric "B" Warp Lettermark -->
+    <div class="card">
+      <div class="icon-box">
+        <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg2" x1="0" y1="0" x2="512" y2="512">
+              <stop offset="0%" stop-color="#080c14" />
+              <stop offset="60%" stop-color="#0d1322" />
+              <stop offset="100%" stop-color="#161536" />
+            </linearGradient>
+            <!-- Facet 1: Electric Cyan to Blue -->
+            <linearGradient id="f1" x1="120" y1="120" x2="380" y2="280">
+              <stop offset="0%" stop-color="#00f5ff" />
+              <stop offset="100%" stop-color="#2563eb" />
+            </linearGradient>
+            <!-- Facet 2: Vibrant Purple to Indigo -->
+            <linearGradient id="f2" x1="120" y1="240" x2="380" y2="400">
+              <stop offset="0%" stop-color="#a855f7" />
+              <stop offset="100%" stop-color="#4338ca" />
+            </linearGradient>
+            <!-- Facet 3: Highlight Spine -->
+            <linearGradient id="fSpine" x1="140" y1="100" x2="140" y2="410">
+              <stop offset="0%" stop-color="#ffffff" />
+              <stop offset="50%" stop-color="#38bdf8" />
+              <stop offset="100%" stop-color="#6366f1" />
+            </linearGradient>
+            <filter id="glow2" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          <!-- Squircle Base -->
+          <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg2)" />
+          <rect x="16.5" y="16.5" width="479" height="479" rx="111.5" stroke="rgba(255,255,255,0.18)" stroke-width="2.5" />
+
+          <!-- Dynamic Geometric "B" (Browser + Autonomous Forward Chevron) -->
+          <g filter="url(#glow2)">
+            <!-- Left Vertical Backbone -->
+            <rect x="132" y="112" width="42" height="288" rx="12" fill="url(#fSpine)" />
+
+            <!-- Top Loop / Navigation Arrowhead -->
+            <path d="M 174 112 L 285 112 C 342 112, 376 148, 376 200 C 376 252, 342 268, 285 268 L 174 268 Z" 
+                  fill="url(#f1)" />
+            <path d="M 216 156 L 275 156 C 306 156, 326 172, 326 200 C 326 228, 306 224, 275 224 L 216 224 Z" 
+                  fill="#080c14" opacity="0.9" />
+
+            <!-- Bottom Loop / Forward Propulsion -->
+            <path d="M 174 244 L 295 244 C 356 244, 394 280, 394 336 C 394 392, 356 400, 295 400 L 174 400 Z" 
+                  fill="url(#f2)" />
+            <path d="M 216 288 L 285 288 C 318 288, 342 304, 342 336 C 342 368, 318 356, 285 356 L 216 356 Z" 
+                  fill="#080c14" opacity="0.9" />
+
+            <!-- Central Arrow Cut Accent -->
+            <polygon points="275,256 315,256 295,280" fill="#ffffff" />
+          </g>
+        </svg>
+      </div>
+      <div class="card-title">方案 2：折跃几何 B 标</div>
+      <div class="card-tag">ISOMETRIC "B" MARK</div>
+      <div class="card-desc">
+        现代顶级 SaaS 字母徽标风格（对标 Linear / Stripe / Vercel）。将首字母「B」与代表前进的物理点击光标融合为立体折跃切面，极具工业锐度。
+      </div>
+    </div>
+
+    <!-- Direction 3: The Autonomous Navigation Cursor -->
+    <div class="card">
+      <div class="icon-box">
+        <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg3" x1="0" y1="0" x2="512" y2="512">
+              <stop offset="0%" stop-color="#090d16" />
+              <stop offset="60%" stop-color="#0d1424" />
+              <stop offset="100%" stop-color="#141738" />
+            </linearGradient>
+            <!-- Cursor Facets -->
+            <linearGradient id="cFront" x1="120" y1="100" x2="380" y2="400">
+              <stop offset="0%" stop-color="#ffffff" />
+              <stop offset="30%" stop-color="#38bdf8" />
+              <stop offset="100%" stop-color="#2563eb" />
+            </linearGradient>
+            <linearGradient id="cSide" x1="120" y1="100" x2="380" y2="400">
+              <stop offset="0%" stop-color="#818cf8" />
+              <stop offset="60%" stop-color="#6366f1" />
+              <stop offset="100%" stop-color="#312e81" />
+            </linearGradient>
+            <filter id="cursorShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#0284c7" flood-opacity="0.4" />
+            </filter>
+          </defs>
+
+          <!-- Squircle Base -->
+          <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg3)" />
+          <rect x="16.5" y="16.5" width="479" height="479" rx="111.5" stroke="rgba(255,255,255,0.18)" stroke-width="2.5" />
+
+          <!-- Background Coordinate Target Grid (CDP Precision) -->
+          <g opacity="0.3">
+            <circle cx="256" cy="256" r="160" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="6 12" />
+            <circle cx="256" cy="256" r="70" stroke="#818cf8" stroke-width="1.5" />
+            <line x1="256" y1="60" x2="256" y2="452" stroke="#1e293b" stroke-width="1.5" />
+            <line x1="60" y1="256" x2="452" y2="256" stroke="#1e293b" stroke-width="1.5" />
+          </g>
+
+          <!-- 3D Autonomous Pointer / Flight Cursor -->
+          <g filter="url(#cursorShadow)">
+            <!-- Left Wing -->
+            <polygon points="256,92 128,380 256,312" fill="url(#cFront)" />
+            <!-- Right Wing -->
+            <polygon points="256,92 384,380 256,312" fill="url(#cSide)" />
+            <!-- Spine Highlight -->
+            <line x1="256" y1="92" x2="256" y2="312" stroke="#ffffff" stroke-width="2.5" />
+            <!-- Tip Glow Particle -->
+            <circle cx="256" cy="92" r="8" fill="#ffffff" />
+          </g>
+
+          <!-- Action Click Pulse Rings -->
+          <circle cx="256" cy="92" r="28" stroke="#38bdf8" stroke-width="2" opacity="0.6" />
+        </svg>
+      </div>
+      <div class="card-title">方案 3：物理领航飞标</div>
+      <div class="card-tag">PHYSICAL CURSOR</div>
+      <div class="card-desc">
+        象征「真实物理点击操控（CDP）与目标制导」。极具冲击力的 3D 立体超音速航标掠过空间坐标靶心，对标 Cursor / Figma 风格，代表真正的掌控力。
+      </div>
+    </div>
+
+    <!-- Direction 4: Minimalist Cyber Visor (Realistic, not cartoon) -->
+    <div class="card">
+      <div class="icon-box">
+        <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg4" x1="0" y1="0" x2="512" y2="512">
+              <stop offset="0%" stop-color="#050811" />
+              <stop offset="60%" stop-color="#090e1c" />
+              <stop offset="100%" stop-color="#121329" />
+            </linearGradient>
+            <!-- Helmet Metallic Obsidian -->
+            <linearGradient id="helmMet" x1="160" y1="120" x2="352" y2="380">
+              <stop offset="0%" stop-color="#2a3242" />
+              <stop offset="50%" stop-color="#161c28" />
+              <stop offset="100%" stop-color="#0b1019" />
+            </linearGradient>
+            <!-- Laser Visor Beam -->
+            <linearGradient id="laserBeam" x1="140" y1="240" x2="372" y2="240">
+              <stop offset="0%" stop-color="#00f5ff" />
+              <stop offset="50%" stop-color="#38bdf8" />
+              <stop offset="100%" stop-color="#a855f7" />
+            </linearGradient>
+            <filter id="laserGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          <!-- Squircle Base -->
+          <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg4)" />
+          <rect x="16.5" y="16.5" width="479" height="479" rx="111.5" stroke="rgba(255,255,255,0.18)" stroke-width="2.5" />
+
+          <!-- Minimalist Aerodynamic Helm (Pure mature silhouette) -->
+          <g>
+            <!-- Helm Body -->
+            <path d="M 126 230 C 126 140, 184 108, 256 108 C 328 108, 386 140, 386 230 C 386 330, 328 388, 256 388 C 184 388, 126 330, 126 230 Z" 
+                  fill="url(#helmMet)" stroke="rgba(255,255,255,0.18)" stroke-width="2.5" />
+
+            <!-- Angular Cyber Bevel Cuts -->
+            <path d="M 186 114 L 326 114 L 306 140 L 206 140 Z" fill="rgba(255,255,255,0.06)" />
+
+            <!-- The Single Razor-Thin Laser Visor Beam (Zero cartoon eyes) -->
+            <g filter="url(#laserGlow)">
+              <rect x="156" y="226" width="200" height="18" rx="9" fill="url(#laserBeam)" />
+              <rect x="180" y="231" width="152" height="8" rx="4" fill="#ffffff" />
+            </g>
+
+            <!-- Lower Sensor Intake Vents -->
+            <line x1="226" y1="316" x2="286" y2="316" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+            <line x1="236" y1="326" x2="276" y2="326" stroke="#64748b" stroke-width="2" stroke-linecap="round" />
+          </g>
+
+          <!-- Precision Calibration Ticks -->
+          <line x1="256" y1="40" x2="256" y2="52" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+        </svg>
+      </div>
+      <div class="card-title">方案 4：黑钛赛博视界</div>
+      <div class="card-tag">CYBER VISOR (HARDWARE)</div>
+      <div class="card-desc">
+        硬核极客与数字副驾驶（对标 GitHub Copilot / Daft Punk）。拒绝任何幼态表情，纯黑钛金流线头盔 + 贯穿式赛博激光扫描条，冷峻、深沉、极具辨识度。
+      </div>
+    </div>
+  </div>
+</body>
+</html>

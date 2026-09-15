@@ -9,7 +9,7 @@ const projectRoot = path.resolve(__dirname, '..');
 async function renderIcons() {
   console.log('Rendering modern vector icons with Playwright...');
   const browser = await chromium.launch({ headless: true });
-  const htmlPath = 'file:///' + path.resolve(__dirname, 'assets/icon-c-template.html').replace(/\\/g, '/');
+  const htmlPath = 'file:///' + path.resolve(__dirname, 'assets/icon-spark-template.html').replace(/\\/g, '/');
 
   const sizes = [
     { size: 512, out: path.resolve(projectRoot, 'docs/screenshots/icon-512.png') },

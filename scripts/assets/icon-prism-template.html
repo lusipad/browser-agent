@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Browser Agent - 3D Prism Crystal Icon</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 512px;
+      height: 512px;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .icon-container {
+      width: 512px;
+      height: 512px;
+      position: relative;
+    }
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="icon-container">
+    <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Background Cosmic Dark -->
+        <linearGradient id="bgC" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#060912" />
+          <stop offset="50%" stop-color="#0b1022" />
+          <stop offset="100%" stop-color="#141732" />
+        </linearGradient>
+
+        <!-- Ambient Nebula Layer -->
+        <radialGradient id="nebulaC" cx="256" cy="256" r="220" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35" />
+          <stop offset="45%" stop-color="#818cf8" stop-opacity="0.2" />
+          <stop offset="100%" stop-color="#060912" stop-opacity="0" />
+        </radialGradient>
+
+        <!-- Metallic Squircle Rim -->
+        <linearGradient id="rimC" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.45" />
+          <stop offset="35%" stop-color="#818cf8" stop-opacity="0.5" />
+          <stop offset="70%" stop-color="#38bdf8" stop-opacity="0.35" />
+          <stop offset="100%" stop-color="#ffffff" stop-opacity="0.15" />
+        </linearGradient>
+
+        <!-- Top North Facet (Fiery Coral, Sun Amber & Radiant Gold) -->
+        <linearGradient id="facetTop" x1="166" y1="76" x2="346" y2="256" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#ff3366" />
+          <stop offset="45%" stop-color="#ff7a00" />
+          <stop offset="100%" stop-color="#ffc700" />
+        </linearGradient>
+
+        <!-- Southwest Facet (Pure Cyan & Sky Blue) -->
+        <linearGradient id="facetLeft" x1="166" y1="220" x2="256" y2="436" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#ffffff" />
+          <stop offset="25%" stop-color="#00f5ff" />
+          <stop offset="70%" stop-color="#0284c7" />
+          <stop offset="100%" stop-color="#0369a1" />
+        </linearGradient>
+
+        <!-- Southeast Facet (Electric Violet & Deep Indigo) -->
+        <linearGradient id="facetRight" x1="346" y1="220" x2="256" y2="436" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#c084fc" />
+          <stop offset="40%" stop-color="#8b5cf6" />
+          <stop offset="75%" stop-color="#6366f1" />
+          <stop offset="100%" stop-color="#3730a3" />
+        </linearGradient>
+
+        <!-- West Tip Accent (Electric Aqua) -->
+        <linearGradient id="tipWest" x1="76" y1="256" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#00f5ff" />
+          <stop offset="100%" stop-color="#38bdf8" />
+        </linearGradient>
+
+        <!-- East Tip Accent (Cyber Magenta) -->
+        <linearGradient id="tipEast" x1="256" y1="256" x2="436" y2="256" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#a855f7" />
+          <stop offset="100%" stop-color="#ec4899" />
+        </linearGradient>
+
+        <!-- Deep Dynamic Shadow -->
+        <filter id="prismShadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.8" />
+        </filter>
+
+        <!-- Luminous Glow Filter -->
+        <filter id="bloomC" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="16" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+
+      <!-- 1. Squircle Canvas Base -->
+      <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bgC)" />
+      <!-- Ambient Nebula Layer -->
+      <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#nebulaC)" />
+      <!-- Specular Bevel Border -->
+      <rect x="16.5" y="16.5" width="479" height="479" rx="111.5" stroke="url(#rimC)" stroke-width="3" />
+
+      <!-- 2. Subtle Precision Navigation Grid Orbit -->
+      <g opacity="0.25">
+        <circle cx="256" cy="256" r="180" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="6 14" />
+        <circle cx="383" cy="129" r="4" fill="#00f5ff" />
+        <circle cx="129" cy="383" r="4" fill="#ff7a00" />
+      </g>
+
+      <!-- 3. The 3D Polyhedral Prism Crystal (Massive, Bold & Strike-Impact) -->
+      <g filter="url(#prismShadow)">
+        <g filter="url(#bloomC)">
+          <!-- North Facet (Top Cone - Radiant Sun Gold & Coral) -->
+          <polygon points="256,68 352,220 256,256 160,220" fill="url(#facetTop)" />
+          
+          <!-- Southwest Facet (Cyan Glacier) -->
+          <polygon points="256,444 160,220 256,256" fill="url(#facetLeft)" />
+          
+          <!-- Southeast Facet (Electric Violet Indigo) -->
+          <polygon points="256,444 352,220 256,256" fill="url(#facetRight)" />
+          
+          <!-- West Dynamic Wing Point -->
+          <polygon points="68,256 160,220 256,256 160,292" fill="url(#tipWest)" />
+          
+          <!-- East Dynamic Wing Point -->
+          <polygon points="444,256 352,220 256,256 352,292" fill="url(#tipEast)" />
+
+          <!-- High-Voltage Specular Spine Highlight (Pure White Razor Edge) -->
+          <line x1="256" y1="68" x2="256" y2="444" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" />
+          <line x1="68" y1="256" x2="444" y2="256" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" />
+
+          <!-- Center Singularity Core (Hot White Pulse) -->
+          <circle cx="256" cy="256" r="16" fill="#ffffff" />
+          <circle cx="256" cy="256" r="6" fill="#ffffff" />
+        </g>
+      </g>
+    </svg>
+  </div>
+</body>
+</html>

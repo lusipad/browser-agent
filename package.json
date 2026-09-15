@@ -3,7 +3,7 @@
   "version": "0.4.1",
   "private": true,
   "type": "module",
-  "description": "Claude-in-Chrome 风格的多模型浏览器智能体扩展（任意 OpenAI 兼容端点）",
+  "description": "新一代开源 Chrome 侧边栏自主 AI 浏览器智能体：目标驱动、长程规划与物理级操控 (BYOK)",
   "scripts": {
     "build": "node build.mjs",
     "watch": "node build.mjs --watch",

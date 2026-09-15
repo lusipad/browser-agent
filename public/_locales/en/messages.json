@@ -1,6 +1,6 @@
 {
-  "extName": { "message": "Browser Agent - AI Automation & Form Filler" },
+  "extName": { "message": "Browser Agent - Autonomous AI Web Copilot" },
   "extShortName": { "message": "Browser Agent" },
-  "extDesc": { "message": "Automate browser tasks with AI: scrape tables, auto-fill forms, research pages with DeepSeek, GPT, Claude or Ollama. 100% private." },
+  "extDesc": { "message": "Next-Gen Autonomous AI Browser Agent: goal-driven planning, spatial vision & native CDP control with DeepSeek or local Ollama. 100% BYOK." },
   "actionTitle": { "message": "Open Browser Agent" }
 }

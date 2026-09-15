@@ -158,6 +158,29 @@ export const optionsDict = {
     en: 'Skips per-site approval. Sites on the blocklist are still blocked.',
   },
 
+  // 跨设备云同步与凭证安全
+  'opt.sync.title': { zh: '跨设备云同步与凭证安全', en: 'Cross-Device Sync & Secret Security' },
+  'opt.sync.lead': {
+    zh: '利用 Chrome 账号自动在你的多台电脑间同步配置与技能库。出于安全考虑，API Key 默认仅保存在本机。',
+    en: 'Automatically sync configuration and skills across your computers via Chrome account. For security, API Keys are kept on this device only by default.',
+  },
+  'opt.sync.enabled': { zh: '启用 Chrome 账号云同步', en: 'Enable Chrome account sync' },
+  'opt.sync.enabledHint': {
+    zh: '在所有登录同一 Google 账号的设备间实时同步模型配置、站点权限与技能库',
+    en: 'Real-time sync of model bindings, site permissions, and skills across devices with the same Google account',
+  },
+  'opt.sync.syncApiKeys': { zh: '跨设备同步 API Key（高风险，不推荐）', en: 'Sync API Keys across devices (High risk, not recommended)' },
+  'opt.sync.syncApiKeysHint': {
+    zh: '默认关闭：API Key 仅加密保存在本机存储（chrome.storage.local）。若开启，密钥将随配置同步到所有设备',
+    en: 'Off by default: API Keys are stored locally on this machine only. If enabled, keys will sync to all your devices',
+  },
+  'opt.sync.syncApiKeysConfirm': {
+    zh: '⚠️ 安全警告：开启后，你的所有 API Key 将通过 Google 账号同步到其他登录设备。若你在公共电脑、公司电脑或他人设备上登录过该账号，可能造成密钥泄露！确定要开启吗？',
+    en: '⚠️ Security Warning: Once enabled, all your API Keys will be synced to other devices via your Google account. If you log into public or shared computers, your keys may be exposed! Are you sure?',
+  },
+  'opt.sync.quotaUsed': { zh: '云同步存储配额：已使用 {0} KB / 100 KB', en: 'Sync storage quota: {0} KB / 100 KB used' },
+  'opt.sync.notAvailable': { zh: '当前环境不支持 chrome.storage.sync（使用本地存储）', en: 'chrome.storage.sync not available in this environment (using local storage)' },
+
   // 站点权限
   'opt.sites.title': { zh: '站点权限', en: 'Site Permissions' },
   'opt.sites.leadA': {

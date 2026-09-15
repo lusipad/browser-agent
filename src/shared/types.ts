@@ -123,6 +123,13 @@ export interface SitePermissions {
   blocked: string[];
 }
 
+export interface SyncSettings {
+  /** 是否启用 Chrome 账号云同步（默认开启） */
+  enabled: boolean;
+  /** 是否在云端同步 API Key（安全关键：默认 false，密钥仅保留在本地设备） */
+  syncApiKeys: boolean;
+}
+
 export interface AppConfig {
   version: 2;
   providers: ProviderConfig[];
@@ -132,6 +139,7 @@ export interface AppConfig {
   safety: SafetySettings;
   advanced: AdvancedSettings;
   sites: SitePermissions;
+  sync?: SyncSettings;
   /** 界面语言：'auto' 跟随浏览器，或强制 'zh' / 'en' */
   uiLang: 'auto' | 'zh' | 'en';
 }

@@ -1,4 +1,12 @@
 import type { AppConfig, ModelBinding, ModelConfig } from './types';
+import {
+  extractLocalSecrets,
+  loadLocalSecrets,
+  mergeLocalSecrets,
+  readSynced,
+  saveLocalSecrets,
+  writeSynced,
+} from './syncStorage';
 
 export const DEFAULT_CONFIG: AppConfig = {
   version: 2,
@@ -65,6 +73,10 @@ export const DEFAULT_CONFIG: AppConfig = {
       'binance.com',
       'coinbase.com',
     ],
+  },
+  sync: {
+    enabled: true,
+    syncApiKeys: false,
   },
 };
 
@@ -149,20 +161,34 @@ export function mergeConfig(raw: unknown): AppConfig {
       allowed: r.sites?.allowed ?? DEFAULT_CONFIG.sites.allowed,
       blocked: r.sites?.blocked ?? DEFAULT_CONFIG.sites.blocked,
     },
+    sync: {
+      enabled: r.sync?.enabled !== false,
+      syncApiKeys: r.sync?.syncApiKeys === true,
+    },
   };
 }
 
 export async function loadConfig(): Promise<AppConfig> {
-  const { config } = await chrome.storage.local.get('config');
-  return mergeConfig(config);
+  const [syncedRaw, localSecrets] = await Promise.all([
+    readSynced<unknown>('config'),
+    loadLocalSecrets(),
+  ]);
+
+  const baseRaw = syncedRaw ?? (await chrome.storage.local.get('config')).config;
+  const merged = mergeConfig(baseRaw);
+  return mergeLocalSecrets(merged, localSecrets);
 }
 
 export async function saveConfig(cfg: AppConfig): Promise<void> {
-  await chrome.storage.local.set({ config: cfg });
+  const { sanitized, secrets } = extractLocalSecrets(cfg);
+  await saveLocalSecrets(secrets);
+  await writeSynced('config', sanitized);
 }
 
 export function onConfigChange(cb: (cfg: AppConfig) => void): void {
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.config) cb(mergeConfig(changes.config.newValue));
+    if ((area === 'local' || area === 'sync') && (changes.config || changes.local_api_keys)) {
+      void loadConfig().then(cb);
+    }
   });
 }

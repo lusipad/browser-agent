@@ -6,7 +6,7 @@ import { runTurn } from './agent';
 import { detachAll } from './cdp';
 import { pickDiagnoseTab, runDiagnostics } from './diagnose';
 import { deleteConversation, listConversations, loadConversation, saveConversation } from './history';
-import { deleteSkill, listSkills, loadSkill, saveSkill } from './skills';
+import { deleteSkill, listSkills, loadSkill, onSkillsChange, saveSkill } from './skills';
 import { generateSkill } from './skillGen';
 import { resolveSkillSteps } from '../shared/skill';
 import { Session } from './session';
@@ -277,6 +277,16 @@ onConfigChange((cfg) => {
     if (!cfg.bindings.find((b) => b.id === s.bindingId && isBindingEnabled(b))) s.bindingId = defaultEnabledBindingId(cfg);
     s.emit({ type: 'bindings', bindings: bindingPicks(cfg), bindingId: s.bindingId });
   }
+});
+
+// 技能库变化时向所有已连接面板广播更新（支持跨设备即时同步）
+onSkillsChange(() => {
+  void (async () => {
+    const list = await listSkills();
+    for (const s of sessions.values()) {
+      s.emit({ type: 'skills_list', skills: list });
+    }
+  })();
 });
 
 chrome.windows.onRemoved.addListener((windowId) => {

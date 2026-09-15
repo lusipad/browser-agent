@@ -14,3 +14,4 @@ import './i18n.test';
 import './registry.test';
 import './session.test';
 import './skill.test';
+import './sync.test';

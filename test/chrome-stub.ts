@@ -7,7 +7,8 @@ const listener = { addListener: noop, removeListener: noop };
   tabs: { onRemoved: listener, onUpdated: listener, query: async () => [], get: async () => ({}), create: async () => ({}) },
   runtime: { onConnect: listener, onMessage: listener, getPlatformInfo: noop, connect: () => ({ onMessage: listener, onDisconnect: listener, postMessage: noop }) },
   storage: {
-    local: { get: async () => ({}), set: async () => {} },
+    local: { get: async () => ({}), set: async () => {}, remove: async () => {}, getBytesInUse: async () => 0 },
+    sync: { get: async () => ({}), set: async () => {}, remove: async () => {}, getBytesInUse: async () => 0 },
     session: { get: async () => ({}), set: async () => {}, remove: async () => {} },
     onChanged: listener,
   },

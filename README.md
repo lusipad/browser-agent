@@ -5,7 +5,9 @@
 <h1 align="center">Browser Agent</h1>
 
 <p align="center">
-  AI-powered browser automation from your sidebar — works with any OpenAI-compatible endpoint.
+  <strong>Next-Generation Autonomous AI Browser Agent · Your Personal Digital Copilot</strong>
+  <br>
+  Goal-Driven · Autonomous Planning · Cross-Tab Exploration · Native CDP Input · Self-Verification
   <br>
   <a href="README.zh-CN.md">中文文档</a> · <a href="https://github.com/lusipad/browser-agent/releases">Releases</a> · <a href="PRIVACY.md">Privacy Policy</a>
 </p>
@@ -20,7 +22,7 @@
 
 ---
 
-A Chrome extension (MV3) that lets you control your browser with natural language. Type a task in the sidebar, and the AI agent opens tabs, clicks, fills forms, reads pages, and reports back — all with your own model and API key.
+**Browser Agent** is a **next-generation autonomous browser agent** living directly inside your Chrome side panel. Far more than a simple scraping tool or macro script, it is a complete cognitive intelligence system equipped with **perception, goal planning, native physical input, and self-correcting validation**. Give it an open-ended goal, and it navigates, reasons, and executes across complex modern web applications just like a human expert — delivering verifiable, end-to-end outcomes.
 
 <p align="center">
   <img src="docs/screenshots/demo.gif" width="700" alt="Browser Agent Live Demo">
@@ -31,15 +33,15 @@ A Chrome extension (MV3) that lets you control your browser with natural languag
   <img src="docs/screenshots/form-filling.png" width="480" alt="Form filling scenario">
 </p>
 
-## 🎯 Killer Use Cases
+## 🚀 Agent Superpowers
 
-Control your browser like a human assistant without writing brittle selectors or scripts:
+Break free from rigid single-step commands. The agent navigates the web with human-like cognitive agency:
 
-- 📊 **Smart Web Scraping & Data Extraction** — Extract table data, e-commerce pricing, product specs, or job posts into clean JSON/Markdown in one click.
-- ✍️ **Autonomous Multi-Step Form Filling** — Simply describe what to fill; the agent identifies fields, dropdowns, and checkboxes to complete forms accurately.
-- 🔍 **Deep Research & Cross-Tab Navigation** — Let AI open tabs, navigate search results, read long articles, and synthesize comparative summaries.
-- 🤖 **Routine Browser Workflow Automation** — Automate repetitive web tasks, click-through flows, and page monitoring directly from the side panel.
-- 🔒 **100% Private & Local-First (BYOK)** — Direct connection to your own model provider (DeepSeek, OpenAI, Claude, or local Ollama). API keys never leave your machine.
+- 🧠 **Autonomous Planning & Self-Correction Loop** — Built on a Planner + Actor + Validator cognitive architecture. Given a high-level goal, it breaks down complex missions into executable steps, validates post-action state, dynamically course-corrects on obstacles, and self-verifies completion before delivery.
+- 🔍 **Deep Research & Multi-Tab Synthesis** — Autonomously spawns and organizes an "🤖 Agent" tab group, traverses multiple information sources, reads long-form technical literature, reconciles conflicting data, and synthesizes structured analytical reports.
+- ✍️ **End-to-End Workflow Execution & Form Automation** — Cross-references data between systems to automate intricate workflows in modern internal dashboards, portals, and multi-step registration forms with trusted keystrokes and screenshot auditing.
+- 👁️ **Native System-Level Control & Spatial Grounding** — Driven by Chrome DevTools Protocol (CDP) for authentic, trusted mouse and keyboard events (bypassing synthetic DOM event filters). Paired with Set-of-Marks visual tags to effortlessly conquer SPAs, nested Shadow DOMs, and cross-origin iframes.
+- 🔒 **Sovereign Local-First Architecture (Zero-Cloud)** — Liberate yourself from overpriced monthly subscriptions and cloud surveillance. Direct connection to DeepSeek, Claude, OpenAI, or 100% offline Ollama / vLLM. Zero intermediary servers, per-site authorization gating, and prompt-injection defenses.
 
 ## Features
 

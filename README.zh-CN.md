@@ -5,7 +5,9 @@
 <h1 align="center">Browser Agent</h1>
 
 <p align="center">
-  侧边栏 AI 浏览器智能体 — 接任意 OpenAI 兼容端点，密钥只存本机。
+  <strong>新一代自主 AI 浏览器智能体 · 个人专属的数字副驾驶</strong>
+  <br>
+  目标驱动 · 自主长程规划 · 跨页探索 · 物理级操控 · 结果自检验收
   <br>
   <a href="README.md">English</a> · <a href="https://github.com/lusipad/browser-agent/releases">Releases</a> · <a href="PRIVACY.md">隐私政策</a>
 </p>
@@ -20,7 +22,7 @@
 
 ---
 
-一个 Chrome 扩展（MV3）：在侧边栏用自然语言驱动浏览器。输入任务，AI 自动打开标签页、点击、填表、读取页面并汇报结果 — 用你自己的模型和 API Key。
+**Browser Agent** 是一款直接运行在 Chrome 原生侧边栏中的**新一代自主浏览器智能体（Next-Gen Autonomous Browser Agent）**。它不仅仅是一个自动化脚本或爬虫插件，而是具备**认知、规划、感知、物理操控与自我纠错闭环**的完整数字助手。下达一个开放的目标，它会像资深人类专家一样，自主在纷繁复杂的现代 Web 应用中探索、执行并交付确定性结果。
 
 <p align="center">
   <img src="docs/screenshots/demo.gif" width="700" alt="Browser Agent Live Demo">
@@ -31,15 +33,15 @@
   <img src="docs/screenshots/form-filling.png" width="480" alt="自动填表场景">
 </p>
 
-## 🎯 核心使用场景 (Killer Use Cases)
+## 🚀 突破性智能体能力 (Agent Superpowers)
 
-无需编写复杂的爬虫或自动化代码，只需在侧边栏说一句话：
+告别死板的单步指令，智能体以人类使用浏览器的方式自主理解并执行复杂使命：
 
-- 📊 **网页数据提取与结构化导出**：一键抓取复杂网页表格、电商比价、新闻列表或招聘信息，直接导出为结构化 JSON / Markdown。
-- ✍️ **复杂多步骤表单自动填写**：AI 智能识别网页上的各类输入框、下拉单选与多选，自动填入并截图复核。
-- 🔍 **跨页面深度调查与提炼**：自动打开多标签页翻页检索、通读长文资讯，汇总提炼出结构化摘要与对比建议。
-- 🤖 **日常重复操作代劳**：自动点击翻页、监测页面动态更新、辅助网页交互测试。
-- 🔒 **100% 隐私优先（BYOK & 本地模型）**：直连官方 API（DeepSeek / OpenAI / Claude）或本地 Ollama，API Key 仅存本机，网页数据绝不出本地。
+- 🧠 **自主长程任务规划与自检闭环 (Autonomous Planning & Self-Correction)**：搭载 Planner + Actor + Validator 认知架构。面对开放性目标，智能体自主将复杂流程拆解为行动步骤，并在每步动作后验证页面状态，遇到阻碍自主重试纠偏，直至通过验收。
+- 🔍 **跨平台深度情报调研与决策提炼 (Deep Research & Multi-Tab Synthesis)**：自主跨多标签页并行检索、通读长篇文献资讯、对比多方数据差异，深度研读并输出结构化决策报告（Markdown / JSON）。
+- ✍️ **复杂多步骤业务流端到端代劳 (End-to-End Workflow & Form Filling)**：跨系统比对信息，自动在现代复杂后台系统（报名、审批、入库、问卷）中智能定位层级表单并执行输入，附带截图复核。
+- 👁️ **原生系统级物理操控与空间视觉 (Native CDP & Spatial Grounding)**：通过 Chrome 官方 CDP 协议生成真实可信的物理鼠标点击与键盘事件，告别脆弱的 DOM 注入；搭配 Set-of-Marks 视觉编号框，无惧复杂单页应用（SPA）、嵌套 Shadow DOM 与动态 iframe。
+- 🔒 **纯正本地主权与安全防线 (Sovereign BYOK & Zero-Cloud)**：摆脱昂贵的月费 SaaS 绑架与云端隐私顾虑。直接连接 DeepSeek 官方 API、Claude、OpenAI 或本地离线 Ollama / vLLM。数据 100% 留在本机，内置逐站授权与金融黑名单拦截。
 
 ## 特性
 

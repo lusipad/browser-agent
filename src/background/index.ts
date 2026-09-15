@@ -6,6 +6,9 @@ import { runTurn } from './agent';
 import { detachAll } from './cdp';
 import { pickDiagnoseTab, runDiagnostics } from './diagnose';
 import { deleteConversation, listConversations, loadConversation, saveConversation } from './history';
+import { deleteSkill, listSkills, loadSkill, saveSkill } from './skills';
+import { generateSkill } from './skillGen';
+import { resolveSkillSteps } from '../shared/skill';
 import { Session } from './session';
 import { defaultEnabledBindingId, isBindingEnabled } from '../shared/models';
 import { ungroupAgentTabs } from './tabs';
@@ -94,6 +97,7 @@ chrome.runtime.onConnect.addListener((port) => {
             port.postMessage(s.snapshot(bindingPicks(s.cfg)));
             pushUsage(s);
             await pushConversations(s);
+            port.postMessage({ type: 'skills_list', skills: await listSkills() });
             break;
           }
           case 'send': {
@@ -180,6 +184,54 @@ chrome.runtime.onConnect.addListener((port) => {
           case 'open_options':
             void chrome.runtime.openOptionsPage();
             break;
+          case 'list_skills': {
+            const skills = await listSkills();
+            bound?.emit({ type: 'skills_list', skills });
+            break;
+          }
+          case 'save_skill': {
+            if (bound && !bound.running && bound.messages.length) {
+              bound.timeline = bound.timeline.filter((it) => it.kind !== 'skill_prompt');
+              bound.info(bound.t('skill.generating'));
+              try {
+                const skill = await generateSkill(bound);
+                await saveSkill(skill);
+                bound.info(bound.t('bg.skillSaved', [skill.name]));
+                const skills = await listSkills();
+                bound.emit({ type: 'skills_list', skills });
+              } catch (e: any) {
+                bound.error(bound.t('bg.skillGenFail', [e?.message || String(e)]));
+              }
+            }
+            break;
+          }
+          case 'run_skill': {
+            if (bound && !bound.running) {
+              const skill = await loadSkill(msg.skillId);
+              if (skill) {
+                const resolvedSteps = resolveSkillSteps(skill, msg.variables);
+                bound.activeSkill = {
+                  name: skill.name,
+                  description: skill.description,
+                  steps: resolvedSteps,
+                  resolvedVars: Object.entries(msg.variables).map(([k, v]) => [k, String(v)]),
+                };
+                const userTask = bound.t('skill.executing', [skill.name]);
+                const s = bound;
+                void runTurn(s, userTask).then(() => {
+                  s.activeSkill = null;
+                  pushConversations(s);
+                });
+              }
+            }
+            break;
+          }
+          case 'delete_skill': {
+            await deleteSkill(msg.id);
+            const skills = await listSkills();
+            bound?.emit({ type: 'skills_list', skills });
+            break;
+          }
           default:
             break;
         }

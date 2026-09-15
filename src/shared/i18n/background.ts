@@ -63,4 +63,9 @@ export const backgroundDict = {
   'bg.diag.networkBrief': { zh: '在途请求 {0}', en: 'In-flight {0}' },
   'bg.diag.title': { zh: '诊断', en: 'Diagnostics' },
   'bg.diag.noHttp': { zh: '没有可诊断的 http(s) 网页。先在浏览器里打开一个普通网页，再回来点诊断。', en: 'No http(s) page to diagnose. Open a normal web page first, then run diagnostics.' },
+  // 技能
+  'skill.generating': { zh: '正在从当前对话中提取技能…', en: 'Extracting skill from conversation...' },
+  'skill.executing': { zh: '执行技能「{0}」', en: 'Run skill "{0}"' },
+  'bg.skillSaved': { zh: '技能「{0}」已成功保存！可在右上角 📋 中查看与运行。', en: 'Skill "{0}" saved! View and run it from 📋 in the top bar.' },
+  'bg.skillGenFail': { zh: '技能提取失败：{0}', en: 'Failed to extract skill: {0}' },
 } as const;

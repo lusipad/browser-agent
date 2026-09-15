@@ -9,12 +9,14 @@ import { SafetyPanel } from './panels/SafetyPanel';
 import { AdvancedPanel } from './panels/AdvancedPanel';
 import { SitesPanel } from './panels/SitesPanel';
 import { DiagnosticsPanel } from './panels/DiagnosticsPanel';
+import { SkillsPanel } from './panels/SkillsPanel';
 
-type Tab = 'providers' | 'models' | 'safety' | 'sites' | 'advanced' | 'diagnostics';
+type Tab = 'providers' | 'models' | 'skills' | 'safety' | 'sites' | 'advanced' | 'diagnostics';
 
 const TABS: Array<{ id: Tab; labelKey: MsgKey }> = [
   { id: 'providers', labelKey: 'opt.providers.title' },
   { id: 'models', labelKey: 'opt.models.title' },
+  { id: 'skills', labelKey: 'opt.skills.title' },
   { id: 'safety', labelKey: 'opt.safety.title' },
   { id: 'sites', labelKey: 'opt.sites.title' },
   { id: 'advanced', labelKey: 'opt.advanced.title' },
@@ -85,6 +87,7 @@ export function Options() {
         <main className="content">
           {tab === 'providers' && <ProvidersPanel cfg={cfg} onChange={update} />}
           {tab === 'models' && <ModelsPanel cfg={cfg} onChange={update} />}
+          {tab === 'skills' && <SkillsPanel />}
           {tab === 'safety' && <SafetyPanel cfg={cfg} onChange={update} />}
           {tab === 'sites' && <SitesPanel cfg={cfg} onChange={update} />}
           {tab === 'advanced' && <AdvancedPanel cfg={cfg} onChange={update} />}

@@ -8,6 +8,8 @@ import { Timeline } from './components/Timeline';
 import { Composer } from './components/Composer';
 import { Header } from './components/Header';
 import { HistoryDrawer } from './components/HistoryDrawer';
+import { SkillDrawer } from './components/SkillDrawer';
+import type { SkillMeta } from '../shared/skill';
 
 export function App() {
   const port = useMemo(() => new BgPort(), []);
@@ -28,6 +30,8 @@ export function App() {
   const [conversations, setConversations] = useState<ConvMeta[]>([]);
   const [activeConv, setActiveConv] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [skills, setSkills] = useState<SkillMeta[]>([]);
+  const [skillDrawerOpen, setSkillDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedBottom = useRef(true);
 
@@ -90,6 +94,9 @@ export function App() {
             contextBudget: msg.contextBudget ?? prev.contextBudget,
           }));
           break;
+        case 'skills_list':
+          setSkills(msg.skills);
+          break;
       }
     });
     void port.connect();
@@ -127,6 +134,7 @@ export function App() {
         }}
         onNewChat={() => port.post({ type: 'new_chat' })}
         onHistory={() => setHistoryOpen((o) => !o)}
+        onSkills={() => setSkillDrawerOpen((o) => !o)}
         onOptions={() => port.post({ type: 'open_options' })}
         onDetach={() => port.post({ type: 'detach' })}
         running={running}
@@ -148,6 +156,16 @@ export function App() {
           onDelete={(id) => port.post({ type: 'delete_conv', id })}
         />
       )}
+      {skillDrawerOpen && (
+        <SkillDrawer
+          skills={skills}
+          running={running}
+          onClose={() => setSkillDrawerOpen(false)}
+          onRun={(skillId, variables) => port.post({ type: 'run_skill', skillId, variables })}
+          onDelete={(id) => port.post({ type: 'delete_skill', id })}
+          onOptions={() => port.post({ type: 'open_options' })}
+        />
+      )}
       <div className="scroll" ref={scrollRef} onScroll={onScroll}>
         <Timeline
           items={items}
@@ -155,6 +173,7 @@ export function App() {
           onApprove={(id, decision) => port.post({ type: 'approval', id, decision })}
           onContinue={() => port.post({ type: 'continue' })}
           onSelectExample={(text) => port.post({ type: 'send', text })}
+          onSaveSkill={() => port.post({ type: 'save_skill' })}
         />
       </div>
       <Composer

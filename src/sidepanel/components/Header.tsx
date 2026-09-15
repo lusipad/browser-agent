@@ -23,6 +23,7 @@ interface Props {
   onVision: (enabled: boolean) => void;
   onNewChat: () => void;
   onHistory: () => void;
+  onSkills: () => void;
   onOptions: () => void;
   onDetach: () => void;
 }
@@ -120,6 +121,9 @@ export function Header(props: Props) {
         />
         <button className="icon-btn" title={t('header.history')} onClick={props.onHistory}>
           🕘
+        </button>
+        <button className="icon-btn" title={t('header.skills')} onClick={props.onSkills}>
+          📋
         </button>
         <button className="icon-btn" title={t('header.detach')} onClick={props.onDetach}>
           ⏏

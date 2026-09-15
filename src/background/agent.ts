@@ -59,11 +59,32 @@ export async function runTurn(
     session.upsert({ kind: 'user', id: uid('u'), text: userText });
   }
 
-  const sysBase = buildSystemPrompt({
+  let sysBase = buildSystemPrompt({
     date: new Date().toISOString().slice(0, 10),
     vision: session.effectiveVision(),
     screenshotMaxWidth: adv.screenshotMaxWidth,
   });
+
+  if (session.activeSkill) {
+    const skill = session.activeSkill;
+    const varsText = skill.resolvedVars
+      .map(([k, v]) => `- ${k}: ${v}`)
+      .join('\n');
+    sysBase +=
+      `\n\n## Active Skill: ${skill.name}\n` +
+      `${skill.description}\n\n` +
+      `### Variables\n${varsText || '(None)'}\n\n` +
+      `### Steps (follow this plan, adapting to the actual page state)\n` +
+      skill.steps
+        .map(
+          (s, i) =>
+            `${i + 1}. ${s.intent}${s.url ? ` (navigate to: ${s.url})` : ''}${s.note ? ` [Note: ${s.note}]` : ''}`,
+        )
+        .join('\n') +
+      `\n\nFollow these steps in order. Each step describes INTENT, not exact DOM elements — ` +
+      `use your tools to find the right elements on the current page. ` +
+      `If a step cannot be completed as described, adapt intelligently or ask the user.`;
+  }
 
   // 「继续」时沿用最初的任务作为成功判据
   let successCriteria = continuation ? firstUserText(session) || userText : userText;
@@ -143,6 +164,11 @@ export async function runTurn(
           session.upsert({ kind: 'info', id: uid('i'), text: session.t('bg.validatorPass') });
         }
         if (result.stopReason === 'length') session.info(session.t('bg.maxTokens'));
+        const hasTools = session.messages.some((m) => m.content.some((c) => c.type === 'tool_use'));
+        if (hasTools && !session.activeSkill) {
+          session.timeline = session.timeline.filter((it) => it.kind !== 'skill_prompt');
+          session.upsert({ kind: 'skill_prompt', id: uid('sp'), action: 'save_skill' });
+        }
         break;
       }
 

@@ -165,7 +165,8 @@ export type TimelineItem =
       decision?: ApprovalDecision;
     }
   | { kind: 'error'; id: string; text: string }
-  | { kind: 'info'; id: string; text: string; action?: 'continue' };
+  | { kind: 'info'; id: string; text: string; action?: 'continue' }
+  | { kind: 'skill_prompt'; id: string; action: 'save_skill' };
 
 export interface BindingPick {
   id: string;
@@ -221,7 +222,11 @@ export type PanelToBg =
   | { type: 'set_vision'; enabled: boolean }
   | { type: 'approval'; id: string; decision: ApprovalDecision }
   | { type: 'detach' }
-  | { type: 'open_options' };
+  | { type: 'open_options' }
+  | { type: 'save_skill' }
+  | { type: 'run_skill'; skillId: string; variables: Record<string, string | number | boolean> }
+  | { type: 'delete_skill'; id: string }
+  | { type: 'list_skills' };
 
 export type BgToPanel =
   | {
@@ -248,4 +253,5 @@ export type BgToPanel =
       contextTokens?: number;
       /** 当前输入 token 预算 */
       contextBudget?: number;
-    };
+    }
+  | { type: 'skills_list'; skills: import('../shared/skill').SkillMeta[] };

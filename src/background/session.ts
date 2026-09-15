@@ -12,11 +12,19 @@ import { resolveLang, translate, type MsgKey } from '../shared/i18n';
 import { resolveModelBinding } from '../shared/models';
 import { defaultEnabledBindingId, isBindingEnabled } from '../shared/models';
 import { deriveTitle, uid } from '../shared/util';
+import type { SkillStep } from '../shared/skill';
 import type { GifFrame } from './gif';
 import type { ArchivedConv } from './history';
 import type { ApprovalHost } from './permissions';
 
 const MAX_GIF_FRAMES = 30;
+
+export interface ActiveSkill {
+  name: string;
+  description: string;
+  steps: SkillStep[];
+  resolvedVars: [string, string][];
+}
 
 export class Session implements ApprovalHost {
   readonly windowId: number;
@@ -37,6 +45,8 @@ export class Session implements ApprovalHost {
   /** 会话级视觉覆盖：null=跟随模型，false=本会话关闭视觉，true=本会话强制开启 */
   visionOverride: boolean | null = null;
   port: chrome.runtime.Port | null = null;
+  /** 当前正在执行的技能（含已替换变量的步骤） */
+  activeSkill: ActiveSkill | null = null;
   private pendingApprovals = new Map<string, (d: ApprovalDecision) => void>();
 
   constructor(windowId: number, cfg: AppConfig) {

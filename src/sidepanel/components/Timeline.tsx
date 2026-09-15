@@ -10,9 +10,10 @@ interface Props {
   onApprove: (id: string, decision: ApprovalDecision) => void;
   onContinue: () => void;
   onSelectExample?: (text: string) => void;
+  onSaveSkill?: () => void;
 }
 
-export function Timeline({ items, running, onApprove, onContinue, onSelectExample }: Props) {
+export function Timeline({ items, running, onApprove, onContinue, onSelectExample, onSaveSkill }: Props) {
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   if (!items.length) return <Welcome onSelect={onSelectExample} />;
   // 只有最后一条「继续」提示可点，避免历史里多个按钮
@@ -27,6 +28,8 @@ export function Timeline({ items, running, onApprove, onContinue, onSelectExampl
             onApprove={onApprove}
             onContinue={onContinue}
             onPreview={setPreviewSrc}
+            onSaveSkill={onSaveSkill}
+            running={running}
             canContinue={!running && it.id === lastContinueId}
           />
         ))}
@@ -67,12 +70,16 @@ function Row({
   onApprove,
   onContinue,
   onPreview,
+  onSaveSkill,
+  running,
   canContinue,
 }: {
   item: TimelineItem;
   onApprove: Props['onApprove'];
   onContinue: Props['onContinue'];
   onPreview: (src: string) => void;
+  onSaveSkill?: () => void;
+  running: boolean;
   canContinue: boolean;
 }) {
   const t = useT();
@@ -112,6 +119,20 @@ function Row({
                 {t('timeline.continue')}
               </button>
             )}
+          </div>
+        </div>
+      );
+    case 'skill_prompt':
+      return (
+        <div className="row">
+          <div className="notice skill-prompt">
+            <div className="skill-prompt-text">
+              <span className="skill-prompt-icon">✨</span>
+              <span>{t('skill.promptDesc')}</span>
+            </div>
+            <button className="btn primary skill-save-btn" onClick={onSaveSkill} disabled={running}>
+              {t('skill.saveBtn')}
+            </button>
           </div>
         </div>
       );

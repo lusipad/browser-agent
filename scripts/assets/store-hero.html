@@ -467,14 +467,14 @@
     <div class="main-title-box">
       <img src="../../public/icons/icon128.png" style="width: 44px; height: 44px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-right: 12px;">
       <div class="title-text">
-        <h1>Browser Agent <span class="pill-tag">新一代自主智能体</span></h1>
-        <p>感知 · 规划 · 跨页探索 · 物理级操控 · 自我校验 — 个人专属的数字副驾驶</p>
+        <h1>Browser Agent <span class="pill-tag">v0.5.1 新一代自主智能体</span></h1>
+        <p>目标驱动 · 跨页探索 · 物理操控 · ⚡ SKILL 技能沉淀 · ☁️ 跨设备安全云同步</p>
       </div>
     </div>
     <div class="feature-chips">
-      <div class="chip">🧠 自主任务规划与自检闭环</div>
-      <div class="chip">👁️ 真实物理操控 (CDP + 空间视觉)</div>
-      <div class="chip">🔒 本地主权 AI (零云端中转 · BYOK)</div>
+      <div class="chip">⚡ SKILL 沉淀与自适应回放</div>
+      <div class="chip">☁️ 跨设备安全云同步</div>
+      <div class="chip">🔒 密钥本地物理隔离 (零上云)</div>
     </div>
   </div>
 
@@ -576,6 +576,24 @@
             <div class="news-meta">205 points by dev_lus 9 hours ago | 52 comments</div>
           </div>
         </div>
+
+        <!-- Floating Skill & Sync Badges -->
+        <div style="position: absolute; bottom: 16px; left: 16px; right: 16px; display: flex; gap: 12px; z-index: 20;">
+          <div style="flex: 1; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+            <div style="font-size: 18px; width: 34px; height: 34px; background: rgba(99,102,241,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">⚡</div>
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: #fff;">语义化 SKILL 技能沉淀</div>
+              <div style="font-size: 10.5px; color: #94a3b8;">自动参数化提取 · 跨页自适应回放 · JSON 导入导出</div>
+            </div>
+          </div>
+          <div style="flex: 1; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+            <div style="font-size: 18px; width: 34px; height: 34px; background: rgba(16,185,129,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">☁️</div>
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: #fff;">跨设备安全云同步</div>
+              <div style="font-size: 10.5px; color: #94a3b8;">Chrome 账号多端即时同步 · API Key 本地物理隔离</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Side Panel -->
@@ -586,10 +604,15 @@
             <span>DeepSeek (deepseek-chat)</span>
             <span style="color:#64748b; font-size:10px;">▾</span>
           </div>
-          <div class="usage-stats">
-            <span class="cost">$0.002</span>
-            <span>·</span>
-            <span>1.4k tk</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="background: rgba(99,102,241,0.12); color: #4f46e5; border: 1px solid rgba(99,102,241,0.25); padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+              <span>📋</span> 技能 (2)
+            </div>
+            <div class="usage-stats">
+              <span class="cost">$0.002</span>
+              <span>·</span>
+              <span>1.4k tk</span>
+            </div>
           </div>
         </div>
 
@@ -646,6 +669,17 @@
               </tbody>
             </table>
             <button class="export-btn">📥 导出为深度研报 (Markdown / JSON)</button>
+          </div>
+
+          <!-- Save as Skill Prompt Card -->
+          <div style="margin-top: 10px; background: linear-gradient(135deg, #eef2ff, #f5f3ff); border: 1px solid #c7d2fe; border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(79,70,229,0.06);">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #3730a3; font-weight: 600;">
+              <span>✨</span>
+              <span>觉得这次自动化很棒？保存为可复用技能</span>
+            </div>
+            <div style="background: #4f46e5; color: #fff; padding: 3px 8px; border-radius: 5px; font-size: 10.5px; font-weight: 600; display: flex; align-items: center; gap: 3px; cursor: pointer;">
+              <span>💾</span> 保存技能
+            </div>
           </div>
         </div>
       </div>

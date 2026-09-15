@@ -23,13 +23,15 @@ Browser Agent 是一款运行在 Chrome 原生侧边栏中的新一代自主 AI 
 
 🚀 核心智能体能力：
 1. 🧠 自主长程规划与自检闭环：基于认知架构，自主将复杂需求拆解为行动步骤；动作后实时感知页面变化，遇阻自主重试纠偏，直至通过验收。
-2. 🔍 跨页深度调研与信息合成：自主跨多标签页并行检索、阅读长篇文献资料、比对多方数据差异，深度提炼并输出结构化决策研报（Markdown / JSON）。
-3. ✍️ 复杂业务流程端到端代劳：跨系统比对信息，自动在现代复杂管理后台中定位多层级表单并执行录入，附带可信物理击键与截图复核。
-4. 👁️ 原生系统级物理操控与空间视觉：基于 Chrome 官方 CDP 协议生成真实可信的物理鼠标与键盘事件；搭配 Set-of-Marks 视觉标记框，精准攻克单页应用、Shadow DOM 与动态 iframe。
+2. ⚡ 自动化工作流沉淀为 SKILL：任务完成后一键提炼为高复用技能（自动参数化变量 {{var}}，抽象为自然语言语义步骤）；侧栏抽屉即开即用，支持导入/导出共享。
+3. ☁️ 跨设备安全云同步（凭证物理隔离）：基于 Chrome 账号多端实时同步模型配置与技能库；API Key 强制脱敏仅留在本机（chrome.storage.local），绝不上云，公用电脑使用无忧。
+4. 🔍 跨页深度调研与信息合成：自主跨多标签页并行检索、阅读长篇文献资料、比对多方数据差异，深度提炼并输出结构化决策研报（Markdown / JSON）。
+5. ✍️ 复杂业务流程端到端代劳：跨系统比对信息，自动在现代复杂管理后台中定位多层级表单并执行录入，附带可信物理击键与截图复核。
+6. 👁️ 原生系统级物理操控与空间视觉：基于 Chrome 官方 CDP 协议生成真实可信的物理鼠标与键盘事件；搭配 Set-of-Marks 视觉标记框，精准攻克单页应用、Shadow DOM 与动态 iframe。
 
 🔒 本地主权与安全防线（BYOK）：
 - 纯正本地主权：直连兼容接口标准的大语言模型端点或本地私有离线模型。您的 API Key 与网页交互数据 100% 保存在本机浏览器中，绝不经由任何第三方中间服务器。
-- 逐站明确授权：首次访问未授权域名需经用户弹窗确认；内置金融与支付网站安全黑名单；密码输入与敏感操作强制二次确认。
+- 凭证物理隔离：配置跨设备同步时 API Key 自动脱敏，敏感 Token 自动净化；内置金融与支付网站安全黑名单；密码输入与敏感操作强制二次确认。
 - 透明预算治理：每步操作实时展示 Token 消耗与核算，内置上下文自动压缩机制，防止超出预算。
 
 > 💡 使用提示：本扩展遵循纯本地与自带模型接口（BYOK）模式，请在设置中填入您自备的模型端点地址与密钥，或连接本地离线模型即可开始使用。
@@ -46,22 +48,24 @@ Browser Agent - Autonomous AI Web Copilot
 
 ### Summary / Short Description (Within 132 chars)
 ```
-Next-gen autonomous browser agent: goal-driven planning, spatial vision & native CDP control with local or custom LLMs. 100% BYOK.
+Autonomous browser agent: goal planning, reusable SKILLs, cross-device sync & native CDP control with local or custom LLMs. 100% BYOK.
 ```
 
 ### Detailed Description
 ```
-Browser Agent is a next-generation autonomous AI browser agent living directly inside your Chrome side panel. Far more than a simple scraping script, it is equipped with autonomous goal planning, cross-tab exploration, native physical control, and self-correcting validation.
+Browser Agent is a next-generation autonomous AI browser agent living directly inside your Chrome side panel. Far more than a simple scraping script, it is equipped with autonomous goal planning, reusable SKILL workflows, secure cross-device sync, and self-correcting validation.
 
 🚀 Agent Superpowers:
 1. 🧠 Autonomous Planning & Self-Correction: Decomposes complex missions into structured steps, validates outcomes after every action, and course-corrects dynamically until completion.
-2. 🔍 Deep Research & Multi-Tab Synthesis: Traverses multiple tabs, digests lengthy technical pages, reconciles disparate data, and synthesizes structured analytical reports (Markdown / JSON).
-3. ✍️ End-to-End Workflow & Form Automation: Cross-references data to complete intricate workflows, administrative dashboards, and multi-step registration forms with trusted inputs.
-4. 👁️ Native Physical Control & Spatial Vision: Generates authentic user input events via Chrome DevTools Protocol (CDP); pairs with Set-of-Marks visual bounding boxes to conquer SPAs, nested Shadow DOMs, and dynamic iframes.
+2. ⚡ Reusable SKILL Workflows: Turn any completed automation into a parameterized skill with natural language semantic steps; trigger from the sidebar drawer, or import/export via JSON.
+3. ☁️ Secure Cross-Device Cloud Sync: Seamlessly sync model configs and skills across your devices via Chrome account; API Keys strictly physically isolated in local storage (never cloud-synced).
+4. 🔍 Deep Research & Multi-Tab Synthesis: Traverses multiple tabs, digests lengthy technical pages, reconciles disparate data, and synthesizes structured analytical reports (Markdown / JSON).
+5. ✍️ End-to-End Workflow & Form Automation: Cross-references data to complete intricate workflows, administrative dashboards, and multi-step registration forms with trusted inputs.
+6. 👁️ Native Physical Control & Spatial Vision: Generates authentic user input events via Chrome DevTools Protocol (CDP); pairs with Set-of-Marks visual bounding boxes to conquer SPAs, nested Shadow DOMs, and dynamic iframes.
 
 🔒 Sovereign Local-First Architecture (Zero-Cloud):
 - 100% Private (BYOK): Direct connection to your own standard model endpoints or local offline LLM instances. All API credentials and browsing data remain strictly inside your browser. No intermediary cloud servers, zero data tracking.
-- Transparent Security: Explicit per-site authorization prompt, built-in financial domain blocklist, and mandatory confirmation for sensitive actions.
+- Credential Security: Physical secret isolation on local device; automatic token sanitization for skill variables; built-in financial domain blocklist; mandatory confirmation for sensitive actions.
 - Context & Cost Governance: Real-time token usage accounting and automated context governance to eliminate token waste.
 
 > 💡 Getting Started: This is a Bring-Your-Own-Key (BYOK) extension. Connect your own preferred model endpoint or local offline instance in Settings to get started.
@@ -77,7 +81,7 @@ Browser Agent is a next-generation autonomous AI browser agent living directly i
 | **`scripting`** | 向**用户已授权的页面**注入自包含的轻量 DOM 感知函数，收集可交互元素供模型定位与操作。 |
 | **`tabs` / `tabGroups`** | 列出/新建/关闭标签页，并把智能体新建的标签页归入「🤖 Agent」独立标签组，便于用户识别与隔离。 |
 | **`webNavigation`** | 感知页面导航与帧结构，在动作后等待页面真正加载完成（network-idle）。 |
-| **`storage`** | 在本机 `chrome.storage.local` 保存服务商配置、对话历史、站点授权。**不含任何远程服务器存储**。 |
+| **`storage`** | 用于保存用户配置、已授权站点和技能库。支持通过 `chrome.storage.sync` 跨设备同步配置与技能（API Key 经脱敏处理，强制保存在本地 `chrome.storage.local`，绝不上云）。**不含任何外部远程服务器存储**。 |
 | **`downloads`** | 用户主动导出对话记录（Markdown/JSON）或生成 GIF 时保存到下载目录。 |
 | **`sidePanel`** | 扩展的主界面运行在 Chrome 原生侧边栏。 |
 | **`host_permissions: <all_urls>`** | 用户需要智能体在任意工作网站上执行任务；但**实际操作前每个站点都必须经用户弹窗逐站授权**，未授权站点不会被读取或操作，且金融支付站点预置禁止。 |

@@ -9,31 +9,30 @@
 
 ### 扩展名称（45 字符内）
 ```
-Browser Agent - AI 网页自动化与自动填表助手
+Browser Agent - 新一代自主 AI 浏览器智能体
 ```
 
 ### 简短描述（132 字符内）
 ```
-在侧边栏用自然语言操作浏览器：批量提取网页表格、自动填表、比价与研读。支持 DeepSeek、GPT、Claude、Ollama 本地模型，密钥仅存本机。
+新一代自主 AI 浏览器智能体：目标驱动、长程规划与物理级操控。支持主流标准模型端点与本地离线模型，数据仅存本机。
 ```
 
-### 详细描述（精炼痛点 + 杀手级场景 + 隐私安全）
+### 详细描述（精炼痛点 + 智能体能力 + 隐私安全）
 ```
-Browser Agent 是一款运行在 Chrome 侧边栏的自主 AI 浏览器智能体。用大白话下达任务，AI 会像真人一样打开标签页、浏览点击、输入填表、抓取数据并汇总汇报！
+Browser Agent 是一款运行在 Chrome 原生侧边栏中的新一代自主 AI 浏览器智能体（Autonomous Web Agent）。给出一个开放目标，智能体自主进行多步规划、跨页探索、物理交互与结果校验，像资深专家一样在纷繁复杂的现代 Web 应用中交付确定性结果。
 
-🎯 核心应用场景：
-1. 📊 网页数据智能抽取与导出：一键抓取复杂网页表格、电商比价、新闻列表或招聘信息，支持直接导出为结构化 JSON 或 Markdown。
-2. ✍️ 复杂多步骤表单自动填写：只需说出需求，AI 智能定位输入框、下拉框、单复选框并自动完成填表，并附带截图复核。
-3. 🔍 跨网页深度研读与总结：自动打开多标签页翻页检索、通读长文资讯，快速提炼核心论点与决策依据。
-4. 🤖 机械重复性网页操作代劳：自动点击翻页、监测页面动态更新、辅助网页交互测试。
+🚀 核心智能体能力：
+1. 🧠 自主长程规划与自检闭环：基于认知架构，自主将复杂需求拆解为行动步骤；动作后实时感知页面变化，遇阻自主重试纠偏，直至通过验收。
+2. 🔍 跨页深度调研与信息合成：自主跨多标签页并行检索、阅读长篇文献资料、比对多方数据差异，深度提炼并输出结构化决策研报（Markdown / JSON）。
+3. ✍️ 复杂业务流程端到端代劳：跨系统比对信息，自动在现代复杂管理后台中定位多层级表单并执行录入，附带可信物理击键与截图复核。
+4. 👁️ 原生系统级物理操控与空间视觉：基于 Chrome 官方 CDP 协议生成真实可信的物理鼠标与键盘事件；搭配 Set-of-Marks 视觉标记框，精准攻克单页应用、Shadow DOM 与动态 iframe。
 
-🌟 为什么选择 Browser Agent？
-- 🔒 100% 隐私优先与自带 Key（BYOK）：直接连接官方 API（DeepSeek / OpenAI / Claude / OpenRouter）或本地 Ollama / vLLM，API Key 仅存储在您的本机浏览器中，绝不经由任何第三方中间服务器。
-- 🛡️ 严格安全门控：每个新域名首次操作必须经由用户授权；预置银行/支付金融黑名单；密码输入、文件上传和脚本执行强制二次确认。
-- 👁️ 可靠视觉定位（Set-of-Marks）：截图叠加编号标记框，精准定位复杂按钮与输入框，穿透 Shadow DOM 与 iframe。
-- 💰 实时成本与上下文治理：每步动作成本实时核算，内置自动上下文治理与截断机制，避免 Token 浪费。
+🔒 本地主权与安全防线（BYOK）：
+- 纯正本地主权：直连兼容接口标准的大语言模型端点或本地私有离线模型。您的 API Key 与网页交互数据 100% 保存在本机浏览器中，绝不经由任何第三方中间服务器。
+- 逐站明确授权：首次访问未授权域名需经用户弹窗确认；内置金融与支付网站安全黑名单；密码输入与敏感操作强制二次确认。
+- 透明预算治理：每步操作实时展示 Token 消耗与核算，内置上下文自动压缩机制，防止超出预算。
 
-> 💡 提示：本扩展遵循纯本地与自带 Key（BYOK）模式，请在设置中配置您喜爱的模型服务商 API Key，或启动本地 Ollama 即可开箱即用。
+> 💡 使用提示：本扩展遵循纯本地与自带模型接口（BYOK）模式，请在设置中填入您自备的模型端点地址与密钥，或连接本地离线模型即可开始使用。
 ```
 
 ---
@@ -42,31 +41,30 @@ Browser Agent 是一款运行在 Chrome 侧边栏的自主 AI 浏览器智能体
 
 ### Extension Name (Within 45 chars)
 ```
-Browser Agent - AI Automation & Form Filler
+Browser Agent - Autonomous AI Web Copilot
 ```
 
 ### Summary / Short Description (Within 132 chars)
 ```
-Automate browser tasks with AI: scrape tables, auto-fill forms, research pages with DeepSeek, GPT, Claude or Ollama. 100% private.
+Next-gen autonomous browser agent: goal-driven planning, spatial vision & native CDP control with local or custom LLMs. 100% BYOK.
 ```
 
 ### Detailed Description
 ```
-Browser Agent is an autonomous AI web agent living in your Chrome side panel. Instruct it in plain English, and watch it navigate tabs, click, fill forms, extract data, and report back like a human assistant!
+Browser Agent is a next-generation autonomous AI browser agent living directly inside your Chrome side panel. Far more than a simple scraping script, it is equipped with autonomous goal planning, cross-tab exploration, native physical control, and self-correcting validation.
 
-🎯 Killer Use Cases:
-1. 📊 Smart Web Scraping & Data Extraction: Grab complex web tables, e-commerce pricing, product specs, or job posts into clean JSON/Markdown in seconds.
-2. ✍️ Autonomous Form Filling: Simply tell the agent what to input; it identifies textboxes, dropdowns, and checkboxes to complete multi-step forms accurately.
-3. 🔍 Deep Research & Cross-Tab Navigation: Let AI open multiple tabs, browse search results, read long articles, and synthesize comparative summaries.
-4. 🤖 Repetitive Web Task Automation: Automate pagination, routine page monitoring, and recurring browser workflows right from your sidebar.
+🚀 Agent Superpowers:
+1. 🧠 Autonomous Planning & Self-Correction: Decomposes complex missions into structured steps, validates outcomes after every action, and course-corrects dynamically until completion.
+2. 🔍 Deep Research & Multi-Tab Synthesis: Traverses multiple tabs, digests lengthy technical pages, reconciles disparate data, and synthesizes structured analytical reports (Markdown / JSON).
+3. ✍️ End-to-End Workflow & Form Automation: Cross-references data to complete intricate workflows, administrative dashboards, and multi-step registration forms with trusted inputs.
+4. 👁️ Native Physical Control & Spatial Vision: Generates authentic user input events via Chrome DevTools Protocol (CDP); pairs with Set-of-Marks visual bounding boxes to conquer SPAs, nested Shadow DOMs, and dynamic iframes.
 
-🌟 Why Browser Agent?
-- 🔒 100% Private & Local-First (BYOK): Direct connection to your preferred provider (DeepSeek, OpenAI, Anthropic, OpenRouter) or local Ollama / vLLM. No proxy servers, zero data leakage. Keys stay strictly in your browser.
-- 🛡️ Enterprise-Grade Security: Per-site explicit authorization, built-in financial domain blocklist, and mandatory confirmation for passwords and file uploads.
-- 👁️ Robust Visual Perception (Set-of-Marks): Precise UI interaction via numbered bounding boxes; pierces Shadow DOM and nested iframes.
-- 💰 Transparent Cost & Context Tracking: Live token accounting, budget governance, and multi-session export (Markdown / JSON).
+🔒 Sovereign Local-First Architecture (Zero-Cloud):
+- 100% Private (BYOK): Direct connection to your own standard model endpoints or local offline LLM instances. All API credentials and browsing data remain strictly inside your browser. No intermediary cloud servers, zero data tracking.
+- Transparent Security: Explicit per-site authorization prompt, built-in financial domain blocklist, and mandatory confirmation for sensitive actions.
+- Context & Cost Governance: Real-time token usage accounting and automated context governance to eliminate token waste.
 
-> 💡 Note: This is a Bring-Your-Own-Key (BYOK) extension. Connect your own API key or local Ollama instance in Settings to get started.
+> 💡 Getting Started: This is a Bring-Your-Own-Key (BYOK) extension. Connect your own preferred model endpoint or local offline instance in Settings to get started.
 ```
 
 ---

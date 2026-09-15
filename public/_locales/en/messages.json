@@ -1,6 +1,6 @@
 {
   "extName": { "message": "Browser Agent - Autonomous AI Web Copilot" },
   "extShortName": { "message": "Browser Agent" },
-  "extDesc": { "message": "Next-Gen Autonomous AI Browser Agent: goal-driven planning, spatial vision & native CDP control with DeepSeek or local Ollama. 100% BYOK." },
+  "extDesc": { "message": "Next-gen autonomous browser agent: goal-driven planning, spatial vision & native CDP control with local or custom LLMs. 100% BYOK." },
   "actionTitle": { "message": "Open Browser Agent" }
 }

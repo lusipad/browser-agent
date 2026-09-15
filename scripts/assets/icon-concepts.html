@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Browser Agent Icon Concepts</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #090d16;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+    }
+    .header {
+      text-align: center;
+      max-width: 600px;
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #fff 40%, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 260px);
+      gap: 32px;
+      margin-top: 10px;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .icon-box {
+      width: 160px;
+      height: 160px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .icon-box svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.6));
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+    .card-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      margin-bottom: 10px;
+      letter-spacing: 0.3px;
+    }
+    .card-desc {
+      font-size: 12px;
+      line-height: 1.5;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Browser Agent 品牌图标方案对比</h1>
+    <p>抛弃低幼卡通脸，转向顶级开发者工具（Linear / Raycast / Claude 风格）的极简高质感几何美学</p>
+  </div>
+
+  <div class="grid">
+    <!-- Concept 1: Quantum Compass -->
+    <div class="card">
+      <div class="icon-box">
+        <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg1" x1="0" y1="0" x2="512" y2="512">
+              <stop offset="0%" stop-color="#0b0f19" />
+              <stop offset="60%" stop-color="#0f172a" />
+              <stop offset="100%" stop-color="#1e1b4b" />
+            </linearGradient>
+            <radialGradient id="glow1" cx="256" cy="256" r="240">
+              <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.3" />
+              <stop offset="60%" stop-color="#06b6d4" stop-opacity="0.1" />
+              <stop offset="100%" stop-color="#0b0f19" stop-opacity="0" />
+            </radialGradient>
+            <linearGradient id="rim1" x1="0" y1="0" x2="512" y2="512">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3" />
+              <stop offset="40%" stop-color="#6366f1" stop-opacity="0.4" />
+              <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.2" />
+            </linearGradient>
+            <!-- Needle Cyan Facet -->
+            <linearGradient id="needleCyan" x1="160" y1="160" x2="352" y2="352">
+              <stop offset="0%" stop-color="#38bdf8" />
+              <stop offset="50%" stop-color="#0284c7" />
+              <stop offset="100%" stop-color="#0369a1" />
+            </linearGradient>
+            <!-- Needle Indigo Facet -->
+            <linearGradient id="needleIndigo" x1="160" y1="160" x2="352" y2="352">
+              <stop offset="0%" stop-color="#a855f7" />
+              <stop offset="50%" stop-color="#6366f1" />
+              <stop offset="100%" stop-color="#4338ca" />
+            </linearGradient>
+            <!-- Center Core Spark -->
+            <radialGradient id="coreSpark" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ffffff" />
+              <stop offset="40%" stop-color="#38bdf8" />
+              <stop offset="100%" stop-color="#38bdf8" stop-opacity="0" />
+            </radialGradient>
+            <filter id="neon1" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          <!-- Squircle Base -->
+          <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg1)" />
+          <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#glow1)" />
+          <rect x="16.5" y="16.5" width="479" height="479" rx="111.5" stroke="url(#rim1)" stroke-width="2.5" />
+
+          <!-- Orbital Track Rings (Browser Horizon) -->
+          <circle cx="256" cy="256" r="160" stroke="#1e293b" stroke-width="2" />
+          <circle cx="256" cy="256" r="160" stroke="url(#needleCyan)" stroke-width="2.5" stroke-dasharray="24 16 8 16" opacity="0.6" />
+          <circle cx="256" cy="256" r="195" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 8" opacity="0.4" />
+          
+          <!-- Quantum Waypoint Nodes -->
+          <circle cx="369" cy="143" r="4.5" fill="#38bdf8" filter="url(#neon1)" />
+          <circle cx="143" cy="369" r="4.5" fill="#a855f7" filter="url(#neon1)" />
+
+          <!-- 3D Faceted Quantum Compass Needle (45 deg angle) -->
+          <g transform="rotate(-45 256 256)">
+            <!-- Top Needle - Light Cyan Face -->
+            <polygon points="256,68 256,256 200,256" fill="url(#needleCyan)" />
+            <!-- Top Needle - Specular Cyan Face -->
+            <polygon points="256,68 312,256 256,256" fill="#7dd3fc" />
+            <!-- Bottom Needle - Deep Indigo Face -->
+            <polygon points="256,444 256,256 200,256" fill="#312e81" />
+            <!-- Bottom Needle - Electric Violet Face -->
+            <polygon points="256,444 312,256 256,256" fill="url(#needleIndigo)" />
+            <!-- Central Bevel Highlight Line -->
+            <line x1="256" y1="68" x2="256" y2="444" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" />
+          </g>
+
+          <!-- Glowing Central Intelligence Core -->
+          <circle cx="256" cy="256" r="26" fill="#090d16" stroke="url(#rim1)" stroke-width="2" />
+          <circle cx="256" cy="256" r="16" fill="url(#coreSpark)" filter="url(#neon1)" />
+          <circle cx="256" cy="256" r="5" fill="#ffffff" />
+
+          <!-- High-Tech Coordinate Marks -->
+          <line x1="256" y1="36" x2="256" y2="48" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+          <line x1="256" y1="464" x2="256" y2="476" stroke="#475569" stroke-width="2" stroke-linecap="round" />
+          <line x1="36" y1="256" x2="48" y2="256" stroke="#475569" stroke-width="2" stroke-linecap="round" />
+          <line x1="464" y1="256" x2="476" y2="256" stroke="#a855f7" stroke-width="3" stroke-linecap="round" />
+        </svg>
+      </div>
+      <div class="card-title">方案 A：量子领航罗盘</div>
+      <div class="card-tag">QUANTUM COMPASS</div>
+      <div class="card-desc">
+        象征「自主浏览器导航与长程规划」。立体 3D 棱镜罗盘指针刺破黑暗，环绕轨道式航标，极简利落，在 16px 状态下辨识度拉满。
+      </div>
+    </div>
+
+    <!-- Concept 2: Spatial Vision Aperture -->
+    <div class="card">
+      <div class="icon-box">
+        <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg2" x1="0" y1="0" x2="512" y2="512">
+              <stop offset="0%" stop-color="#0a0f1d" />
+              <stop offset="50%" stop-color="#0c1322" />
+              <stop offset="100%" stop-color="#17153a" />
+            </linearGradient>
+            <radialGradient id="glow2" cx="256" cy="256" r="220">
+              <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.35" />
+              <stop offset="50%" stop-color="#4f46e5" stop-opacity="0.15" />
+              <stop offset="100%" stop-color="#0a0f1d" stop-opacity="0" />
+            </radialGradient>
+            <linearGradient id="blade1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#22d3ee" />
+              <stop offset="100%" stop-color="#0284c7" />
+            </linearGradient>
+            <linearGradient id="blade2" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#818cf8" />
+              <stop offset="100%" stop-color="#4f46e5" />
+            </linearGradient>
+            <linearGradient id="blade3" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#c084fc" />
+              <stop offset="100%" stop-color="#9333ea" />
+            </linearGradient>
+            <filter id="neon2" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          <!-- Squircle Base -->
+          <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg2)" />
+          <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#glow2)" />
+          <rect x="16.5" y="16.5" width="479" height="479" rx="111.5" stroke="rgba(255,255,255,0.18)" stroke-width="2.5" />
+
+          <!-- Outer Precision Gauge Ticks (Set-of-Marks Spatial Perception) -->
+          <circle cx="256" cy="256" r="186" stroke="#1e293b" stroke-width="1.5" />
+          <circle cx="256" cy="256" r="186" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="6 26" opacity="0.8" />
+
+          <!-- 6-Blade Cybernetic Aperture (Camera / Vision Iris) -->
+          <g transform="translate(256, 256)">
+            <!-- Blade 1 -->
+            <path d="M 0 -150 L 130 -75 L 45 -26 Z" fill="url(#blade1)" opacity="0.95" />
+            <!-- Blade 2 -->
+            <path d="M 0 -150 L 130 -75 L 45 -26 Z" fill="url(#blade1)" opacity="0.9" transform="rotate(60)" />
+            <!-- Blade 3 -->
+            <path d="M 0 -150 L 130 -75 L 45 -26 Z" fill="url(#blade2)" opacity="0.95" transform="rotate(120)" />
+            <!-- Blade 4 -->
+            <path d="M 0 -150 L 130 -75 L 45 -26 Z" fill="url(#blade2)" opacity="0.9" transform="rotate(180)" />
+            <!-- Blade 5 -->
+            <path d="M 0 -150 L 130 -75 L 45 -26 Z" fill="url(#blade3)" opacity="0.95" transform="rotate(240)" />
+            <!-- Blade 6 -->
+            <path d="M 0 -150 L 130 -75 L 45 -26 Z" fill="url(#blade3)" opacity="0.9" transform="rotate(300)" />
+          </g>
+
+          <!-- Central Optical AI Pupil / Lens -->
+          <circle cx="256" cy="256" r="54" fill="#090d16" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+          <circle cx="256" cy="256" r="38" fill="url(#blade1)" filter="url(#neon2)" opacity="0.85" />
+          <circle cx="256" cy="256" r="22" fill="#ffffff" />
+          <!-- Lens Glint -->
+          <ellipse cx="246" cy="246" rx="8" ry="5" fill="#ffffff" opacity="0.9" transform="rotate(-30 246 246)" />
+
+          <!-- Corner Spatial Bounding Tag (Set-of-Marks Bracket) -->
+          <path d="M 70 100 L 70 70 L 100 70" stroke="#00f2fe" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M 442 100 L 442 70 L 412 70" stroke="#00f2fe" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M 70 412 L 70 442 L 100 442" stroke="#a855f7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M 442 412 L 442 442 L 412 442" stroke="#a855f7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+      <div class="card-title">方案 B：空间视觉智瞳</div>
+      <div class="card-tag">SPATIAL APERTURE</div>
+      <div class="card-desc">
+        象征「空间视觉感知与 Set-of-Marks 打标」。六叶片赛博光圈与高精密镜头核心，四角辅以视觉空间定位锚点，极具科技感与计算感知力。
+      </div>
+    </div>
+
+    <!-- Concept 3: Neural Warp Core -->
+    <div class="card">
+      <div class="icon-box">
+        <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg3" x1="0" y1="0" x2="512" y2="512">
+              <stop offset="0%" stop-color="#080c15" />
+              <stop offset="60%" stop-color="#0e1322" />
+              <stop offset="100%" stop-color="#1c193f" />
+            </linearGradient>
+            <radialGradient id="glow3" cx="256" cy="256" r="230">
+              <stop offset="0%" stop-color="#818cf8" stop-opacity="0.3" />
+              <stop offset="50%" stop-color="#06b6d4" stop-opacity="0.15" />
+              <stop offset="100%" stop-color="#080c15" stop-opacity="0" />
+            </radialGradient>
+            <!-- Dynamic Ribbon Gradients -->
+            <linearGradient id="ribbon1" x1="120" y1="140" x2="390" y2="370">
+              <stop offset="0%" stop-color="#00f2fe" />
+              <stop offset="50%" stop-color="#3b82f6" />
+              <stop offset="100%" stop-color="#7c3aed" />
+            </linearGradient>
+            <linearGradient id="ribbon2" x1="140" y1="370" x2="370" y2="140">
+              <stop offset="0%" stop-color="#ec4899" />
+              <stop offset="50%" stop-color="#8b5cf6" />
+              <stop offset="100%" stop-color="#06b6d4" />
+            </linearGradient>
+            <filter id="neon3" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          <!-- Squircle Base -->
+          <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg3)" />
+          <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#glow3)" />
+          <rect x="16.5" y="16.5" width="479" height="479" rx="111.5" stroke="rgba(255,255,255,0.2)" stroke-width="2.5" />
+
+          <!-- Infinite Möbius Loop / Neural Energy Portal -->
+          <g filter="url(#neon3)">
+            <!-- Front Arc -->
+            <path d="M 148 200 C 148 140, 220 120, 256 160 C 292 200, 364 260, 364 320 C 364 380, 292 396, 256 356 C 220 316, 148 260, 148 200 Z" 
+                  stroke="url(#ribbon1)" stroke-width="36" stroke-linecap="round" fill="none" />
+            <!-- Back Intertwining Arc -->
+            <path d="M 364 200 C 364 140, 292 120, 256 160 C 220 200, 148 260, 148 320 C 148 380, 220 396, 256 356 C 292 316, 364 260, 364 200 Z" 
+                  stroke="url(#ribbon2)" stroke-width="22" stroke-linecap="round" fill="none" opacity="0.85" />
+          </g>
+
+          <!-- Central Intelligence Focal Spark -->
+          <g transform="translate(256, 256)">
+            <!-- 4-point Diamond Core -->
+            <path d="M 0 -28 L 8 -8 L 28 0 L 8 8 L 0 28 L -8 8 L -28 0 L -8 -8 Z" fill="#ffffff" filter="url(#neon3)" />
+            <circle cx="0" cy="0" r="6" fill="#ffffff" />
+          </g>
+
+          <!-- Top Browser Tab Indicator Notch -->
+          <rect x="206" y="24" width="100" height="6" rx="3" fill="#38bdf8" opacity="0.7" />
+        </svg>
+      </div>
+      <div class="card-title">方案 C：神经折跃核心</div>
+      <div class="card-tag">NEURAL WARP CORE</div>
+      <div class="card-desc">
+        象征「无穷思考与跨页闭环流动」。莫比乌斯无限能量回环贯通浏览器视窗，中心爆发 AI 奇点星光，兼具深度与流动感。
+      </div>
+    </div>
+  </div>
+</body>
+</html>

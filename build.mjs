@@ -1,13 +1,11 @@
 import * as esbuild from 'esbuild';
 import { cpSync, mkdirSync, rmSync } from 'node:fs';
-import { genIcons } from './scripts/gen-icons.mjs';
 
 const watch = process.argv.includes('--watch');
 
 rmSync('dist', { recursive: true, force: true });
 mkdirSync('dist', { recursive: true });
 cpSync('public', 'dist', { recursive: true });
-genIcons('dist/icons');
 
 /** @type {import('esbuild').BuildOptions} */
 const common = {

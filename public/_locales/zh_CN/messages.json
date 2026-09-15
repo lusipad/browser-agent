@@ -1,6 +1,6 @@
 {
   "extName": { "message": "Browser Agent - 新一代自主 AI 浏览器智能体" },
   "extShortName": { "message": "Browser Agent" },
-  "extDesc": { "message": "新一代自主 AI 浏览器智能体：目标驱动、长程规划与物理级操控。支持 DeepSeek 思考模型与本地离线 Ollama，数据仅存本机。" },
+  "extDesc": { "message": "新一代自主 AI 浏览器智能体：目标驱动、长程规划与物理级操控。支持主流标准模型端点与本地离线模型，数据仅存本机。" },
   "actionTitle": { "message": "打开 Browser Agent" }
 }

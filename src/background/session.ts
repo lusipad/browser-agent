@@ -6,6 +6,7 @@ import type {
   BgToPanel,
   ChatMessage,
   BindingPick,
+  DemonstratedAction,
   TimelineItem,
 } from '../shared/types';
 import { resolveLang, translate, type MsgKey } from '../shared/i18n';
@@ -47,6 +48,9 @@ export class Session implements ApprovalHost {
   port: chrome.runtime.Port | null = null;
   /** 当前正在执行的技能（含已替换变量的步骤） */
   activeSkill: ActiveSkill | null = null;
+  /** 示教录制状态 */
+  recording = false;
+  recordedActions: DemonstratedAction[] = [];
   private pendingApprovals = new Map<string, (d: ApprovalDecision) => void>();
   private pendingInterventions = new Map<string, () => void>();
 
@@ -183,6 +187,39 @@ export class Session implements ApprovalHost {
     }
   }
 
+  startRecording(): void {
+    this.recording = true;
+    this.recordedActions = [];
+    this.emitRecordingState();
+  }
+
+  stopRecording(): void {
+    this.recording = false;
+    this.emitRecordingState();
+  }
+
+  recordDemonstratedAction(act: DemonstratedAction): void {
+    if (!this.recording) return;
+    this.recordedActions.push(act);
+    this.emitRecordingState(act);
+  }
+
+  emitRecordingState(lastAct?: DemonstratedAction): void {
+    let lastActionStr: string | undefined;
+    if (lastAct) {
+      if (lastAct.type === 'input') lastActionStr = `输入 "${lastAct.value}"`;
+      else if (lastAct.type === 'click') lastActionStr = `点击 "${lastAct.target?.text || lastAct.target?.label || lastAct.target?.tag}"`;
+      else if (lastAct.type === 'upload') lastActionStr = `上传文件 "${lastAct.fileInfo?.name}"`;
+      else if (lastAct.type === 'navigate') lastActionStr = `跳转至 ${lastAct.url}`;
+    }
+    this.emit({
+      type: 'recording_state',
+      recording: this.recording,
+      count: this.recordedActions.length,
+      lastAction: lastActionStr,
+    });
+  }
+
   snapshot(bindings: BindingPick[]): BgToPanel {
     return {
       type: 'snapshot',
@@ -191,6 +228,7 @@ export class Session implements ApprovalHost {
       bindingId: this.bindingId,
       bindings,
       visionOverride: this.visionOverride,
+      recording: this.recording,
     };
   }
 

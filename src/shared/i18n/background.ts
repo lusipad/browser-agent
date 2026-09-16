@@ -67,6 +67,7 @@ export const backgroundDict = {
   'skill.generating': { zh: '正在从当前对话中提取技能…', en: 'Extracting skill from conversation...' },
   'skill.executing': { zh: '执行技能「{0}」', en: 'Run skill "{0}"' },
   'skill.autoInferDesc': { zh: '(未指定，由智能体结合页面自主推导决策)', en: '(unspecified, deduced autonomously by agent)' },
+  'skill.learningFromDemo': { zh: '正在分析您的示教操作并自动提炼技能…', en: 'Analyzing demonstration and synthesizing skill...' },
   'bg.skillSaved': { zh: '技能「{0}」已成功保存！可在右上角 📋 中查看与运行。', en: 'Skill "{0}" saved! View and run it from 📋 in the top bar.' },
   'bg.skillGenFail': { zh: '技能提取失败：{0}', en: 'Failed to extract skill: {0}' },
   'human.title': { zh: '需要人机协同介入', en: 'Human Intervention Required' },

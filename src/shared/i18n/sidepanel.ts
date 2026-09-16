@@ -114,6 +114,12 @@ export const sidepanelDict = {
   'skill.backToList': { zh: '‹ 返回列表', en: '‹ Back to list' },
   'skill.varAutoInferHint': { zh: '留空由智能体根据页面自主推导', en: 'Leave empty for agent to auto-infer' },
   'skill.autoInferTip': { zh: '💡 提示：未填写的参数将由智能体在执行时结合网页内容自主决策推导。', en: '💡 Tip: Unspecified parameters will be deduced autonomously by the agent during execution.' },
+  'skill.teachMeBtn': { zh: '🔴 示教录制新技能', en: '🔴 Teach Me (Record Skill)' },
+  'skill.recordingTitle': { zh: '示教录制中', en: 'Recording Demo' },
+  'skill.recordingActions': { zh: '已捕获 {0} 个动作', en: '{0} action(s) captured' },
+  'skill.finishTeach': { zh: '完成并学习', en: 'Finish & Learn' },
+  'skill.cancelTeach': { zh: '取消', en: 'Cancel' },
+  'skill.learningFromDemo': { zh: '正在分析您的示教操作并自动提炼技能…', en: 'Analyzing demonstration and synthesizing skill...' },
   // 工具名
   'tool.request_human_intervention': { zh: '请求协同', en: 'Human Help' },
   // 人机协同验证码介入

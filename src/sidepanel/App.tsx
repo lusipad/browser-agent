@@ -9,6 +9,7 @@ import { Composer } from './components/Composer';
 import { Header } from './components/Header';
 import { HistoryDrawer } from './components/HistoryDrawer';
 import { SkillDrawer } from './components/SkillDrawer';
+import { RecordingBanner } from './components/RecordingBanner';
 import type { SkillMeta } from '../shared/skill';
 
 export function App() {
@@ -32,6 +33,9 @@ export function App() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [skills, setSkills] = useState<SkillMeta[]>([]);
   const [skillDrawerOpen, setSkillDrawerOpen] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordingCount, setRecordingCount] = useState(0);
+  const [recordingLastAction, setRecordingLastAction] = useState<string | undefined>();
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedBottom = useRef(true);
 
@@ -50,6 +54,11 @@ export function App() {
           setBindings(msg.bindings);
           setBindingId(msg.bindingId);
           setVisionOverride(msg.visionOverride);
+          setRecording(!!msg.recording);
+          if (!msg.recording) {
+            setRecordingCount(0);
+            setRecordingLastAction(undefined);
+          }
           break;
         case 'item_upsert':
           setItems((prev) => {
@@ -96,6 +105,15 @@ export function App() {
           break;
         case 'skills_list':
           setSkills(msg.skills);
+          break;
+        case 'recording_state':
+          setRecording(msg.recording);
+          setRecordingCount(msg.count);
+          setRecordingLastAction(msg.lastAction);
+          if (!msg.recording) {
+            setRecordingCount(0);
+            setRecordingLastAction(undefined);
+          }
           break;
       }
     });
@@ -164,8 +182,16 @@ export function App() {
           onRun={(skillId, variables) => port.post({ type: 'run_skill', skillId, variables })}
           onDelete={(id) => port.post({ type: 'delete_skill', id })}
           onOptions={() => port.post({ type: 'open_options' })}
+          onStartRecording={() => port.post({ type: 'start_recording' })}
         />
       )}
+      <RecordingBanner
+        recording={recording}
+        count={recordingCount}
+        lastAction={recordingLastAction}
+        onFinish={() => port.post({ type: 'stop_recording', learn: true })}
+        onCancel={() => port.post({ type: 'stop_recording', learn: false })}
+      />
       <div className="scroll" ref={scrollRef} onScroll={onScroll}>
         <Timeline
           items={items}

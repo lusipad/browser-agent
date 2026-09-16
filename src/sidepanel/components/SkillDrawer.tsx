@@ -10,9 +10,10 @@ interface Props {
   onRun: (skillId: string, variables: Record<string, string | number | boolean>) => void;
   onDelete: (id: string) => void;
   onOptions: () => void;
+  onStartRecording?: () => void;
 }
 
-export function SkillDrawer({ skills, running, onClose, onRun, onDelete, onOptions }: Props) {
+export function SkillDrawer({ skills, running, onClose, onRun, onDelete, onOptions, onStartRecording }: Props) {
   const t = useT();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeSkill, setActiveSkill] = useState<Skill | null>(null);
@@ -73,6 +74,18 @@ export function SkillDrawer({ skills, running, onClose, onRun, onDelete, onOptio
         {!selectedId ? (
           // 列表模式
           <div className="skill-list-view">
+            <div className="skill-teach-head">
+              <button
+                className="btn primary skill-teach-btn"
+                disabled={running}
+                onClick={() => {
+                  onStartRecording?.();
+                  onClose();
+                }}
+              >
+                {t('skill.teachMeBtn')}
+              </button>
+            </div>
             {skills.length === 0 ? (
               <div className="drawer-empty">{t('skill.empty')}</div>
             ) : (

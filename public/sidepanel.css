@@ -1116,4 +1116,152 @@ body {
   font-weight: 600;
 }
 
+/* ---------- 示教录制 (Teach Me) 录制条与控件 ---------- */
+.skill-teach-head {
+  padding: 10px 14px 4px 14px;
+}
+
+.skill-teach-btn {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+  transition: all 0.15s ease;
+}
+
+.skill-teach-btn:hover:not(:disabled) {
+  opacity: 0.92;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+  transform: translateY(-1px);
+}
+
+.recording-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, #ef4444 12%, var(--bg-soft));
+  border-bottom: 1.5px solid #ef4444;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.15);
+  z-index: 20;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.recording-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.recording-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  flex-shrink: 0;
+}
+
+.recording-dot.pulse {
+  animation: pulseDot 1.4s infinite;
+}
+
+@keyframes pulseDot {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.recording-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.recording-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.recording-badge {
+  color: #ef4444;
+}
+
+.recording-count {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: normal;
+}
+
+.recording-last {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.recording-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.recording-finish-btn {
+  font-size: 12px;
+  padding: 5px 10px;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.15s ease;
+}
+
+.recording-finish-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.recording-finish-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.recording-cancel-btn {
+  font-size: 12px;
+  padding: 5px 8px;
+  border-radius: 6px;
+}
+
+
 

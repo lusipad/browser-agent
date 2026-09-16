@@ -94,6 +94,65 @@ export async function generateSkill(session: Session): Promise<Skill> {
   return parseSkillJson(text, session.conversationId);
 }
 
+const DEMO_SKILL_GEN_PROMPT = `You are an expert workflow learning engine.
+Given a sequence of actions recorded from a HUMAN DEMONSTRATION on web pages, synthesize a clean, generalized, reusable SKILL definition in JSON.
+
+Rules:
+1. INTENT-BASED: Describe each step as a natural language intent (e.g. "在搜索框中输入 {{keyword}} 并点击搜索", "点击 {{category}} 分类"), NEVER raw selectors or technical IDs.
+2. EXTRACT VARIABLES: Identify concrete values the user typed, selected, or uploaded (search queries, form inputs, filter options, file uploads).
+   - Turn them into {{variable_name}} placeholders.
+   - For file/image uploads, define a variable like "image_file" or "upload_document" of type "string", with default: the uploaded file's name.
+   - CRITICAL - DEFAULT VALUES: Every variable MUST have a "default" value set to the concrete value the user used during demonstration!
+   - Set "required": false.
+3. NOISE CLEANING: Humans often hesitate, click into inputs multiple times, or do redundant scrolling. Merge consecutive inputs into the final value, eliminate useless clicks, and keep the workflow streamlined (typically 3–8 concise steps).
+4. EMOJI: Pick an expressive emoji matching the task.
+5. JSON OUTPUT ONLY matching this schema, no extra text:
+{
+  "name": "string",
+  "description": "string",
+  "icon": "emoji",
+  "variables": [{ "name": "string", "label": "string", "type": "string|number|boolean", "required": false, "default": "concrete value", "placeholder": "helpful hint" }],
+  "steps": [{ "intent": "string", "url": "optional string", "note": "optional string" }]
+}`;
+
+/** 调用 LLM 从人类示教动作流中生成 SKILL 定义 */
+export async function generateSkillFromDemonstration(session: Session): Promise<Skill> {
+  const { formatDemonstratedTrajectory } = await import('./recorder');
+  const trajectory = formatDemonstratedTrajectory(session.recordedActions);
+  if (!session.recordedActions.length) {
+    throw new Error('No demonstrated actions recorded');
+  }
+
+  const binding = session.cfg.bindings.find((b) => b.id === session.bindingId);
+  const resolved = binding ? resolveModelBinding(session.cfg, binding.id) : null;
+  if (!resolved || !isBindingEnabled(binding!)) {
+    throw new Error('No active model binding');
+  }
+
+  const { provider, model } = resolved;
+  const messages: ChatMessage[] = [
+    { role: 'user', content: [{ type: 'text', text: `Demonstrated Trajectory from Human:\n${trajectory}` }] },
+  ];
+
+  const result = await openaiStream({
+    provider,
+    model,
+    binding: binding!,
+    system: DEMO_SKILL_GEN_PROMPT,
+    messages,
+    tools: [],
+    temperature: 0.2,
+    maxTokens: 2048,
+    signal: AbortSignal.timeout(60000),
+    timeoutMs: 60000,
+    retries: 1,
+    onText: () => {},
+  });
+
+  const text = textOfBlocks(result.blocks).trim();
+  return parseSkillJson(text, session.conversationId);
+}
+
 /** 解析 LLM 返回的 JSON，构造完整 Skill 对象 */
 export function parseSkillJson(text: string, sourceConvId?: string): Skill {
   // 提取 JSON（可能被 ```json ... ``` 包裹）

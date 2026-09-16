@@ -7,11 +7,12 @@ import { detachAll } from './cdp';
 import { pickDiagnoseTab, runDiagnostics } from './diagnose';
 import { deleteConversation, listConversations, loadConversation, saveConversation } from './history';
 import { deleteSkill, listSkills, loadSkill, onSkillsChange, saveSkill } from './skills';
-import { generateSkill } from './skillGen';
+import { generateSkill, generateSkillFromDemonstration } from './skillGen';
+import { inPageRecorder } from './recorder';
 import { resolveSkillSteps } from '../shared/skill';
 import { Session } from './session';
 import { defaultEnabledBindingId, isBindingEnabled } from '../shared/models';
-import { ungroupAgentTabs } from './tabs';
+import { activeTabIn, ungroupAgentTabs } from './tabs';
 import { browserTools } from './tools/browser';
 import { computerTool } from './tools/computer';
 import { devtoolsTools } from './tools/devtools';
@@ -47,6 +48,17 @@ async function sessionFor(windowId: number): Promise<Session> {
     sessions.set(windowId, s);
   }
   return s;
+}
+
+async function injectRecorder(tabId: number): Promise<void> {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: inPageRecorder,
+    });
+  } catch {
+    /* 忽略不可注入的页面（如 chrome://, edge:// 等） */
+  }
 }
 
 function bindingPicks(cfg: AppConfig): BindingPick[] {
@@ -258,6 +270,35 @@ chrome.runtime.onConnect.addListener((port) => {
             bound?.emit({ type: 'skills_list', skills });
             break;
           }
+          case 'start_recording': {
+            if (bound && !bound.running) {
+              bound.startRecording();
+              const activeTab = await activeTabIn(bound.windowId);
+              if (activeTab?.id) {
+                await injectRecorder(activeTab.id);
+              }
+            }
+            break;
+          }
+          case 'stop_recording': {
+            if (bound) {
+              const shouldLearn = msg.learn;
+              bound.stopRecording();
+              if (shouldLearn && bound.recordedActions.length > 0) {
+                bound.info(bound.t('skill.learningFromDemo'));
+                try {
+                  const skill = await generateSkillFromDemonstration(bound);
+                  await saveSkill(skill);
+                  bound.info(bound.t('bg.skillSaved', [skill.name]));
+                  const skills = await listSkills();
+                  bound.emit({ type: 'skills_list', skills });
+                } catch (e: any) {
+                  bound.error(bound.t('bg.skillGenFail', [e?.message || String(e)]));
+                }
+              }
+            }
+            break;
+          }
           default:
             break;
         }
@@ -304,7 +345,51 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     })();
     return true;
   }
+  if (msg?.type === 'recorder_action' && msg.action) {
+    const targetWin = sender.tab?.windowId;
+    if (targetWin != null) {
+      const s = sessions.get(targetWin);
+      if (s && s.recording) {
+        s.recordDemonstratedAction(msg.action);
+      }
+    } else {
+      for (const s of sessions.values()) {
+        if (s.recording) {
+          s.recordDemonstratedAction(msg.action);
+        }
+      }
+    }
+    return undefined;
+  }
   return undefined;
+});
+
+// 示教录制中标签页导航/跳转监听：自动重新注入录制器并记录导航动作
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.windowId != null) {
+    const s = sessions.get(tab.windowId);
+    if (s && s.recording) {
+      void injectRecorder(tabId);
+      if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
+        const last = s.recordedActions[s.recordedActions.length - 1];
+        if (!last || last.url !== tab.url) {
+          s.recordDemonstratedAction({
+            type: 'navigate',
+            url: tab.url,
+            title: tab.title || '',
+            timestamp: Date.now(),
+          });
+        }
+      }
+    }
+  }
+});
+
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  const s = sessions.get(activeInfo.windowId);
+  if (s && s.recording) {
+    void injectRecorder(activeInfo.tabId);
+  }
 });
 
 // 设置变化时向所有已连接面板广播模型列表

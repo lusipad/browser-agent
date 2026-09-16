@@ -223,6 +223,27 @@ export interface DiagnosticsReport {
   checks: DiagCheck[];
 }
 
+export interface DemonstratedAction {
+  type: 'click' | 'input' | 'upload' | 'navigate';
+  url: string;
+  title: string;
+  timestamp: number;
+  target?: {
+    tag: string;
+    text?: string;
+    placeholder?: string;
+    label?: string;
+    role?: string;
+    isPassword?: boolean;
+  };
+  value?: string;
+  fileInfo?: {
+    name: string;
+    type: string;
+    size: number;
+  };
+}
+
 // ============================================================
 // 面板 <-> 后台 消息协议
 // ============================================================
@@ -244,7 +265,9 @@ export type PanelToBg =
   | { type: 'run_skill'; skillId: string; variables: Record<string, string | number | boolean> }
   | { type: 'delete_skill'; id: string }
   | { type: 'list_skills' }
-  | { type: 'resolve_human_intervention'; id: string };
+  | { type: 'resolve_human_intervention'; id: string }
+  | { type: 'start_recording' }
+  | { type: 'stop_recording'; learn: boolean };
 
 export type BgToPanel =
   | {
@@ -255,6 +278,7 @@ export type BgToPanel =
       bindings: BindingPick[];
       /** 会话级视觉覆盖：null=跟随模型，false=本会话关闭，true=本会话强制开启 */
       visionOverride: boolean | null;
+      recording?: boolean;
     }
   | { type: 'item_upsert'; item: TimelineItem }
   | { type: 'text_delta'; id: string; delta: string }
@@ -272,4 +296,5 @@ export type BgToPanel =
       /** 当前输入 token 预算 */
       contextBudget?: number;
     }
-  | { type: 'skills_list'; skills: import('../shared/skill').SkillMeta[] };
+  | { type: 'skills_list'; skills: import('../shared/skill').SkillMeta[] }
+  | { type: 'recording_state'; recording: boolean; count: number; lastAction?: string };

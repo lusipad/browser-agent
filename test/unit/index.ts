@@ -17,3 +17,4 @@ import './skill.test';
 import './sync.test';
 import './scheduler.test';
 import './intervention.test';
+import './recorder.test';

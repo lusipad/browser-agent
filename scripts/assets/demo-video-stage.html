@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Browser Agent v0.6.0 Video Showcase</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    body {
+      width: 1280px;
+      height: 720px;
+      background: #090c15;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Outer Stage */
+    .stage {
+      width: 1280px;
+      height: 720px;
+      background: radial-gradient(120% 120% at 50% 10%, #151c38 0%, #080a12 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 24px;
+    }
+
+    /* Ambient glow */
+    .glow-bg {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+      top: -150px;
+      left: 100px;
+      pointer-events: none;
+      transition: all 1s ease;
+    }
+
+    /* Top Stage Bar */
+    .stage-bar {
+      width: 1200px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      z-index: 10;
+    }
+    .brand-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    }
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pill-ver {
+      background: #3b82f6;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .scene-indicator {
+      display: flex;
+      gap: 8px;
+    }
+    .scene-chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      transition: all 0.3s;
+    }
+    .scene-chip.active {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: #fff;
+      box-shadow: 0 0 12px rgba(37, 99, 235, 0.5);
+    }
+
+    /* Browser Mockup Window */
+    .browser-frame {
+      width: 1200px;
+      height: 610px;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.12);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Window Header */
+    .chrome-titlebar {
+      height: 32px;
+      background: #e2e8f0;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+      border-bottom: 1px solid #cbd5e1;
+    }
+    .dots { display: flex; gap: 6px; margin-right: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .red { background: #ef4444; } .yellow { background: #f59e0b; } .green { background: #10b981; }
+    .tab {
+      background: #fff;
+      height: 26px;
+      padding: 0 14px;
+      border-radius: 6px 6px 0 0;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Address bar */
+    .chrome-addressbar {
+      height: 32px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+    }
+    .url-box {
+      flex: 1;
+      height: 22px;
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 11.5px;
+      color: #334155;
+    }
+
+    /* Main Container: Webpage (Left) + Sidepanel (Right) */
+    .main-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Webpage Area */
+    .webpage {
+      flex: 1.35;
+      background: #f1f5f9;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    /* Scene 1: Visual ROI Selection Elements */
+    .region-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 20;
+      display: none;
+    }
+    .region-banner {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.9);
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 25;
+      display: none;
+    }
+    .region-box {
+      position: absolute;
+      border: 2px dashed #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 8px;
+      box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.45);
+      z-index: 22;
+      display: none;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 6px;
+    }
+    .region-dim {
+      background: #2563eb;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Product Card on page */
+    .product-card {
+      width: 380px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 22px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      position: relative;
+    }
+    .sale-tag {
+      background: #fee2e2;
+      color: #dc2626;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+    .card-price {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ef4444;
+      margin-bottom: 12px;
+    }
+    .card-btn {
+      width: 100%;
+      padding: 10px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Scene 2: Teach-Me Card */
+    .teach-card {
+      width: 420px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 22px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      display: none;
+    }
+
+    /* Scene 3: Captcha Card */
+    .captcha-card {
+      width: 400px;
+      background: #fff;
+      border: 1px solid #fed7aa;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.12);
+      display: none;
+    }
+    .slider-track {
+      margin: 16px 0;
+      height: 40px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      padding: 2px;
+      position: relative;
+    }
+    .slider-thumb {
+      width: 38px;
+      height: 36px;
+      background: #3b82f6;
+      border-radius: 18px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      position: absolute;
+      left: 2px;
+      transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Sidepanel Area */
+    .sidepanel {
+      flex: 1.05;
+      background: #fff;
+      border-left: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Sidepanel Header */
+    .sp-header {
+      height: 46px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+    .sp-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sp-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-teach-pill {
+      background: rgba(239, 68, 68, 0.12);
+      color: #dc2626;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Floating Recording Banner */
+    .rec-banner {
+      background: linear-gradient(135deg, #fef2f2, #fff1f2);
+      border-bottom: 1px solid #fecdd3;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      display: none;
+    }
+    .rec-pulse-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #dc2626;
+      animation: pulse 1s infinite alternate;
+    }
+    @keyframes pulse {
+      from { transform: scale(0.9); opacity: 0.6; }
+      to { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* Sidepanel Chat Stream */
+    .sp-chat {
+      flex: 1;
+      padding: 14px;
+      background: #f8fafc;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* User Message Bubble */
+    .user-bubble {
+      align-self: flex-end;
+      background: #4f46e5;
+      color: #fff;
+      border-radius: 12px 12px 2px 12px;
+      padding: 10px 12px;
+      max-width: 90%;
+      font-size: 12.5px;
+      display: none;
+    }
+    .user-thumb-box {
+      background: #fff;
+      border-radius: 6px;
+      padding: 6px;
+      color: #1e293b;
+      margin-bottom: 6px;
+      font-size: 11px;
+      position: relative;
+    }
+
+    /* Agent Message Bubble */
+    .agent-bubble {
+      align-self: flex-start;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px 12px 12px 2px;
+      padding: 12px;
+      max-width: 95%;
+      font-size: 12px;
+      line-height: 1.5;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      display: none;
+    }
+    .token-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+    }
+    .data-table th, .data-table td {
+      border: 1px solid #e2e8f0;
+      padding: 4px 6px;
+      font-size: 11px;
+      text-align: left;
+    }
+    .data-table th { background: #f8fafc; font-weight: 600; color: #475569; }
+
+    /* Intervention Card in Timeline */
+    .intervene-card {
+      background: linear-gradient(135deg, #fffbeb, #fef3c7);
+      border: 1.5px solid #f59e0b;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
+      display: none;
+    }
+
+    /* Sidepanel Composer */
+    .sp-composer {
+      padding: 10px 12px;
+      background: #fff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .attached-chip {
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 6px;
+      padding: 4px 8px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: #3730a3;
+    }
+    .composer-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .target-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .input-box {
+      flex: 1;
+      height: 32px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 0 10px;
+      font-size: 12px;
+      color: #334155;
+    }
+    .send-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: #4f46e5;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      border: none;
+    }
+
+    /* Animated Fake Cursor */
+    .fake-cursor {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      z-index: 1000;
+      pointer-events: none;
+      transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+    .cursor-icon {
+      width: 18px;
+      height: 18px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+
+    /* Outro Slide */
+    .outro-screen {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 30%, #1e1b4b 0%, #030712 100%);
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="glow-bg" id="glow"></div>
+
+    <!-- Top Branding Bar -->
+    <div class="stage-bar">
+      <div class="brand-left">
+        <div class="brand-logo">🤖</div>
+        <div class="brand-title">Browser Agent <span class="pill-ver">v0.6.0</span></div>
+      </div>
+      <div class="scene-indicator">
+        <div class="scene-chip active" id="chip-1">🎯 视觉框选指哪打哪</div>
+        <div class="scene-chip" id="chip-2">🔴 示教学习 (Teach-Me)</div>
+        <div class="scene-chip" id="chip-3">⏰ 定时调度与协同</div>
+      </div>
+    </div>
+
+    <!-- Browser Frame -->
+    <div class="browser-frame">
+      <div class="chrome-titlebar">
+        <div class="dots">
+          <div class="dot red"></div>
+          <div class="dot yellow"></div>
+          <div class="dot green"></div>
+        </div>
+        <div class="tab">
+          <span id="tab-icon">🛒</span> <span id="tab-title">电商特惠专区 - 实时比价</span>
+        </div>
+      </div>
+
+      <div class="chrome-addressbar">
+        <div class="url-box" id="address-url">
+          <span style="color:#10b981; font-weight:700;">🔒 https://</span><span>item.store.com/keyboard-pro</span>
+        </div>
+        <div style="font-size: 11.5px; color: #4f46e5; font-weight: 700;" id="address-status">🎯 Alt+S 快捷框选</div>
+      </div>
+
+      <div class="main-body">
+        <!-- Webpage Area -->
+        <div class="webpage" id="webpage-area">
+          <!-- Selection Overlay -->
+          <div class="region-banner" id="reg-banner">
+            <span>🎯</span> 拖拽鼠标框选目标区域 / 点击单个元素 / 按 Esc 取消
+          </div>
+          <div class="region-box" id="reg-box">
+            <span class="region-dim">🎯 380 × 310 px</span>
+          </div>
+
+          <!-- Scene 1: Product Card -->
+          <div class="product-card" id="prod-card">
+            <div class="sale-tag">限时特惠 · 秒杀中</div>
+            <div class="card-title">人体工学分体客制化机械键盘</div>
+            <div class="card-price">¥599.00 <span style="font-size:14px; color:#94a3b8; text-decoration:line-through; font-weight:normal;">¥899.00</span></div>
+            <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">已售 1,280+ 件 · 支持 7 天无理由退换</div>
+            <button class="card-btn">立即抢购</button>
+          </div>
+
+          <!-- Scene 2: Teach-Me Card -->
+          <div class="teach-card" id="teach-card">
+            <div style="font-size:16px; font-weight:800; color:#0f172a; margin-bottom:12px;">搜索与以图搜图示教</div>
+            <div style="margin-bottom:12px;">
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">搜索关键词</label>
+              <input id="teach-kw" type="text" style="width:100%; padding:8px 10px; border:1.5px solid #3b82f6; border-radius:6px; font-size:13px; background:#eff6ff;" value="">
+            </div>
+            <div style="border:2px dashed #93c5fd; border-radius:8px; padding:12px; text-align:center; font-size:12px; color:#475569;" id="teach-upload">
+              <span>🖼️ 已捕获参考图: sample.png (84 KB)</span>
+            </div>
+          </div>
+
+          <!-- Scene 3: Captcha Card -->
+          <div class="captcha-card" id="captcha-card">
+            <div style="font-size:15px; font-weight:800; color:#1e293b; margin-bottom:4px;">安全风控验证</div>
+            <div style="font-size:11.5px; color:#64748b;">系统检测到环境异常，请完成滑块安全拼图：</div>
+            <div class="slider-track">
+              <div class="slider-thumb" id="slider-thumb">➔</div>
+              <div style="flex:1; text-align:center; font-size:11.5px; color:#94a3b8; font-weight:600;">拖动滑块完成拼图</div>
+            </div>
+            <div style="font-size:11px; color:#f59e0b; font-weight:700;" id="captcha-msg">
+              ⚠️ 智能体主动感知到验证挑战，已安全挂起执行等待协同！
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidepanel Area -->
+        <div class="sidepanel">
+          <div class="sp-header">
+            <div class="sp-title">
+              <span style="width:7px; height:7px; border-radius:50%; background:#10b981;"></span>
+              <span id="model-name">GPT-5.6 Terra (视觉: 开)</span>
+            </div>
+            <div class="sp-actions">
+              <div class="btn-teach-pill" id="header-teach-btn">🔴 示教</div>
+              <div style="font-size:11px; color:#64748b; font-weight:600;">$0.0004</div>
+            </div>
+          </div>
+
+          <!-- Recording Banner -->
+          <div class="rec-banner" id="sp-rec-banner">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="rec-pulse-dot"></div>
+              <div>
+                <div style="font-size:11.5px; font-weight:700; color:#991b1b;" id="rec-status-text">正在示教录制中... 已捕获 0 个动作</div>
+              </div>
+            </div>
+            <button style="background:#dc2626; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700;" id="btn-rec-finish">■ 完成并学习</button>
+          </div>
+
+          <div class="sp-chat">
+            <!-- User Bubble with Region -->
+            <div class="user-bubble" id="user-bubble">
+              <div class="user-thumb-box" id="bubble-thumb">
+                <span style="background:#fee2e2; color:#dc2626; font-size:9px; font-weight:700; padding:1px 3px; border-radius:3px;">限时特惠</span>
+                <div style="font-weight:700; margin:2px 0;">人体工学分体键盘</div>
+                <div style="color:#ef4444; font-weight:800;">¥599.00</div>
+                <div style="position:absolute; bottom:4px; right:4px; background:#0f172a; color:#fff; font-size:9.5px; padding:1px 4px; border-radius:3px;">🎯 380×310</div>
+              </div>
+              <div id="user-bubble-text">提取所选卡片商品名、限时价格并计算折扣率</div>
+            </div>
+
+            <!-- Agent Table Response -->
+            <div class="agent-bubble" id="agent-bubble">
+              <div class="token-badge">⚡ 局部对焦完成 · 上下文节省 82%</div>
+              <div>已精准定位所选区域，提取核心参数如下：</div>
+              <table class="data-table">
+                <tr><th>属性</th><th>数值</th></tr>
+                <tr><td>商品名称</td><td>人体工学分体客制化键盘</td></tr>
+                <tr><td>特惠价格</td><td>¥599.00 (原价 ¥899.00)</td></tr>
+                <tr><td>折扣让利</td><td><strong>6.6 折</strong> (立省 ¥300.00)</td></tr>
+              </table>
+            </div>
+
+            <!-- Intervention Card -->
+            <div class="intervene-card" id="intervene-card">
+              <div style="font-size:12.5px; font-weight:800; color:#92400e; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                <span>🛡️</span> 需要人工协同：滑块拼图验证
+              </div>
+              <div style="font-size:11px; color:#78350f; line-height:1.4; margin-bottom:8px;">
+                网页出现滑块阻断。智能体已暂停操作，请在左侧网页中手工拼图：
+              </div>
+              <button style="width:100%; background:#f59e0b; color:#fff; border:none; padding:6px; border-radius:5px; font-size:11.5px; font-weight:700;" id="btn-intervene-resume">✔ 已完成验证，继续执行 ↵</button>
+            </div>
+          </div>
+
+          <!-- Composer -->
+          <div class="sp-composer">
+            <div class="attached-chip" id="comp-chip">
+              <span>🎯 已选定局部区域 (380 × 310 px)</span>
+              <span style="cursor:pointer;">✕</span>
+            </div>
+            <div class="composer-row">
+              <div class="target-btn" id="comp-target-btn">🎯</div>
+              <input class="input-box" id="comp-input" type="text" placeholder="给智能体下达指令..." readonly>
+              <div class="send-btn" id="comp-send-btn">↑</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Animated Fake Cursor -->
+    <div class="fake-cursor" id="cursor" style="top: 300px; left: 600px;">
+      <svg class="cursor-icon" viewBox="0 0 24 24" fill="none">
+        <path d="M5.5 3.2L18.5 13.5L12.5 14.5L10 20L7.5 19L10 13.5L5.5 10.5V3.2Z" fill="#1e293b" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- Outro Screen -->
+    <div class="outro-screen" id="outro">
+      <div style="font-size:52px; margin-bottom:12px;">🤖 ✨ 🎯</div>
+      <h1 style="font-size:32px; font-weight:900; margin-bottom:8px; letter-spacing:-0.5px;">Browser Agent v0.6.0</h1>
+      <p style="font-size:16px; color:#cbd5e1; max-width:640px; margin-bottom:24px; line-height:1.6;">
+        新一代开源 Chrome 侧边栏 AI 自主智能体<br>
+        🎯 视觉框选指哪打哪 · 🔴 示教录制自学成才 · ⏰ 定时调度自动化 · 🛡️ 人机协同
+      </p>
+      <div style="display:flex; gap:16px;">
+        <div style="background:#2563eb; color:#fff; font-size:14px; font-weight:700; padding:10px 24px; border-radius:8px; box-shadow:0 4px 16px rgba(37,99,235,0.4);">
+          ⭐ GitHub: lusipad/browser-agent
+        </div>
+        <div style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.25); color:#fff; font-size:14px; font-weight:700; padding:10px 24px; border-radius:8px;">
+          Chrome Web Store 免费安装
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Animation Sequencer for Video Recording
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const cursor = document.getElementById('cursor');
+
+    function moveCursor(x, y, duration = 600) {
+      cursor.style.transition = `all ${duration}ms cubic-bezier(0.25, 1, 0.5, 1)`;
+      cursor.style.left = x + 'px';
+      cursor.style.top = y + 'px';
+      return sleep(duration + 50);
+    }
+
+    async function runDemo() {
+      console.log('Starting animated sequence...');
+      await sleep(1000);
+
+      // ================= SCENE 1: 🎯 视觉框选与指哪打哪 =================
+      console.log('Scene 1: Visual ROI Selection');
+      // 1. Move cursor to Composer target button
+      await moveCursor(860, 640, 800);
+      document.getElementById('comp-target-btn').style.background = '#c7d2fe';
+      await sleep(200);
+      document.getElementById('comp-target-btn').style.background = '#eef2ff';
+
+      // 2. Overlay & instruction banner appear
+      document.getElementById('reg-banner').style.display = 'flex';
+      await sleep(400);
+
+      // 3. Move cursor to product card and drag box
+      await moveCursor(210, 240, 700);
+      const regBox = document.getElementById('reg-box');
+      regBox.style.display = 'flex';
+      regBox.style.top = '200px';
+      regBox.style.left = '200px';
+      regBox.style.width = '20px';
+      regBox.style.height = '20px';
+
+      // Dragging simulation
+      await moveCursor(580, 510, 900);
+      regBox.style.width = '380px';
+      regBox.style.height = '310px';
+      await sleep(500);
+
+      // 4. Selection confirmed! Overlay fades, Chip attached in Composer
+      document.getElementById('reg-banner').style.display = 'none';
+      regBox.style.display = 'none';
+      document.getElementById('comp-chip').style.display = 'flex';
+      await sleep(400);
+
+      // 5. Types prompt in Composer
+      const input = document.getElementById('comp-input');
+      const prompt = '提取所选卡片商品名、限时价格并计算折扣率';
+      for (let i = 1; i <= prompt.length; i++) {
+        input.value = prompt.slice(0, i);
+        await sleep(40);
+      }
+      await sleep(300);
+
+      // 6. Click send
+      await moveCursor(1140, 660, 500);
+      document.getElementById('comp-send-btn').style.background = '#3730a3';
+      await sleep(200);
+      document.getElementById('comp-send-btn').style.background = '#4f46e5';
+      input.value = '';
+      document.getElementById('comp-chip').style.display = 'none';
+
+      // 7. User bubble and agent response show up
+      document.getElementById('user-bubble').style.display = 'block';
+      await sleep(600);
+      document.getElementById('agent-bubble').style.display = 'block';
+      await sleep(2000);
+
+      // ================= SCENE 2: 🔴 示教学习 (Teach-Me) =================
+      console.log('Scene 2: Teach-Me Demonstration');
+      document.getElementById('chip-1').classList.remove('active');
+      document.getElementById('chip-2').classList.add('active');
+
+      // Switch webpage content to teach-me card
+      document.getElementById('prod-card').style.display = 'none';
+      document.getElementById('teach-card').style.display = 'block';
+      document.getElementById('tab-title').textContent = '淘宝网 - 商品搜索与以图搜图';
+      document.getElementById('address-url').innerHTML = '<span style="color:#10b981; font-weight:700;">🔒 https://</span><span>s.taobao.com/search</span>';
+      document.getElementById('address-status').innerHTML = '<span style="color:#dc2626; font-weight:700;">🔴 正在示教</span>';
+
+      // Move cursor to header Teach button & click
+      await moveCursor(1080, 100, 700);
+      document.getElementById('sp-rec-banner').style.display = 'flex';
+      await sleep(500);
+
+      // In webpage, type search keyword
+      await moveCursor(340, 290, 700);
+      const teachKw = document.getElementById('teach-kw');
+      const kw = '人体工学客制化机械键盘';
+      for (let i = 1; i <= kw.length; i++) {
+        teachKw.value = kw.slice(0, i);
+        await sleep(40);
+      }
+      document.getElementById('rec-status-text').textContent = '正在示教录制中... 已捕获 2 个动作';
+      await sleep(500);
+
+      // Move to upload box
+      await moveCursor(340, 390, 600);
+      document.getElementById('teach-upload').style.background = '#eff6ff';
+      document.getElementById('rec-status-text').textContent = '正在示教录制中... 已捕获 3 个动作 (最新: 上传 sample.png)';
+      await sleep(800);
+
+      // Move cursor to "Finish & Learn" button
+      await moveCursor(1110, 135, 700);
+      document.getElementById('btn-rec-finish').style.background = '#991b1b';
+      await sleep(200);
+      document.getElementById('btn-rec-finish').style.background = '#dc2626';
+      document.getElementById('sp-rec-banner').style.display = 'none';
+      await sleep(1500);
+
+      // ================= SCENE 3: ⏰ 定时调度与验证码协同 =================
+      console.log('Scene 3: Cron & Captcha Intervention');
+      document.getElementById('chip-2').classList.remove('active');
+      document.getElementById('chip-3').classList.add('active');
+
+      // Switch to Captcha scene
+      document.getElementById('teach-card').style.display = 'none';
+      document.getElementById('captcha-card').style.display = 'block';
+      document.getElementById('tab-title').textContent = '每日数据归档自动化 (09:30 定时触发)';
+      document.getElementById('address-url').innerHTML = '<span style="color:#10b981; font-weight:700;">🔒 https://</span><span>analytics.internal.net/login</span>';
+      document.getElementById('address-status').innerHTML = '<span style="color:#10b981; font-weight:700;">⏰ Cron 激活</span>';
+
+      // Agent shows Intervention Card in timeline
+      document.getElementById('user-bubble').style.display = 'none';
+      document.getElementById('agent-bubble').style.display = 'none';
+      document.getElementById('intervene-card').style.display = 'block';
+      await sleep(800);
+
+      // Move cursor to slide puzzle
+      await moveCursor(280, 380, 700);
+      const thumb = document.getElementById('slider-thumb');
+      thumb.style.left = '310px';
+      await sleep(900);
+      document.getElementById('captcha-msg').innerHTML = '<span style="color:#10b981;">✔ 验证已通过！</span>';
+      await sleep(500);
+
+      // Move cursor to "Resume" button in sidepanel & click
+      await moveCursor(1020, 320, 600);
+      document.getElementById('btn-intervene-resume').style.background = '#d97706';
+      await sleep(200);
+      document.getElementById('intervene-card').innerHTML = '<div style="color:#059669; font-weight:700; font-size:12px; display:flex; align-items:center; gap:6px;"><span>✔</span> 人机协同完成，智能体正在无缝恢复执行...</div>';
+      await sleep(1500);
+
+      // ================= SCENE 4: 🌟 Outro Call to Action =================
+      console.log('Scene 4: Outro');
+      const outro = document.getElementById('outro');
+      outro.style.display = 'flex';
+      await sleep(50);
+      outro.style.opacity = '1';
+      await sleep(3500);
+
+      console.log('Sequence finished!');
+      window.DEMO_DONE = true;
+    }
+
+    window.onload = () => {
+      runDemo();
+    };
+  </script>
+</body>
+</html>

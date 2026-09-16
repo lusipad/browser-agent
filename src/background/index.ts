@@ -209,12 +209,32 @@ chrome.runtime.onConnect.addListener((port) => {
             if (bound && !bound.running) {
               const skill = await loadSkill(msg.skillId);
               if (skill) {
-                const resolvedSteps = resolveSkillSteps(skill, msg.variables);
+                const resolvedVars: Record<string, string | number | boolean> = {};
+                const displayVars: Array<[string, string]> = [];
+
+                for (const v of skill.variables) {
+                  const inputVal = msg.variables?.[v.name];
+                  let effectiveVal: string | number | boolean | undefined = undefined;
+                  if (inputVal !== undefined && inputVal !== null && inputVal !== '') {
+                    effectiveVal = inputVal;
+                  } else if (v.default !== undefined && v.default !== null && v.default !== '') {
+                    effectiveVal = v.default;
+                  }
+
+                  if (effectiveVal !== undefined) {
+                    resolvedVars[v.name] = effectiveVal;
+                    displayVars.push([v.label || v.name, String(effectiveVal)]);
+                  } else {
+                    displayVars.push([v.label || v.name, bound.t('skill.autoInferDesc')]);
+                  }
+                }
+
+                const resolvedSteps = resolveSkillSteps(skill, resolvedVars);
                 bound.activeSkill = {
                   name: skill.name,
                   description: skill.description,
                   steps: resolvedSteps,
-                  resolvedVars: Object.entries(msg.variables).map(([k, v]) => [k, String(v)]),
+                  resolvedVars: displayVars,
                 };
                 const userTask = bound.t('skill.executing', [skill.name]);
                 const s = bound;

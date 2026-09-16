@@ -112,4 +112,6 @@ export const sidepanelDict = {
   'skill.promptDesc': { zh: '觉得这次自动化很棒？将它保存为可复用的技能。', en: 'Liked this automation? Save it as a reusable skill.' },
   'skill.manageInOptions': { zh: '⚙ 管理全部技能', en: '⚙ Manage in Settings' },
   'skill.backToList': { zh: '‹ 返回列表', en: '‹ Back to list' },
+  'skill.varAutoInferHint': { zh: '留空由智能体根据页面自主推导', en: 'Leave empty for agent to auto-infer' },
+  'skill.autoInferTip': { zh: '💡 提示：未填写的参数将由智能体在执行时结合网页内容自主决策推导。', en: '💡 Tip: Unspecified parameters will be deduced autonomously by the agent during execution.' },
 } as const;

@@ -73,17 +73,18 @@ export async function runTurn(
     sysBase +=
       `\n\n## Active Skill: ${skill.name}\n` +
       `${skill.description}\n\n` +
-      `### Variables\n${varsText || '(None)'}\n\n` +
-      `### Steps (follow this plan, adapting to the actual page state)\n` +
+      `### Parameters & Variables\n${varsText || '(None)'}\n\n` +
+      `### Steps (follow this workflow plan, adapting to actual page state)\n` +
       skill.steps
         .map(
           (s, i) =>
             `${i + 1}. ${s.intent}${s.url ? ` (navigate to: ${s.url})` : ''}${s.note ? ` [Note: ${s.note}]` : ''}`,
         )
         .join('\n') +
-      `\n\nFollow these steps in order. Each step describes INTENT, not exact DOM elements — ` +
-      `use your tools to find the right elements on the current page. ` +
-      `If a step cannot be completed as described, adapt intelligently or ask the user.`;
+      `\n\n### Execution Guidelines for Active Skill:\n` +
+      `1. Follow these steps in order. Each step describes high-level INTENT, not exact DOM elements — use your tools to find the right elements on the current page.\n` +
+      `2. **Auto-inference for unspecified parameters**: If any variable or step parameter is marked as [自主推导: ...] or (未指定) or left blank, DO NOT fail or stop. Autonomously analyze the current page content, URL, user context, or common sense to deduce the most sensible value and proceed decisively.\n` +
+      `3. If a step cannot be completed as described, adapt intelligently or self-correct to fulfill the overall objective.`;
   }
 
   // 「继续」时沿用最初的任务作为成功判据

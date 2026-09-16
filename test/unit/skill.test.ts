@@ -202,3 +202,54 @@ test('skill: parseImportedSkills 导入验证与格式规范化', () => {
   assert.equal(parseImportedSkills([{}]).length, 0);
 });
 
+test('skill: resolveSkillSteps 未输入时回退默认值，无默认值时标记自主推导', () => {
+  const s: Skill = {
+    id: 's_infer',
+    name: '比价技能',
+    description: '测试推导',
+    icon: '⚡',
+    version: 1,
+    variables: [
+      { name: 'keyword', label: '搜索词', type: 'string', required: false, default: '机械键盘' },
+      { name: 'price_limit', label: '价格上限', type: 'number', required: false },
+    ],
+    steps: [
+      { intent: '在搜索框中输入 {{keyword}} 并搜索' },
+      { intent: '筛选价格低于 {{price_limit}} 元的商品' },
+    ],
+    createdAt: 1000,
+    updatedAt: 1000,
+  };
+
+  // 1. 用户留空输入 {}：keyword 自动回退默认值 '机械键盘'，price_limit 替换为 [自主推导: 价格上限]
+  const resolved = resolveSkillSteps(s, {});
+  assert.equal(resolved[0].intent, '在搜索框中输入 机械键盘 并搜索');
+  assert.equal(resolved[1].intent, '筛选价格低于 [自主推导: 价格上限] 元的商品');
+
+  // 2. 用户显式输入覆盖默认值
+  const resolvedCustom = resolveSkillSteps(s, { keyword: '显卡', price_limit: 3000 });
+  assert.equal(resolvedCustom[0].intent, '在搜索框中输入 显卡 并搜索');
+  assert.equal(resolvedCustom[1].intent, '筛选价格低于 3000 元的商品');
+});
+
+test('skill: parseSkillJson 支持提取默认值并默认为非必填', () => {
+  const jsonWithDefaults = `\`\`\`json
+{
+  "name": "商品比价",
+  "description": "自动比价",
+  "icon": "🛒",
+  "variables": [
+    { "name": "prod", "label": "商品名称", "type": "string", "default": "4K显示器", "placeholder": "输入商品名" },
+    { "name": "sort", "label": "排序方式", "type": "string" }
+  ],
+  "steps": [{ "intent": "搜索 {{prod}}" }]
+}
+\`\`\``;
+
+  const parsed = parseSkillJson(jsonWithDefaults);
+  assert.equal(parsed.variables[0].default, '4K显示器');
+  assert.equal(parsed.variables[0].required, false); // 默认允许留空
+  assert.equal(parsed.variables[1].required, false);
+  assert.ok(parsed.variables[1].placeholder.includes('自主推导'));
+});
+

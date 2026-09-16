@@ -40,18 +40,20 @@ const SKILL_GEN_PROMPT = `You are a workflow extraction engine. Given a recorded
 
 Rules:
 1. Each step must describe INTENT in natural language (e.g. "Search for {{keyword}} in the search box"), NOT DOM selectors or ref numbers.
-2. Replace specific values (URLs, search terms, form content, filenames) with {{variable_name}} template placeholders.
-3. Define each variable with name, label, type, required, and optionally default/placeholder.
-4. Merge repeated operations (like pagination) into a single step with a note like "repeat until page {{max_pages}}".
-5. Keep steps concise — typically 3–8 steps for most tasks.
-6. Choose an appropriate emoji icon for the skill.
-7. Output ONLY valid JSON matching this schema, no prose:
+2. Replace specific values (URLs, search terms, form content, quantities) with {{variable_name}} template placeholders.
+3. CRITICAL - DEFAULT VALUES: Every variable MUST include a realistic "default" value extracted directly from the concrete values used during this recorded trajectory! (e.g. If the user originally searched for "机械键盘", the variable "keyword" MUST have default: "机械键盘"). This allows the user to re-run the skill immediately with the recorded parameters without manual typing.
+4. Set "required": false by default so the workflow can always run or auto-infer even if the user leaves fields blank.
+5. Provide a helpful "placeholder" hint (e.g. "留空将由智能体根据页面自主推导").
+6. Merge repeated operations (like pagination) into a single step with a note like "repeat until page {{max_pages}}".
+7. Keep steps concise — typically 3–8 steps for most tasks.
+8. Choose an appropriate emoji icon for the skill.
+9. Output ONLY valid JSON matching this schema, no prose:
 
 {
   "name": "string",
   "description": "string",
   "icon": "emoji",
-  "variables": [{ "name": "string", "label": "string", "type": "string|number|boolean", "required": true, "default": "optional", "placeholder": "optional" }],
+  "variables": [{ "name": "string", "label": "string", "type": "string|number|boolean", "required": false, "default": "concrete value from trajectory", "placeholder": "helpful hint" }],
   "steps": [{ "intent": "string", "url": "optional string", "note": "optional string" }]
 }`;
 
@@ -105,9 +107,9 @@ export function parseSkillJson(text: string, sourceConvId?: string): Skill {
     name: String(v.name ?? ''),
     label: String(v.label ?? v.name ?? ''),
     type: v.type === 'number' ? 'number' : v.type === 'boolean' ? 'boolean' : 'string',
-    required: v.required !== false,
-    default: v.default,
-    placeholder: v.placeholder,
+    required: v.required === true, // 默认非强制必填，允许用户留空由智能体自主推导
+    default: v.default !== undefined ? v.default : '',
+    placeholder: v.placeholder || (v.default != null && v.default !== '' ? String(v.default) : '留空将由智能体根据页面自主推导'),
   }));
 
   const steps: SkillStep[] = (raw.steps ?? []).map((s: any) => ({

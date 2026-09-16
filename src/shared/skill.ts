@@ -65,26 +65,39 @@ export function toSkillMeta(s: Skill): SkillMeta {
   };
 }
 
-/** 将技能步骤中的 {{变量}} 模板替换为实际值 */
+/** 将技能步骤中的 {{变量}} 模板替换为实际值（支持变量默认值回退与未提供时的自主推导标记） */
 export function resolveSkillTemplate(
   template: string,
   variables: Record<string, string | number | boolean>,
+  variableDefs?: SkillVariable[],
 ): string {
-  return template.replace(/\{\{(\w+)\}\}/g, (_, name: string) => {
+  return template.replace(/\{\{(\w+)\}\}/g, (match, name: string) => {
     const v = variables[name];
-    return v != null ? String(v) : `{{${name}}}`;
+    if (v !== undefined && v !== null && v !== '') {
+      return String(v);
+    }
+    // 检查是否有预设默认值
+    const def = variableDefs?.find((d) => d.name === name);
+    if (def?.default !== undefined && def.default !== null && def.default !== '') {
+      return String(def.default);
+    }
+    // 若均未提供，生成显式的自主推导指示标记，避免被替换为空字符串导致语义破损
+    if (def) {
+      return `[自主推导: ${def.label || def.name}]`;
+    }
+    return match;
   });
 }
 
-/** 解析技能步骤，替换所有变量模板 */
+/** 解析技能步骤，替换所有变量模板（传入 variableDefs 保障智能推导与默认值生效） */
 export function resolveSkillSteps(
   skill: Skill,
   variables: Record<string, string | number | boolean>,
 ): SkillStep[] {
   return skill.steps.map((step) => ({
-    intent: resolveSkillTemplate(step.intent, variables),
-    url: step.url ? resolveSkillTemplate(step.url, variables) : undefined,
-    note: step.note ? resolveSkillTemplate(step.note, variables) : undefined,
+    intent: resolveSkillTemplate(step.intent, variables, skill.variables),
+    url: step.url ? resolveSkillTemplate(step.url, variables, skill.variables) : undefined,
+    note: step.note ? resolveSkillTemplate(step.note, variables, skill.variables) : undefined,
   }));
 }
 

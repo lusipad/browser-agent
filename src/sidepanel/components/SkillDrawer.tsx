@@ -49,16 +49,8 @@ export function SkillDrawer({ skills, running, onClose, onRun, onDelete, onOptio
     onClose();
   }
 
-  // 验证必填字段
-  const canRun =
-    !running &&
-    activeSkill &&
-    activeSkill.variables.every((v) => {
-      if (!v.required) return true;
-      const val = formValues[v.name];
-      if (val === undefined || val === null || val === '') return false;
-      return true;
-    });
+  // 允许直接运行：未填写的变量在执行时回退默认值或由智能体结合页面自主推导
+  const canRun = !running && !!activeSkill;
 
   return (
     <div className="drawer-overlay" onClick={onClose}>
@@ -190,7 +182,12 @@ export function SkillDrawer({ skills, running, onClose, onRun, onDelete, onOptio
                                 ? (formValues[v.name] as number | string)
                                 : ''
                             }
-                            placeholder={v.placeholder}
+                            placeholder={
+                              v.placeholder ||
+                              (v.default != null && v.default !== ''
+                                ? String(v.default)
+                                : t('skill.varAutoInferHint'))
+                            }
                             onChange={(e) =>
                               handleFieldChange(
                                 v.name,
@@ -203,12 +200,20 @@ export function SkillDrawer({ skills, running, onClose, onRun, onDelete, onOptio
                             type="text"
                             className="skill-var-input"
                             value={String(formValues[v.name] ?? '')}
-                            placeholder={v.placeholder}
+                            placeholder={
+                              v.placeholder ||
+                              (v.default != null && v.default !== ''
+                                ? String(v.default)
+                                : t('skill.varAutoInferHint'))
+                            }
                             onChange={(e) => handleFieldChange(v.name, e.target.value)}
                           />
                         )}
                       </div>
                     ))}
+                    <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '8px', padding: '0 2px' }}>
+                      {t('skill.autoInferTip')}
+                    </div>
                   </div>
                 )}
 

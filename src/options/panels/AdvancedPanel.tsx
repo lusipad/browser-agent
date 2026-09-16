@@ -94,7 +94,7 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
             <NumberInput
               value={a.maxIterations}
               min={1}
-              max={100}
+              max={500}
               fallback={100}
               onChange={(val) => patch({ maxIterations: val ?? 100 })}
             />

@@ -90,6 +90,11 @@ test('DEFAULT_CONFIG: GPT-5.6 默认使用服务商实际提供的 Terra 模型�
   assert.ok(!DEFAULT_CONFIG.bindings.some((b) => b.apiModelName === 'gpt-5.6'));
 });
 
-test('DEFAULT_CONFIG: 单轮迭代上限为 100', () => {
+test('DEFAULT_CONFIG: 单轮迭代上限默认为 100', () => {
   assert.equal(DEFAULT_CONFIG.advanced.maxIterations, 100);
+});
+
+test('mergeConfig: 支持自定义单轮最大迭代次数高达 500', () => {
+  const c = mergeConfig({ advanced: { maxIterations: 500 } as any });
+  assert.equal(c.advanced.maxIterations, 500);
 });

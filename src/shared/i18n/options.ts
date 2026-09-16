@@ -205,8 +205,8 @@ export const optionsDict = {
   },
   'opt.advanced.maxIterations': { zh: '单轮最大迭代次数', en: 'Max iterations per turn' },
   'opt.advanced.maxIterationsHint': {
-    zh: '一次消息内模型↔工具往返上限（防失控）',
-    en: 'Upper bound on model↔tool round-trips within one message (prevents runaway loops)',
+    zh: '一次消息内模型↔工具往返上限（1-500 轮，默认 100，防死循环）',
+    en: 'Upper bound on model↔tool round-trips within one message (1-500, default 100, prevents runaway loops)',
   },
   'opt.advanced.maxImagesKept': { zh: '保留截图数量', en: 'Screenshots to keep' },
   'opt.advanced.maxImagesKeptHint': {

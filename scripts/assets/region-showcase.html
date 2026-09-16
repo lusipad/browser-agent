@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Browser Agent - Visual Region Selection Showcase</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    body {
+      width: 1280px;
+      height: 800px;
+      background: radial-gradient(120% 120% at 50% 10%, #151c38 0%, #090c1a 100%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .glow-1 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -150px;
+      left: 100px;
+      pointer-events: none;
+    }
+    .glow-2 {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
+      bottom: -100px;
+      right: 120px;
+      pointer-events: none;
+    }
+    .header-bar {
+      width: 1180px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 16px;
+    }
+    .main-title-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-badge {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+      font-size: 26px;
+    }
+    .title-text h1 {
+      font-size: 25px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title-text p {
+      font-size: 13.5px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .pill-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #3b82f6;
+      color: #fff;
+    }
+    .feature-chips {
+      display: flex;
+      gap: 8px;
+    }
+    .chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .browser-frame {
+      width: 1180px;
+      height: 640px;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      display: flex;
+      flex-direction: column;
+    }
+    .chrome-titlebar {
+      height: 38px;
+      background: #e2e8f0;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border-bottom: 1px solid #cbd5e1;
+      user-select: none;
+    }
+    .window-dots {
+      display: flex;
+      gap: 7px;
+      margin-right: 14px;
+    }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot.red { background: #ff5f56; }
+    .dot.yellow { background: #ffbd2e; }
+    .dot.green { background: #27c93f; }
+    .tabs-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .chrome-tab {
+      height: 28px;
+      background: #ffffff;
+      border-radius: 6px 6px 0 0;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1e293b;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .chrome-addressbar {
+      height: 34px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 10px;
+    }
+    .url-input {
+      flex: 1;
+      height: 24px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 12px;
+      color: #334155;
+    }
+    .main-view {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+    .webpage-area {
+      flex: 1.4;
+      background: #f1f5f9;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    /* In-page selection overlay simulation */
+    .region-overlay-mock {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 10;
+      pointer-events: none;
+    }
+    .region-banner-pill {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.9);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 20;
+    }
+    .region-box-mock {
+      position: absolute;
+      top: 90px;
+      left: 140px;
+      width: 380px;
+      height: 310px;
+      border: 2px dashed #3b82f6;
+      background: rgba(59, 130, 246, 0.08);
+      border-radius: 10px;
+      box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.45);
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+      padding: 8px;
+    }
+    .dim-tag {
+      background: #2563eb;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    /* Web page mock content */
+    .store-card {
+      width: 360px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin: 70px auto 0 auto;
+    }
+    .badge-sale {
+      background: #fee2e2;
+      color: #dc2626;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    .product-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+    .product-price {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ef4444;
+      margin-bottom: 12px;
+    }
+    .btn-buy {
+      width: 100%;
+      padding: 10px;
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    /* Sidepanel area */
+    .sidepanel-area {
+      flex: 1;
+      background: #ffffff;
+      border-left: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidepanel-header {
+      height: 48px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+    .sidepanel-chat {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #f8fafc;
+      overflow-y: auto;
+    }
+    .user-bubble {
+      align-self: flex-end;
+      background: #4f46e5;
+      color: #ffffff;
+      border-radius: 12px 12px 2px 12px;
+      padding: 12px;
+      max-width: 90%;
+      font-size: 13px;
+      line-height: 1.5;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    }
+    .bubble-thumb-wrap {
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+    .bubble-thumb-img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      display: block;
+    }
+    .bubble-badge {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(15, 23, 42, 0.85);
+      color: #fff;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .agent-response {
+      align-self: flex-start;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px 12px 12px 2px;
+      padding: 12px;
+      max-width: 95%;
+      font-size: 12.5px;
+      color: #1e293b;
+      line-height: 1.5;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .token-saving-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 5px;
+      margin-bottom: 8px;
+    }
+    .result-mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: 12px;
+    }
+    .result-mini-table th, .result-mini-table td {
+      border: 1px solid #e2e8f0;
+      padding: 5px 8px;
+      text-align: left;
+    }
+    .result-mini-table th { background: #f8fafc; font-weight: 600; color: #475569; }
+    /* Composer */
+    .composer-wrap {
+      padding: 12px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .composer-chip {
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .composer-chip-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .composer-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn-target {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid #c7d2fe;
+      background: #eef2ff;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .composer-input {
+      flex: 1;
+      height: 32px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 0 10px;
+      font-size: 12px;
+      color: #334155;
+    }
+    .btn-send {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+
+  <!-- Header -->
+  <div class="header-bar">
+    <div class="main-title-box">
+      <div class="logo-badge">🎯</div>
+      <div class="title-text">
+        <h1>视觉框选与指哪打哪 <span class="pill-tag">v0.6.0 重磅特性</span></h1>
+        <p>1:1 像素级高清裁剪 · 局部对焦执行 · 彻底消除长网页歧义 · Token 消耗立减 80%</p>
+      </div>
+    </div>
+    <div class="feature-chips">
+      <div class="chip">🎯 拖拽与元素吸附</div>
+      <div class="chip">⚡ Token 节省 80%</div>
+      <div class="chip">🖼️ 1:1 无感高清裁剪</div>
+      <div class="chip">🔍 全屏大图查验</div>
+    </div>
+  </div>
+
+  <!-- Browser Frame -->
+  <div class="browser-frame">
+    <div class="chrome-titlebar">
+      <div class="window-dots">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+      </div>
+      <div class="tabs-container">
+        <div class="chrome-tab">
+          <span>🛒</span> 京东商城 - 商品特惠专区
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-addressbar">
+      <div class="url-input">
+        <span style="color:#059669; font-weight:700;">🔒 https://</span><span>item.jd.com/100829104.html</span>
+      </div>
+      <div style="font-size: 13px; color: #4f46e5; font-weight: 700;">🎯 Alt+S</div>
+    </div>
+
+    <div class="main-view">
+      <!-- Webpage View with Region Selection -->
+      <div class="webpage-area">
+        <div class="region-banner-pill">
+          <span>🎯</span> 拖拽鼠标框选目标区域 / 点击单个元素 / 按 Esc 取消
+        </div>
+
+        <div class="region-box-mock">
+          <div class="dim-tag">🎯 380 × 310 px</div>
+        </div>
+
+        <div class="store-card">
+          <div class="badge-sale">限时特惠 · 抢购中</div>
+          <div class="product-title">人体工学分体式客制化机械键盘</div>
+          <div class="product-price">¥599.00 <span style="font-size:14px; color:#94a3b8; text-decoration:line-through; font-weight:normal;">¥899.00</span></div>
+          <div style="font-size:12px; color:#64748b; margin-bottom:12px;">已售出 1,280+ 件 · 支持 7 天无理由退换</div>
+          <button class="btn-buy">立即抢购</button>
+        </div>
+      </div>
+
+      <!-- Sidepanel -->
+      <div class="sidepanel-area">
+        <div class="sidepanel-header">
+          <div style="font-size:13px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:6px;">
+            <span style="width:8px; height:8px; border-radius:50%; background:#10b981;"></span>
+            <span>GPT-5.6 Terra (视觉: 开)</span>
+          </div>
+          <div style="font-size:11px; color:#64748b; font-weight:600;">$0.0004 · 320 tk</div>
+        </div>
+
+        <div class="sidepanel-chat">
+          <!-- User bubble with region preview -->
+          <div class="user-bubble">
+            <div class="bubble-thumb-wrap">
+              <div style="background:#f8fafc; padding:8px; border-radius:6px; color:#334155; font-size:11px;">
+                <span style="background:#fee2e2; color:#dc2626; font-size:9.5px; font-weight:700; padding:1px 4px; border-radius:3px;">限时特惠</span>
+                <div style="font-weight:700; margin:3px 0;">人体工学分体键盘</div>
+                <div style="color:#ef4444; font-weight:800;">¥599.00</div>
+              </div>
+              <div class="bubble-badge">🎯 380×310</div>
+            </div>
+            <div>提取所选卡片商品名、限时价格并计算折扣率</div>
+          </div>
+
+          <!-- Agent response -->
+          <div class="agent-response">
+            <div class="token-saving-badge">
+              <span>⚡</span> 局部对焦完成 · 上下文节省 82%
+            </div>
+            <p>已精准定位所选区域，提取核心参数如下：</p>
+            <table class="result-mini-table">
+              <tr><th>属性</th><th>数值</th></tr>
+              <tr><td>商品名称</td><td>人体工学分体客制化键盘</td></tr>
+              <tr><td>特惠价格</td><td>¥599.00 (原价 ¥899.00)</td></tr>
+              <tr><td>折扣让利</td><td><strong>6.6 折</strong> (省 ¥300.00)</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- Composer with attached region chip -->
+        <div class="composer-wrap">
+          <div class="composer-chip">
+            <div class="composer-chip-left">
+              <span style="font-size:15px;">🎯</span>
+              <span style="font-size:12px; font-weight:700; color:#3730a3;">已选定局部区域 (380 × 310 px)</span>
+            </div>
+            <span style="font-size:12px; color:#64748b; cursor:pointer;">✕</span>
+          </div>
+          <div class="composer-input-row">
+            <div class="btn-target" title="点击框选页面局部">🎯</div>
+            <input class="composer-input" type="text" value="针对该选区下达指令 (直接回车默认分析与提取)..." readonly>
+            <div class="btn-send">↑</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

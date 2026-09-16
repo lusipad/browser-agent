@@ -90,20 +90,22 @@
     }
     .feature-chips {
       display: flex;
-      gap: 10px;
+      gap: 8px;
+      flex-shrink: 0;
     }
     .chip {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(10px);
-      padding: 6px 14px;
+      padding: 5px 10px;
       border-radius: 20px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: #e2e8f0;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
+      white-space: nowrap;
     }
 
     /* Browser Mockup Window */
@@ -467,14 +469,15 @@
     <div class="main-title-box">
       <img src="../../public/icons/icon128.png" style="width: 44px; height: 44px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-right: 12px;">
       <div class="title-text">
-        <h1>Browser Agent <span class="pill-tag">v0.5.1 新一代自主智能体</span></h1>
-        <p>目标驱动 · 跨页探索 · 物理操控 · ⚡ SKILL 技能沉淀 · ☁️ 跨设备安全云同步</p>
+        <h1>Browser Agent <span class="pill-tag">v0.6.0 新一代自主智能体</span></h1>
+        <p>目标驱动 · 🎯 视觉框选指哪打哪 · 🔴 示教学习 · ⏰ 定时调度 · 🛡️ 验证码协同</p>
       </div>
     </div>
     <div class="feature-chips">
-      <div class="chip">⚡ SKILL 沉淀与自适应回放</div>
-      <div class="chip">☁️ 跨设备安全云同步</div>
-      <div class="chip">🔒 密钥本地物理隔离 (零上云)</div>
+      <div class="chip">🎯 视觉框选 (指哪打哪)</div>
+      <div class="chip">🔴 示教录制自学成才</div>
+      <div class="chip">⏰ 定时自动化 (Cron)</div>
+      <div class="chip">🛡️ 验证码协同介入</div>
     </div>
   </div>
 
@@ -578,19 +581,26 @@
         </div>
 
         <!-- Floating Skill & Sync Badges -->
-        <div style="position: absolute; bottom: 16px; left: 16px; right: 16px; display: flex; gap: 12px; z-index: 20;">
-          <div style="flex: 1; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
-            <div style="font-size: 18px; width: 34px; height: 34px; background: rgba(99,102,241,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">⚡</div>
+        <div style="position: absolute; bottom: 16px; left: 16px; right: 16px; display: flex; gap: 10px; z-index: 20;">
+          <div style="flex: 1; background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+            <div style="font-size: 16px; width: 32px; height: 32px; background: rgba(59,130,246,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">🎯</div>
             <div>
-              <div style="font-size: 12px; font-weight: 700; color: #fff;">语义化 SKILL 技能沉淀</div>
-              <div style="font-size: 10.5px; color: #94a3b8;">自动参数化提取 · 跨页自适应回放 · JSON 导入导出</div>
+              <div style="font-size: 11.5px; font-weight: 700; color: #fff;">视觉框选指哪打哪</div>
+              <div style="font-size: 10px; color: #94a3b8;">1:1 高清无损裁剪 · Token -80%</div>
             </div>
           </div>
-          <div style="flex: 1; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
-            <div style="font-size: 18px; width: 34px; height: 34px; background: rgba(16,185,129,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">☁️</div>
+          <div style="flex: 1; background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+            <div style="font-size: 16px; width: 32px; height: 32px; background: rgba(239,68,68,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">🔴</div>
             <div>
-              <div style="font-size: 12px; font-weight: 700; color: #fff;">跨设备安全云同步</div>
-              <div style="font-size: 10.5px; color: #94a3b8;">Chrome 账号多端即时同步 · API Key 本地物理隔离</div>
+              <div style="font-size: 11.5px; font-weight: 700; color: #fff;">示教学习 (Teach-Me)</div>
+              <div style="font-size: 10px; color: #94a3b8;">手动操作静默捕获 · 自提炼 SKILL</div>
+            </div>
+          </div>
+          <div style="flex: 1; background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+            <div style="font-size: 16px; width: 32px; height: 32px; background: rgba(16,185,129,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">⏰</div>
+            <div>
+              <div style="font-size: 11.5px; font-weight: 700; color: #fff;">定时运行与验证码协同</div>
+              <div style="font-size: 10px; color: #94a3b8;">Cron 自动化 · 验证阻断优雅挂起</div>
             </div>
           </div>
         </div>
@@ -604,14 +614,15 @@
             <span>DeepSeek (deepseek-chat)</span>
             <span style="color:#64748b; font-size:10px;">▾</span>
           </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="background: rgba(99,102,241,0.12); color: #4f46e5; border: 1px solid rgba(99,102,241,0.25); padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
-              <span>📋</span> 技能 (2)
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="background: rgba(239,68,68,0.12); color: #dc2626; border: 1px solid rgba(239,68,68,0.25); padding: 2px 6px; border-radius: 6px; font-size: 10.5px; font-weight: 600; display: flex; align-items: center; gap: 3px;">
+              <span>🔴</span> 示教
+            </div>
+            <div style="background: rgba(99,102,241,0.12); color: #4f46e5; border: 1px solid rgba(99,102,241,0.25); padding: 2px 6px; border-radius: 6px; font-size: 10.5px; font-weight: 600; display: flex; align-items: center; gap: 3px;">
+              <span>📋</span> 技能 (⏰ 2)
             </div>
             <div class="usage-stats">
               <span class="cost">$0.002</span>
-              <span>·</span>
-              <span>1.4k tk</span>
             </div>
           </div>
         </div>

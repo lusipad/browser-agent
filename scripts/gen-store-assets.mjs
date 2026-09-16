@@ -54,6 +54,51 @@ async function renderAssets() {
   console.log('Successfully generated form-filling.png at:', formOut);
   await formPage.close();
 
+  // 4. Render Region Selection Showcase (1280x800)
+  const regionPage = await browser.newPage({
+    viewport: { width: 1280, height: 800 },
+    deviceScaleFactor: 2
+  });
+  const regionUrl = 'file:///' + path.resolve(__dirname, 'assets/region-showcase.html').replace(/\\/g, '/');
+  console.log('Rendering Region Selection from:', regionUrl);
+  await regionPage.goto(regionUrl, { waitUntil: 'load' });
+  await regionPage.waitForTimeout(500);
+
+  const regionOut = path.resolve(projectRoot, 'docs/screenshots/region-selection.png');
+  await regionPage.screenshot({ path: regionOut });
+  console.log('Successfully generated region-selection.png at:', regionOut);
+  await regionPage.close();
+
+  // 5. Render Teach-Me Showcase (1280x800)
+  const teachPage = await browser.newPage({
+    viewport: { width: 1280, height: 800 },
+    deviceScaleFactor: 2
+  });
+  const teachUrl = 'file:///' + path.resolve(__dirname, 'assets/teach-me-showcase.html').replace(/\\/g, '/');
+  console.log('Rendering Teach-Me from:', teachUrl);
+  await teachPage.goto(teachUrl, { waitUntil: 'load' });
+  await teachPage.waitForTimeout(500);
+
+  const teachOut = path.resolve(projectRoot, 'docs/screenshots/teach-me.png');
+  await teachPage.screenshot({ path: teachOut });
+  console.log('Successfully generated teach-me.png at:', teachOut);
+  await teachPage.close();
+
+  // 6. Render Cron & Captcha Intervention Showcase (1280x800)
+  const cronPage = await browser.newPage({
+    viewport: { width: 1280, height: 800 },
+    deviceScaleFactor: 2
+  });
+  const cronUrl = 'file:///' + path.resolve(__dirname, 'assets/cron-showcase.html').replace(/\\/g, '/');
+  console.log('Rendering Cron & Intervention from:', cronUrl);
+  await cronPage.goto(cronUrl, { waitUntil: 'load' });
+  await cronPage.waitForTimeout(500);
+
+  const cronOut = path.resolve(projectRoot, 'docs/screenshots/cron-intervention.png');
+  await cronPage.screenshot({ path: cronOut });
+  console.log('Successfully generated cron-intervention.png at:', cronOut);
+  await cronPage.close();
+
   await browser.close();
   console.log('All store assets successfully rendered!');
 }

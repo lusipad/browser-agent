@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Browser Agent - Teach-Me Showcase</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    body {
+      width: 1280px;
+      height: 800px;
+      background: radial-gradient(120% 120% at 50% 10%, #1f142b 0%, #0c0814 100%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .glow-1 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(239, 68, 68, 0.22) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -150px;
+      left: 100px;
+      pointer-events: none;
+    }
+    .glow-2 {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, rgba(0, 0, 0, 0) 70%);
+      bottom: -100px;
+      right: 120px;
+      pointer-events: none;
+    }
+    .header-bar {
+      width: 1180px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 16px;
+    }
+    .main-title-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-badge {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #dc2626, #9333ea);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+      font-size: 26px;
+    }
+    .title-text h1 {
+      font-size: 25px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title-text p {
+      font-size: 13.5px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .pill-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #dc2626;
+      color: #fff;
+    }
+    .feature-chips {
+      display: flex;
+      gap: 8px;
+    }
+    .chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .browser-frame {
+      width: 1180px;
+      height: 640px;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      display: flex;
+      flex-direction: column;
+    }
+    .chrome-titlebar {
+      height: 38px;
+      background: #e2e8f0;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border-bottom: 1px solid #cbd5e1;
+      user-select: none;
+    }
+    .window-dots {
+      display: flex;
+      gap: 7px;
+      margin-right: 14px;
+    }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot.red { background: #ff5f56; }
+    .dot.yellow { background: #ffbd2e; }
+    .dot.green { background: #27c93f; }
+    .tabs-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .chrome-tab {
+      height: 28px;
+      background: #ffffff;
+      border-radius: 6px 6px 0 0;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .chrome-addressbar {
+      height: 34px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 10px;
+    }
+    .url-input {
+      flex: 1;
+      height: 24px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 12px;
+      color: #334155;
+    }
+    .main-view {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+    .webpage-area {
+      flex: 1.3;
+      background: #f8fafc;
+      padding: 30px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .demo-form-card {
+      width: 440px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .form-input-text {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #3b82f6;
+      border-radius: 6px;
+      font-size: 13.5px;
+      background: #eff6ff;
+      color: #1e293b;
+      outline: none;
+    }
+    .upload-box {
+      border: 2px dashed #93c5fd;
+      border-radius: 8px;
+      padding: 16px;
+      background: #f8fafc;
+      text-align: center;
+      color: #475569;
+      font-size: 13px;
+    }
+    .file-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    /* Sidepanel area */
+    .sidepanel-area {
+      flex: 1.1;
+      background: #ffffff;
+      border-left: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Recording Banner */
+    .recording-banner-mock {
+      background: linear-gradient(135deg, #fef2f2, #fff1f2);
+      border-bottom: 1px solid #fecdd3;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.08);
+    }
+    .rec-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rec-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #dc2626;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25);
+    }
+    .rec-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #991b1b;
+    }
+    .rec-sub {
+      font-size: 11px;
+      color: #b91c1c;
+    }
+    .rec-btns {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-finish {
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .sidepanel-content {
+      padding: 16px;
+      flex: 1;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+    .skill-card-mock {
+      background: #ffffff;
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.08);
+    }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #4f46e5;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+
+  <!-- Header -->
+  <div class="header-bar">
+    <div class="main-title-box">
+      <div class="logo-badge">🔴</div>
+      <div class="title-text">
+        <h1>人操作，工具学习 (Teach-Me 示教系统) <span class="pill-tag">v0.6.0 重磅特性</span></h1>
+        <p>手动操作无感捕获 · 敏感密码物理脱敏 · 自动提炼为抗改版高层意图与标准可变参 SKILL</p>
+      </div>
+    </div>
+    <div class="feature-chips">
+      <div class="chip">🔴 手动操作捕获</div>
+      <div class="chip">🔒 密码物理脱敏</div>
+      <div class="chip">⚡ 意图自动泛化</div>
+      <div class="chip">📋 一键沉淀 SKILL</div>
+    </div>
+  </div>
+
+  <!-- Browser Frame -->
+  <div class="browser-frame">
+    <div class="chrome-titlebar">
+      <div class="window-dots">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+      </div>
+      <div class="tabs-container">
+        <div class="chrome-tab">
+          <span>🔍</span> 电商以图搜图与多条件检索
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-addressbar">
+      <div class="url-input">
+        <span style="color:#059669; font-weight:700;">🔒 https://</span><span>s.taobao.com/search</span>
+      </div>
+      <div style="font-size: 12px; color: #dc2626; font-weight: 700;">🔴 正在示教录制</div>
+    </div>
+
+    <div class="main-view">
+      <!-- Webpage View with Form Actions -->
+      <div class="webpage-area">
+        <div class="demo-form-card">
+          <div style="font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 14px;">商品智能搜索与以图搜图</div>
+          
+          <div class="form-group">
+            <label class="form-label">商品关键词</label>
+            <input class="form-input-text" type="text" value="人体工学分体客制化机械键盘">
+            <div style="font-size: 11px; color: #3b82f6; margin-top: 4px; font-weight: 600;">👆 用户正在输入，已捕获 input 事件（自动防抖去重）</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">以图搜图上传参考图片</label>
+            <div class="upload-box">
+              <span>🖼️ 已拖入参考图文件</span><br>
+              <div class="file-chip">📎 sample-keyboard.png (84 KB)</div>
+            </div>
+            <div style="font-size: 11px; color: #059669; margin-top: 4px; font-weight: 600;">✔ 已捕获 change 文件上传事件与媒体元数据</div>
+          </div>
+
+          <button style="width: 100%; padding: 10px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600;">🔍 搜索商品</button>
+        </div>
+      </div>
+
+      <!-- Sidepanel -->
+      <div class="sidepanel-area">
+        <!-- Floating Recording Banner -->
+        <div class="recording-banner-mock">
+          <div class="rec-left">
+            <div class="rec-dot"></div>
+            <div>
+              <div class="rec-title">正在示教录制中... 已捕获 3 个动作</div>
+              <div class="rec-sub">最新: 上传文件 "sample-keyboard.png"</div>
+            </div>
+          </div>
+          <div class="rec-btns">
+            <button class="btn-finish">■ 完成并学习</button>
+            <button style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:5px 8px; border-radius:5px; font-size:11px; font-weight:600;">✕</button>
+          </div>
+        </div>
+
+        <div class="sidepanel-content">
+          <div style="font-size: 12px; font-weight: 700; color: #4338ca; display: flex; align-items: center; gap: 6px;">
+            <span>✨</span> 大模型自提炼标准 SKILL 预览
+          </div>
+
+          <div class="skill-card-mock">
+            <div style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">🛒 电商以图搜图与比价助手</div>
+            <div style="font-size: 11.5px; color: #64748b; margin-bottom: 10px;">通过输入关键词和上传图片进行跨店相似商品检索与价格比对。</div>
+
+            <div style="background: #f8fafc; border-radius: 6px; padding: 8px; margin-bottom: 8px;">
+              <div style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px;">抽离的参数变量：</div>
+              <div style="font-size: 11px; color: #334155; font-family: monospace;">- {{keyword}} (默认值: "人体工学分体客制化机械键盘")</div>
+              <div style="font-size: 11px; color: #334155; font-family: monospace;">- {{reference_image}} (默认值: "sample-keyboard.png")</div>
+            </div>
+
+            <div style="background: #f8fafc; border-radius: 6px; padding: 8px;">
+              <div style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px;">抗改版自然语言步骤：</div>
+              <div style="font-size: 11px; color: #334155; margin-bottom: 3px;"><span class="step-badge">1</span>在搜索框中输入 {{keyword}}</div>
+              <div style="font-size: 11px; color: #334155; margin-bottom: 3px;"><span class="step-badge">2</span>在图片上传区选择 {{reference_image}}</div>
+              <div style="font-size: 11px; color: #334155;"><span class="step-badge">3</span>点击搜索按钮并自检结果列表</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

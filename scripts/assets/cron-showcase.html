@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Browser Agent - Cron & Captcha Intervention Showcase</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    body {
+      width: 1280px;
+      height: 800px;
+      background: radial-gradient(120% 120% at 50% 10%, #1c2237 0%, #0a0d16 100%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .glow-1 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -150px;
+      left: 100px;
+      pointer-events: none;
+    }
+    .glow-2 {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
+      bottom: -100px;
+      right: 120px;
+      pointer-events: none;
+    }
+    .header-bar {
+      width: 1180px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 16px;
+    }
+    .main-title-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-badge {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #10b981, #f59e0b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+      font-size: 26px;
+    }
+    .title-text h1 {
+      font-size: 25px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title-text p {
+      font-size: 13.5px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .pill-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #10b981;
+      color: #fff;
+    }
+    .feature-chips {
+      display: flex;
+      gap: 8px;
+    }
+    .chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .browser-frame {
+      width: 1180px;
+      height: 640px;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      display: flex;
+      flex-direction: column;
+    }
+    .chrome-titlebar {
+      height: 38px;
+      background: #e2e8f0;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border-bottom: 1px solid #cbd5e1;
+      user-select: none;
+    }
+    .window-dots {
+      display: flex;
+      gap: 7px;
+      margin-right: 14px;
+    }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot.red { background: #ff5f56; }
+    .dot.yellow { background: #ffbd2e; }
+    .dot.green { background: #27c93f; }
+    .tabs-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .chrome-tab {
+      height: 28px;
+      background: #ffffff;
+      border-radius: 6px 6px 0 0;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .chrome-addressbar {
+      height: 34px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 10px;
+    }
+    .url-input {
+      flex: 1;
+      height: 24px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 12px;
+      color: #334155;
+    }
+    .main-view {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+    .webpage-area {
+      flex: 1.3;
+      background: #f8fafc;
+      padding: 24px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    /* Simulated Captcha Card on Page */
+    .captcha-page-card {
+      width: 420px;
+      background: #ffffff;
+      border: 1px solid #fed7aa;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.12);
+      margin: 40px auto 0 auto;
+      text-align: center;
+    }
+    .captcha-slider-box {
+      margin: 16px 0;
+      height: 42px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      padding: 2px;
+      position: relative;
+    }
+    .slider-handle {
+      width: 40px;
+      height: 36px;
+      background: #3b82f6;
+      border-radius: 18px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+      cursor: pointer;
+    }
+    /* Sidepanel area */
+    .sidepanel-area {
+      flex: 1.1;
+      background: #ffffff;
+      border-left: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidepanel-header {
+      height: 48px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+    .sidepanel-chat {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #f8fafc;
+      overflow-y: auto;
+    }
+    /* Human Intervention Card */
+    .intervention-card {
+      background: linear-gradient(135deg, #fffbeb, #fef3c7);
+      border: 1.5px solid #f59e0b;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.2);
+    }
+    .intervention-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #92400e;
+      margin-bottom: 6px;
+    }
+    .intervention-hint {
+      font-size: 12px;
+      color: #78350f;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .btn-resume {
+      width: 100%;
+      background: #f59e0b;
+      color: #ffffff;
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+    }
+    /* Floating Cron Card */
+    .cron-notice-card {
+      background: #ffffff;
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+
+  <!-- Header -->
+  <div class="header-bar">
+    <div class="main-title-box">
+      <div class="logo-badge">⏰</div>
+      <div class="title-text">
+        <h1>定时运行 (Cron) 与验证码协同介入 <span class="pill-tag">v0.6.0 重磅特性</span></h1>
+        <p>周期/每日定时自动化后台运行 · 桌面系统通知 · 智能阻断嗅探与优雅人机协同恢复</p>
+      </div>
+    </div>
+    <div class="feature-chips">
+      <div class="chip">⏰ 周期与每日定时</div>
+      <div class="chip">🔔 桌面系统通知</div>
+      <div class="chip">🛡️ 智能嗅探安全阻断</div>
+      <div class="chip">🤝 一键无缝恢复执行</div>
+    </div>
+  </div>
+
+  <!-- Browser Frame -->
+  <div class="browser-frame">
+    <div class="chrome-titlebar">
+      <div class="window-dots">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+      </div>
+      <div class="tabs-container">
+        <div class="chrome-tab">
+          <span>⏰</span> 每日早报数据自动归档
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-addressbar">
+      <div class="url-input">
+        <span style="color:#059669; font-weight:700;">🔒 https://</span><span>analytics.internal.net/login</span>
+      </div>
+      <div style="font-size: 12px; color: #10b981; font-weight: 700;">⏰ 已设定每日 09:30 自动执行</div>
+    </div>
+
+    <div class="main-view">
+      <!-- Webpage View with Captcha -->
+      <div class="webpage-area">
+        <div class="captcha-page-card">
+          <div style="font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 6px;">安全风控验证</div>
+          <div style="font-size: 12px; color: #64748b;">系统检测到环境异常，请完成滑块安全拼图：</div>
+
+          <div class="captcha-slider-box">
+            <div class="slider-handle">➔</div>
+            <div style="flex:1; text-align:center; font-size:12px; color:#94a3b8; font-weight:600;">按住滑块向右拖动完成拼图</div>
+          </div>
+
+          <div style="font-size: 11.5px; color: #f59e0b; font-weight: 600;">
+            ⚠️ 智能体主动感知到验证码挑战，已安全挂起执行等待用户协同！
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidepanel -->
+      <div class="sidepanel-area">
+        <div class="sidepanel-header">
+          <div style="font-size:13px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:6px;">
+            <span style="width:8px; height:8px; border-radius:50%; background:#10b981;"></span>
+            <span>定时任务：每日行业早报采集</span>
+          </div>
+          <span style="background:#dcfce7; color:#166534; font-size:11px; font-weight:700; padding:2px 6px; border-radius:4px;">⏰ Cron 激活</span>
+        </div>
+
+        <div class="sidepanel-chat">
+          <!-- Cron info card -->
+          <div class="cron-notice-card">
+            <span style="font-size:18px;">⏰</span>
+            <div>
+              <div style="font-size:12px; font-weight:700; color:#3730a3;">由定时计划准时触发执行</div>
+              <div style="font-size:10.5px; color:#64748b;">周期: 每日 09:30 · 完成时发送桌面通知</div>
+            </div>
+          </div>
+
+          <!-- Human Intervention Card -->
+          <div class="intervention-card">
+            <div class="intervention-head">
+              <span>🛡️</span>
+              <span>需要人工协同：滑块拼图验证</span>
+            </div>
+            <div class="intervention-hint">
+              网页出现安全验证阻断。智能体已暂停操作，请在左侧网页中手工完成拼图，随后点击下方按钮恢复任务：
+            </div>
+            <button class="btn-resume">✔ 已完成验证，继续执行 ↵</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

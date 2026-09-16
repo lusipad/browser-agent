@@ -171,6 +171,8 @@ export function App() {
           items={items}
           running={running}
           onApprove={(id, decision) => port.post({ type: 'approval', id, decision })}
+          onResolveIntervention={(id) => port.post({ type: 'resolve_human_intervention', id })}
+          onAbort={() => port.post({ type: 'abort' })}
           onContinue={() => port.post({ type: 'continue' })}
           onSelectExample={(text) => port.post({ type: 'send', text })}
           onSaveSkill={() => port.post({ type: 'save_skill' })}

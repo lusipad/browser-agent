@@ -38,7 +38,9 @@
     "sidePanel",
     "downloads",
     "webNavigation",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "alarms",
+    "notifications"
   ],
   "host_permissions": ["<all_urls>"]
 }

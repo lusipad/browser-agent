@@ -85,7 +85,10 @@ export function SkillDrawer({ skills, running, onClose, onRun, onDelete, onOptio
                   >
                     <span className="skill-icon">{s.icon || '⚡'}</span>
                     <div className="skill-info">
-                      <div className="skill-name">{s.name}</div>
+                      <div className="skill-name">
+                        {s.name}
+                        {s.scheduled && <span className="skill-sched-badge" title="已启用定时调度"> ⏰</span>}
+                      </div>
                       {s.description && <div className="skill-desc">{s.description}</div>}
                       <div className="skill-meta">
                         <span>{t('skill.stepsCount', [s.stepCount])}</span>

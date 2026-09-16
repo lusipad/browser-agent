@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { parseImportedSkills, type Skill, type SkillStep, type SkillVariable } from '../../shared/skill';
+import { parseImportedSkills, type Skill, type SkillSchedule, type SkillStep, type SkillVariable } from '../../shared/skill';
 import { deleteSkill, loadAllSkills, saveSkill } from '../../shared/skillsStore';
 import { uid } from '../../shared/util';
 import { useT } from '../../shared/i18nReact';
@@ -71,6 +71,39 @@ export function SkillsPanel() {
     setEditing(next);
     setSavedNotice(true);
     setTimeout(() => setSavedNotice(false), 2000);
+  }
+
+  function updateSchedule(patch: Partial<SkillSchedule>) {
+    if (!editing) return;
+    const current: SkillSchedule = editing.schedule || {
+      enabled: false,
+      frequency: '1h',
+      dailyTime: '09:00',
+      notifyOnComplete: true,
+    };
+    setEditing({
+      ...editing,
+      schedule: { ...current, ...patch },
+    });
+  }
+
+  const [testingRun, setTestingRun] = useState(false);
+
+  async function handleTestRun() {
+    if (!editing || testingRun) return;
+    setTestingRun(true);
+    try {
+      await handleSave();
+      chrome.runtime.sendMessage({ type: 'run_scheduled_skill', skillId: editing.id }, async (resp) => {
+        setTestingRun(false);
+        const list = await loadAllSkills();
+        setSkills(list);
+        const updated = list.find((s) => s.id === editing.id);
+        if (updated) setEditing(structuredClone(updated));
+      });
+    } catch {
+      setTestingRun(false);
+    }
   }
 
   async function handleDelete(id: string) {
@@ -440,6 +473,102 @@ export function SkillsPanel() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 定时调度与自动化运行 */}
+              <div className="card">
+                <div className="card-title-row">
+                  <span className="card-title">{t('opt.skills.scheduleTitle')}</span>
+                  <div className="skill-sched-toggle">
+                    <label style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={!!editing.schedule?.enabled}
+                        onChange={(e) => updateSchedule({ enabled: e.target.checked })}
+                      />
+                      <span style={{ marginLeft: 6, fontSize: 13 }}>{t('opt.skills.enableSchedule')}</span>
+                    </label>
+                  </div>
+                </div>
+
+                {editing.schedule?.enabled ? (
+                  <div className="skill-schedule-body">
+                    <div className="grid-2col" style={{ marginBottom: 12 }}>
+                      <Field label={t('opt.skills.frequency')} hint={t('opt.skills.frequencyDesc')}>
+                        <select
+                          className="select-input"
+                          value={editing.schedule.frequency}
+                          onChange={(e) => updateSchedule({ frequency: e.target.value as any })}
+                        >
+                          <option value="15m">{t('opt.skills.freq15m')}</option>
+                          <option value="30m">{t('opt.skills.freq30m')}</option>
+                          <option value="1h">{t('opt.skills.freq1h')}</option>
+                          <option value="6h">{t('opt.skills.freq6h')}</option>
+                          <option value="12h">{t('opt.skills.freq12h')}</option>
+                          <option value="24h">{t('opt.skills.freq24h')}</option>
+                          <option value="daily">{t('opt.skills.freqDaily')}</option>
+                        </select>
+                      </Field>
+
+                      {editing.schedule.frequency === 'daily' && (
+                        <Field label={t('opt.skills.dailyTime')} hint={t('opt.skills.dailyTimeDesc')}>
+                          <input
+                            type="time"
+                            className="input-text"
+                            value={editing.schedule.dailyTime || '09:00'}
+                            onChange={(e) => updateSchedule({ dailyTime: e.target.value })}
+                          />
+                        </Field>
+                      )}
+                    </div>
+
+                    <div style={{ marginBottom: 14 }}>
+                      <label style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={editing.schedule.notifyOnComplete !== false}
+                          onChange={(e) => updateSchedule({ notifyOnComplete: e.target.checked })}
+                        />
+                        <span style={{ marginLeft: 6, fontSize: 13 }}>{t('opt.skills.notifyOnComplete')}</span>
+                      </label>
+                    </div>
+
+                    <div className="skill-sched-status-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+                      <div className="skill-sched-last-info" style={{ fontSize: 12.5, color: 'var(--text-dim)' }}>
+                        {editing.schedule.lastRunAt ? (
+                          <>
+                            <span>{t('opt.skills.lastRun')}: {new Date(editing.schedule.lastRunAt).toLocaleString()}</span>
+                            <span style={{
+                              marginLeft: 8,
+                              fontWeight: 600,
+                              color: editing.schedule.lastStatus === 'success' ? 'var(--ok)' : editing.schedule.lastStatus === 'running' ? '#f59e0b' : 'var(--err)',
+                            }}>
+                              {editing.schedule.lastStatus === 'success' ? `✓ ${t('opt.skills.statusSuccess')}` : editing.schedule.lastStatus === 'running' ? `⏳ ${t('opt.skills.statusRunning')}` : `✕ ${t('opt.skills.statusFail')}`}
+                            </span>
+                            {editing.schedule.lastError && (
+                              <div style={{ color: 'var(--err)', marginTop: 2 }}>{editing.schedule.lastError}</div>
+                            )}
+                          </>
+                        ) : (
+                          <span>{t('opt.skills.neverRun')}</span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="btn secondary"
+                        disabled={testingRun}
+                        onClick={handleTestRun}
+                      >
+                        {testingRun ? t('opt.skills.runningTest') : t('opt.skills.runTestBtn')}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="subtle-empty" style={{ padding: '8px 0', color: 'var(--text-dim)', fontSize: 12.5 }}>
+                    {t('opt.skills.scheduleDisabledTip')}
                   </div>
                 )}
               </div>

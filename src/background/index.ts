@@ -17,9 +17,12 @@ import { computerTool } from './tools/computer';
 import { devtoolsTools } from './tools/devtools';
 import { gifTool } from './tools/gif';
 import { pageTools } from './tools/page';
+import { humanInterventionTool } from './tools/human';
 import { registerTools } from './tools/registry';
+import { runScheduledSkill, setupScheduler } from './scheduler';
 
-registerTools([...browserTools, computerTool, ...pageTools, ...devtoolsTools, gifTool]);
+registerTools([...browserTools, computerTool, ...pageTools, ...devtoolsTools, gifTool, humanInterventionTool]);
+setupScheduler();
 
 // 点击工具栏图标 → 打开侧边栏
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
@@ -172,6 +175,9 @@ chrome.runtime.onConnect.addListener((port) => {
           case 'approval':
             bound?.resolveApproval(msg.id, msg.decision);
             break;
+          case 'resolve_human_intervention':
+            bound?.resolveHumanIntervention(msg.id);
+            break;
           case 'detach': {
             const n = await detachAll();
             if (bound) {
@@ -286,6 +292,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
     })();
     return true; // 异步 sendResponse
+  }
+  if (msg?.type === 'run_scheduled_skill' && typeof msg.skillId === 'string') {
+    void (async () => {
+      try {
+        const ok = await runScheduledSkill(msg.skillId);
+        sendResponse({ ok });
+      } catch (e: any) {
+        sendResponse({ ok: false, error: e?.message || String(e) });
+      }
+    })();
+    return true;
   }
   return undefined;
 });

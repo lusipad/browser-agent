@@ -174,7 +174,16 @@ export type TimelineItem =
     }
   | { kind: 'error'; id: string; text: string }
   | { kind: 'info'; id: string; text: string; action?: 'continue' }
-  | { kind: 'skill_prompt'; id: string; action: 'save_skill' };
+  | { kind: 'skill_prompt'; id: string; action: 'save_skill' }
+  | {
+      kind: 'human_intervention';
+      id: string;
+      title: string;
+      hint: string;
+      reason?: 'captcha' | 'slider' | 'sms_code' | 'login' | 'other';
+      status: 'waiting' | 'resolved';
+      resolvedAt?: number;
+    };
 
 export interface BindingPick {
   id: string;
@@ -234,7 +243,8 @@ export type PanelToBg =
   | { type: 'save_skill' }
   | { type: 'run_skill'; skillId: string; variables: Record<string, string | number | boolean> }
   | { type: 'delete_skill'; id: string }
-  | { type: 'list_skills' };
+  | { type: 'list_skills' }
+  | { type: 'resolve_human_intervention'; id: string };
 
 export type BgToPanel =
   | {

@@ -25,6 +25,24 @@ export interface SkillStep {
   note?: string;
 }
 
+/** 技能定时调度配置 */
+export interface SkillSchedule {
+  /** 是否启用定时调度 */
+  enabled: boolean;
+  /** 执行频次：15分钟、30分钟、1小时、6小时、12小时、24小时、每天固定时间 */
+  frequency: '15m' | '30m' | '1h' | '6h' | '12h' | '24h' | 'daily';
+  /** 每天固定时间点，如 "09:30"（仅在 frequency === 'daily' 时有效） */
+  dailyTime?: string;
+  /** 任务执行完毕后是否推送 Chrome 桌面系统通知 */
+  notifyOnComplete?: boolean;
+  /** 上次运行时间戳 */
+  lastRunAt?: number;
+  /** 上次运行状态 */
+  lastStatus?: 'success' | 'fail' | 'running';
+  /** 上次运行失败原因（若有） */
+  lastError?: string;
+}
+
 /** 完整技能定义 */
 export interface Skill {
   id: string;
@@ -35,6 +53,8 @@ export interface Skill {
   version: number;
   variables: SkillVariable[];
   steps: SkillStep[];
+  /** 定时运行配置 */
+  schedule?: SkillSchedule;
   /** 来源对话 ID（用于溯源） */
   sourceConvId?: string;
   createdAt: number;
@@ -49,6 +69,8 @@ export interface SkillMeta {
   icon: string;
   variableCount: number;
   stepCount: number;
+  /** 是否配置并启用了定时运行 */
+  scheduled?: boolean;
   updatedAt: number;
 }
 
@@ -61,6 +83,7 @@ export function toSkillMeta(s: Skill): SkillMeta {
     icon: s.icon,
     variableCount: s.variables.length,
     stepCount: s.steps.length,
+    scheduled: !!s.schedule?.enabled,
     updatedAt: s.updatedAt,
   };
 }
@@ -130,6 +153,22 @@ export function parseImportedSkills(raw: unknown): Skill[] {
           }))
         : [];
 
+      let schedule: SkillSchedule | undefined = undefined;
+      if (obj.schedule && typeof obj.schedule === 'object') {
+        const sched = obj.schedule as Record<string, any>;
+        schedule = {
+          enabled: !!sched.enabled,
+          frequency: ['15m', '30m', '1h', '6h', '12h', '24h', 'daily'].includes(sched.frequency)
+            ? sched.frequency
+            : '1h',
+          dailyTime: typeof sched.dailyTime === 'string' ? sched.dailyTime : '09:00',
+          notifyOnComplete: sched.notifyOnComplete !== false,
+          lastRunAt: typeof sched.lastRunAt === 'number' ? sched.lastRunAt : undefined,
+          lastStatus: ['success', 'fail', 'running'].includes(sched.lastStatus) ? sched.lastStatus : undefined,
+          lastError: typeof sched.lastError === 'string' ? sched.lastError : undefined,
+        };
+      }
+
       valid.push({
         id: typeof obj.id === 'string' && obj.id ? obj.id : 'skill_' + Math.random().toString(36).slice(2, 10),
         name: String(obj.name).trim(),
@@ -138,6 +177,7 @@ export function parseImportedSkills(raw: unknown): Skill[] {
         version: Number(obj.version ?? 1),
         variables,
         steps,
+        schedule,
         createdAt: typeof obj.createdAt === 'number' ? obj.createdAt : now,
         updatedAt: now,
       });

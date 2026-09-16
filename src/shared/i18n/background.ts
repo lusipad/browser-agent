@@ -69,4 +69,5 @@ export const backgroundDict = {
   'skill.autoInferDesc': { zh: '(未指定，由智能体结合页面自主推导决策)', en: '(unspecified, deduced autonomously by agent)' },
   'bg.skillSaved': { zh: '技能「{0}」已成功保存！可在右上角 📋 中查看与运行。', en: 'Skill "{0}" saved! View and run it from 📋 in the top bar.' },
   'bg.skillGenFail': { zh: '技能提取失败：{0}', en: 'Failed to extract skill: {0}' },
+  'human.title': { zh: '需要人机协同介入', en: 'Human Intervention Required' },
 } as const;

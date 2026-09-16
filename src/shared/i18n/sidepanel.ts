@@ -114,4 +114,16 @@ export const sidepanelDict = {
   'skill.backToList': { zh: '‹ 返回列表', en: '‹ Back to list' },
   'skill.varAutoInferHint': { zh: '留空由智能体根据页面自主推导', en: 'Leave empty for agent to auto-infer' },
   'skill.autoInferTip': { zh: '💡 提示：未填写的参数将由智能体在执行时结合网页内容自主决策推导。', en: '💡 Tip: Unspecified parameters will be deduced autonomously by the agent during execution.' },
+  // 工具名
+  'tool.request_human_intervention': { zh: '请求协同', en: 'Human Help' },
+  // 人机协同验证码介入
+  'human.title': { zh: '需要人机协同介入', en: 'Human Intervention Required' },
+  'human.reasonCaptcha': { zh: '图形/字符验证码', en: 'CAPTCHA' },
+  'human.reasonSlider': { zh: '滑块拼图验证', en: 'Slider puzzle' },
+  'human.reasonSms': { zh: '短信验证码', en: 'SMS code' },
+  'human.reasonLogin': { zh: '账号登录验证', en: 'Login challenge' },
+  'human.reasonOther': { zh: '安全阻断验证', en: 'Security check' },
+  'human.resumeBtn': { zh: '已完成验证，继续执行 ↵', en: 'Verification Solved, Resume ↵' },
+  'human.abortBtn': { zh: '终止任务', en: 'Abort Task' },
+  'human.resolved': { zh: '已人工完成验证，任务继续执行中…', en: 'Human intervention resolved. Resuming task...' },
 } as const;

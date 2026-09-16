@@ -330,6 +330,53 @@ export function pageAgent(cmd: string, payload: any): any {
       return lines.join('\n');
     }
 
+    function detectCaptchaChallenge(): string | null {
+      try {
+        const href = (topWin.location?.href ?? '').toLowerCase();
+        if (/recaptcha|turnstile|geetest|challenge|verify-v2|cf-chl-widget/i.test(href)) {
+          return 'URL indicates challenge/verification page';
+        }
+        const sel = [
+          'iframe[src*="challenges.cloudflare.com"]',
+          'iframe[src*="google.com/recaptcha"]',
+          'iframe[src*="recaptcha.net"]',
+          'iframe[src*="hcaptcha.com"]',
+          'iframe[src*="turing.captcha.qcloud.com"]',
+          '#challenge-stage',
+          '#cf-challenge-running',
+          '.cf-turnstile-wrapper',
+          '.g-recaptcha',
+          '.geetest_radar_tip',
+          '.geetest_popup_wrap',
+          '.geetest_holder',
+          '.geetest_widget',
+          '#tcaptcha_transform',
+        ].join(',');
+        if (topDoc.querySelector(sel)) {
+          return 'Interactive security challenge widget (Turnstile/reCAPTCHA/GeeTest/hCaptcha) detected';
+        }
+        const body = (topDoc.body?.innerText ?? '').slice(0, 3000).toLowerCase();
+        const keywords = [
+          '请完成安全验证',
+          '滑动滑块完成拼图',
+          '拖动滑块',
+          '点击完成验证',
+          '人机验证',
+          'verify you are human',
+          'human verification',
+          'security check',
+          'please verify that you are not a robot',
+          'checking your browser before accessing',
+        ];
+        for (const kw of keywords) {
+          if (body.includes(kw)) return `Security verification prompt: "${kw}"`;
+        }
+      } catch {
+        /* 忽略探测异常 */
+      }
+      return null;
+    }
+
     // ---------------- 各命令 ----------------
     function readPage(filter: string, maxChars: number): any {
       const descs = gather(700);
@@ -338,6 +385,10 @@ export function pageAgent(cmd: string, payload: any): any {
         `URL: ${m.url}\nTitle: ${m.title}\n` +
         `Viewport: ${m.iw}x${m.ih} css px | scrollY ${m.scrollY}/${m.scrollMax}` +
         `${m.scrollMax > 0 && m.scrollY < m.scrollMax ? ' (more content below — scroll to see it)' : ''}`;
+      const challenge = detectCaptchaChallenge();
+      const alert = challenge
+        ? `\n\n[⚠️ SECURITY CHALLENGE / CAPTCHA DETECTED: ${challenge}]\nAutomated browser tools cannot solve this. You MUST call "request_human_intervention" with clear instructions to ask the user to solve it.\n`
+        : '';
       let body = '';
       if (filter !== 'interactive') {
         const outline = headingOutline(40);
@@ -345,7 +396,7 @@ export function pageAgent(cmd: string, payload: any): any {
       }
       body += `\n\n== Interactive elements (${descs.length}${descs.length >= 700 ? ', capped' : ''}) ==\n`;
       body += descs.map(describe).join('\n');
-      let text = header + body;
+      let text = header + alert + body;
       if (text.length > maxChars) text = text.slice(0, maxChars) + '\n…(truncated — use `find` with a query to locate specific elements)';
       return { text, elements: descs.map(serialize), meta: m };
     }

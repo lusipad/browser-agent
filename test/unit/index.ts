@@ -15,3 +15,5 @@ import './registry.test';
 import './session.test';
 import './skill.test';
 import './sync.test';
+import './scheduler.test';
+import './intervention.test';

@@ -48,6 +48,7 @@ export class Session implements ApprovalHost {
   /** 当前正在执行的技能（含已替换变量的步骤） */
   activeSkill: ActiveSkill | null = null;
   private pendingApprovals = new Map<string, (d: ApprovalDecision) => void>();
+  private pendingInterventions = new Map<string, () => void>();
 
   constructor(windowId: number, cfg: AppConfig) {
     this.windowId = windowId;
@@ -114,12 +115,64 @@ export class Session implements ApprovalHost {
     }
   }
 
+  requestHumanIntervention(req: {
+    title?: string;
+    hint: string;
+    reason?: 'captcha' | 'slider' | 'sms_code' | 'login' | 'other';
+  }): Promise<void> {
+    const id = uid('human');
+    const title = req.title || this.t('human.title');
+    const item: TimelineItem = {
+      kind: 'human_intervention',
+      id,
+      title,
+      hint: req.hint,
+      reason: req.reason || 'captcha',
+      status: 'waiting',
+    };
+    this.upsert(item);
+
+    // 发送 Chrome 桌面系统通知，提示用户人工介入协同
+    if (typeof chrome !== 'undefined' && chrome.notifications?.create) {
+      try {
+        chrome.notifications.create(`human_intervention:${id}`, {
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+          title,
+          message: req.hint,
+          priority: 2,
+        });
+      } catch {
+        /* 忽略通知创建失败 */
+      }
+    }
+
+    return new Promise((resolve) => {
+      this.pendingInterventions.set(id, () => {
+        this.upsert({ ...item, status: 'resolved', resolvedAt: Date.now() });
+        resolve();
+      });
+    });
+  }
+
+  resolveHumanIntervention(id: string): void {
+    const r = this.pendingInterventions.get(id);
+    if (r) {
+      this.pendingInterventions.delete(id);
+      r();
+    }
+  }
+
   abort(): void {
     this.aborted = true;
     this.controller?.abort();
     for (const [id, r] of [...this.pendingApprovals]) {
       this.pendingApprovals.delete(id);
       r('deny');
+    }
+    for (const [id, r] of [...this.pendingInterventions]) {
+      this.pendingInterventions.delete(id);
+      r();
     }
   }
 

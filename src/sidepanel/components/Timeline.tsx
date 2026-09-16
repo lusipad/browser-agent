@@ -9,11 +9,22 @@ interface Props {
   running: boolean;
   onApprove: (id: string, decision: ApprovalDecision) => void;
   onContinue: () => void;
+  onResolveIntervention?: (id: string) => void;
+  onAbort?: () => void;
   onSelectExample?: (text: string) => void;
   onSaveSkill?: () => void;
 }
 
-export function Timeline({ items, running, onApprove, onContinue, onSelectExample, onSaveSkill }: Props) {
+export function Timeline({
+  items,
+  running,
+  onApprove,
+  onContinue,
+  onResolveIntervention,
+  onAbort,
+  onSelectExample,
+  onSaveSkill,
+}: Props) {
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   if (!items.length) return <Welcome onSelect={onSelectExample} />;
   // 只有最后一条「继续」提示可点，避免历史里多个按钮
@@ -27,6 +38,8 @@ export function Timeline({ items, running, onApprove, onContinue, onSelectExampl
             item={it}
             onApprove={onApprove}
             onContinue={onContinue}
+            onResolveIntervention={onResolveIntervention}
+            onAbort={onAbort}
             onPreview={setPreviewSrc}
             onSaveSkill={onSaveSkill}
             running={running}
@@ -69,6 +82,8 @@ function Row({
   item,
   onApprove,
   onContinue,
+  onResolveIntervention,
+  onAbort,
   onPreview,
   onSaveSkill,
   running,
@@ -77,6 +92,8 @@ function Row({
   item: TimelineItem;
   onApprove: Props['onApprove'];
   onContinue: Props['onContinue'];
+  onResolveIntervention?: Props['onResolveIntervention'];
+  onAbort?: Props['onAbort'];
   onPreview: (src: string) => void;
   onSaveSkill?: () => void;
   running: boolean;
@@ -103,6 +120,8 @@ function Row({
       return <ToolRow item={item} onPreview={onPreview} />;
     case 'approval':
       return <ApprovalRow item={item} onApprove={onApprove} />;
+    case 'human_intervention':
+      return <HumanInterventionRow item={item} onResolve={onResolveIntervention} onAbort={onAbort} />;
     case 'error':
       return (
         <div className="row">
@@ -207,6 +226,65 @@ function ApprovalRow({
             <button className="btn danger" onClick={() => onApprove(item.id, 'deny')}>
               {t('approval.deny')}
             </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HumanInterventionRow({
+  item,
+  onResolve,
+  onAbort,
+}: {
+  item: Extract<TimelineItem, { kind: 'human_intervention' }>;
+  onResolve?: (id: string) => void;
+  onAbort?: () => void;
+}) {
+  const t = useT();
+  const isResolved = item.status === 'resolved';
+
+  const reasonLabels: Record<string, string> = {
+    captcha: t('human.reasonCaptcha'),
+    slider: t('human.reasonSlider'),
+    sms_code: t('human.reasonSms'),
+    login: t('human.reasonLogin'),
+    other: t('human.reasonOther'),
+  };
+
+  const reasonText = reasonLabels[item.reason || 'captcha'] || t('human.reasonCaptcha');
+
+  return (
+    <div className={'row human-intervention' + (isResolved ? ' resolved' : ' waiting')}>
+      <div className="intervention-card">
+        <div className="intervention-header">
+          <span className="intervention-badge">✋ {reasonText}</span>
+          <span className="intervention-title">{item.title}</span>
+        </div>
+        <div className="intervention-hint">{item.hint}</div>
+        {isResolved ? (
+          <div className="intervention-resolved">
+            ✓ {t('human.resolved')}
+          </div>
+        ) : (
+          <div className="intervention-actions">
+            <button
+              type="button"
+              className="btn primary intervention-resume-btn"
+              onClick={() => onResolve?.(item.id)}
+            >
+              {t('human.resumeBtn')}
+            </button>
+            {onAbort && (
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={onAbort}
+              >
+                {t('human.abortBtn')}
+              </button>
+            )}
           </div>
         )}
       </div>

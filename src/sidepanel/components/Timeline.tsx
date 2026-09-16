@@ -104,7 +104,17 @@ function Row({
     case 'user':
       return (
         <div className="row user">
-          <div className="bubble">{item.text}</div>
+          <div className="bubble">
+            {item.image && (
+              <div className="user-region-preview" onClick={() => onPreview(item.image!)}>
+                <img src={item.image} alt="User region selection" className="user-region-img" />
+                {item.regionInfo && (
+                  <span className="user-region-badge">🎯 {item.regionInfo.w}×{item.regionInfo.h}</span>
+                )}
+              </div>
+            )}
+            {item.text && <div>{item.text}</div>}
+          </div>
         </div>
       );
     case 'assistant':

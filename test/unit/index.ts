@@ -18,3 +18,4 @@ import './sync.test';
 import './scheduler.test';
 import './intervention.test';
 import './recorder.test';
+import './region.test';

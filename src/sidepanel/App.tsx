@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { detectLang, makeT, resolveLang, type Lang } from '../shared/i18n';
 import { I18nProvider } from '../shared/i18nReact';
 import { loadConfig, onConfigChange } from '../shared/settings';
-import type { BgToPanel, ConvMeta, BindingPick, TimelineItem } from '../shared/types';
+import type { BgToPanel, ConvMeta, BindingPick, RegionSnippet, TimelineItem } from '../shared/types';
 import { BgPort } from './port';
 import { Timeline } from './components/Timeline';
 import { Composer } from './components/Composer';
@@ -36,6 +36,7 @@ export function App() {
   const [recording, setRecording] = useState(false);
   const [recordingCount, setRecordingCount] = useState(0);
   const [recordingLastAction, setRecordingLastAction] = useState<string | undefined>();
+  const [selectedRegion, setSelectedRegion] = useState<RegionSnippet | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedBottom = useRef(true);
 
@@ -114,6 +115,11 @@ export function App() {
             setRecordingCount(0);
             setRecordingLastAction(undefined);
           }
+          break;
+        case 'region_selected':
+          setSelectedRegion(msg.region);
+          break;
+        case 'region_select_canceled':
           break;
       }
     });
@@ -206,7 +212,10 @@ export function App() {
       </div>
       <Composer
         running={running}
-        onSend={(text) => port.post({ type: 'send', text })}
+        region={selectedRegion}
+        onClearRegion={() => setSelectedRegion(null)}
+        onSelectRegion={() => port.post({ type: 'start_region_select' })}
+        onSend={(text, region) => port.post({ type: 'send', text, region })}
         onAbort={() => port.post({ type: 'abort' })}
         hasModel={!!bindingId}
       />

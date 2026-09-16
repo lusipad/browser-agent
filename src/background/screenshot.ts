@@ -1,5 +1,6 @@
 // 截图：CDP 捕获（无需标签页聚焦）→ 缩放到 CSS 像素坐标空间 →（可选）set-of-marks 标注 → JPEG 压缩
 import { b64FromBytes, bytesFromB64 } from '../shared/util';
+import type { RegionSnippet } from '../shared/types';
 import { ensureAttached, evalInPage, send } from './cdp';
 import { colorFor, layoutMarks, type BoxMark, type RawMark } from './marks';
 
@@ -119,5 +120,71 @@ export function clearScreenshotState(tabId: number): void {
 chrome.tabs?.onRemoved?.addListener?.((tabId) => {
   clearScreenshotState(tabId);
 });
+
+/** 截取并裁剪视口中的指定矩形区域，生成高清局部切片供多模态模型定位与交互 */
+export async function captureRegionScreenshot(
+  windowId: number,
+  tabId: number,
+  rect: { x: number; y: number; w: number; h: number; dpr: number },
+  elementsSummary?: string,
+): Promise<RegionSnippet> {
+  // 1. 获取当前窗口可见区域的截图（优先走 chrome.tabs.captureVisibleTab 无感捕获，失败则回退 CDP）
+  let dataUrl: string | null = null;
+  try {
+    dataUrl = await chrome.tabs.captureVisibleTab(windowId, { format: 'jpeg', quality: 95 });
+  } catch {
+    try {
+      await ensureAttached(tabId);
+      const cdpShot = await send(tabId, 'Page.captureScreenshot', { format: 'jpeg', quality: 95 });
+      if (cdpShot?.data) {
+        dataUrl = `data:image/jpeg;base64,${cdpShot.data}`;
+      }
+    } catch {
+      /* 无法截图 */
+    }
+  }
+
+  if (!dataUrl) {
+    throw new Error('Failed to capture visible tab for region cropping');
+  }
+
+  const base64Data = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+  const bytes = bytesFromB64(base64Data);
+  const bitmap = await createImageBitmap(new Blob([bytes as BlobPart], { type: 'image/jpeg' }));
+
+  try {
+    const dpr = rect.dpr || (bitmap.width / (await getViewport(tabId).catch(() => ({ iw: bitmap.width }))).iw) || 1;
+    const sx = Math.max(0, Math.min(bitmap.width - 1, Math.round(rect.x * dpr)));
+    const sy = Math.max(0, Math.min(bitmap.height - 1, Math.round(rect.y * dpr)));
+    const sw = Math.max(1, Math.min(bitmap.width - sx, Math.round(rect.w * dpr)));
+    const sh = Math.max(1, Math.min(bitmap.height - sy, Math.round(rect.h * dpr)));
+
+    const maxCropW = 800;
+    const targetW = Math.min(rect.w, maxCropW);
+    const targetH = Math.max(1, Math.round((targetW * sh) / sw));
+
+    const canvas = new OffscreenCanvas(targetW, targetH);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('OffscreenCanvas context unavailable');
+
+    ctx.drawImage(bitmap, sx, sy, sw, sh, 0, 0, targetW, targetH);
+
+    const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.88 });
+    const b64 = b64FromBytes(new Uint8Array(await blob.arrayBuffer()));
+
+    return {
+      data: b64,
+      mediaType: 'image/jpeg',
+      x: rect.x,
+      y: rect.y,
+      w: rect.w,
+      h: rect.h,
+      elementsSummary,
+    };
+  } finally {
+    bitmap.close();
+  }
+}
+
 
 

@@ -9,10 +9,12 @@ import { deleteConversation, listConversations, loadConversation, saveConversati
 import { deleteSkill, listSkills, loadSkill, onSkillsChange, saveSkill } from './skills';
 import { generateSkill, generateSkillFromDemonstration } from './skillGen';
 import { inPageRecorder } from './recorder';
+import { inPageRegionSelector } from './regionSelector';
+import { captureRegionScreenshot } from './screenshot';
 import { resolveSkillSteps } from '../shared/skill';
 import { Session } from './session';
 import { defaultEnabledBindingId, isBindingEnabled } from '../shared/models';
-import { activeTabIn, ungroupAgentTabs } from './tabs';
+import { activeTabIn, pickTargetTab, ungroupAgentTabs } from './tabs';
 import { browserTools } from './tools/browser';
 import { computerTool } from './tools/computer';
 import { devtoolsTools } from './tools/devtools';
@@ -116,9 +118,9 @@ chrome.runtime.onConnect.addListener((port) => {
             break;
           }
           case 'send': {
-            if (bound && !bound.running && msg.text.trim()) {
+            if (bound && !bound.running && (msg.text.trim() || msg.region)) {
               const s = bound;
-              void runTurn(s, msg.text.trim()).then(() => pushConversations(s));
+              void runTurn(s, msg.text.trim(), { region: msg.region }).then(() => pushConversations(s));
             }
             break;
           }
@@ -299,6 +301,22 @@ chrome.runtime.onConnect.addListener((port) => {
             }
             break;
           }
+          case 'start_region_select': {
+            if (bound && !bound.running) {
+              const targetTab = await pickTargetTab(bound.windowId);
+              if (targetTab?.id) {
+                try {
+                  await chrome.scripting.executeScript({
+                    target: { tabId: targetTab.id },
+                    func: inPageRegionSelector,
+                  });
+                } catch {
+                  bound.error('无法在当前页面开启框选（该页面受浏览器安全限制禁止注入脚本）');
+                }
+              }
+            }
+            break;
+          }
           default:
             break;
         }
@@ -358,6 +376,32 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           s.recordDemonstratedAction(msg.action);
         }
       }
+    }
+    return undefined;
+  }
+  if (msg?.type === 'inpage_region_selected' && msg.rect) {
+    void (async () => {
+      const winId = sender.tab?.windowId;
+      const tabId = sender.tab?.id;
+      if (winId != null && tabId != null) {
+        const s = sessions.get(winId);
+        if (s) {
+          try {
+            const snippet = await captureRegionScreenshot(winId, tabId, msg.rect, msg.elementsSummary);
+            s.emit({ type: 'region_selected', region: snippet });
+          } catch (e: any) {
+            s.error(`选区裁剪失败: ${e?.message || String(e)}`);
+          }
+        }
+      }
+    })();
+    return undefined;
+  }
+  if (msg?.type === 'inpage_region_canceled') {
+    const winId = sender.tab?.windowId;
+    if (winId != null) {
+      const s = sessions.get(winId);
+      s?.emit({ type: 'region_select_canceled' });
     }
     return undefined;
   }

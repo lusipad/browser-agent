@@ -41,6 +41,17 @@ export async function activeTabIn(windowId: number | null): Promise<chrome.tabs.
   return tabs[0] ?? null;
 }
 
+/** 智能选择操作目标标签页：优先选择活跃的普通网页，避免误选中扩展侧边栏或系统页 */
+export async function pickTargetTab(windowId: number | null): Promise<chrome.tabs.Tab | null> {
+  const tabs = await chrome.tabs.query(windowId != null ? { windowId } : {});
+  const valid = tabs.filter(
+    (t) => t.id != null && !t.url?.startsWith('chrome-extension://') && !t.url?.startsWith('chrome://'),
+  );
+  if (!valid.length) return tabs[0] ?? null;
+  valid.sort((a, b) => (b.active ? 1 : 0) - (a.active ? 1 : 0) || ((b as any).lastAccessed ?? 0) - ((a as any).lastAccessed ?? 0));
+  return valid[0] ?? null;
+}
+
 /**
  * 等待网络静默：在途请求降到阈值以下并保持安静一小段时间，或超时。
  * 允许少量长连接（分析/SSE/websocket）存在，避免永远等不到 0。

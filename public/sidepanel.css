@@ -725,6 +725,124 @@ body {
   margin: 0 auto;
 }
 
+/* ---------- Composer Container & Region Snippet ---------- */
+.composer-container {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.composer-region-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 10px 0;
+  padding: 6px 10px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-soft));
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.region-chip-thumb {
+  width: 44px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.region-chip-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  gap: 2px;
+}
+
+.region-chip-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.region-chip-dim {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+}
+
+.region-chip-remove {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.region-chip-remove:hover {
+  background: rgba(127, 127, 127, 0.15);
+  color: var(--text);
+}
+
+.region-select-btn {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.15s ease;
+}
+
+.region-select-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-soft));
+  transform: translateY(-1px);
+}
+
+.region-select-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* User Message Region Preview in Timeline */
+.user-region-preview {
+  margin-bottom: 6px;
+  position: relative;
+  display: inline-block;
+  cursor: zoom-in;
+}
+
+.user-region-img {
+  max-width: 100%;
+  max-height: 160px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: block;
+}
+
+.user-region-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
 /* ---------- Composer ---------- */
 .composer {
   flex: 0 0 auto;
@@ -732,7 +850,6 @@ body {
   align-items: flex-end;
   gap: 8px;
   padding: 10px;
-  border-top: 1px solid var(--border);
   background: var(--bg);
 }
 .input {

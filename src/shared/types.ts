@@ -151,7 +151,7 @@ export interface AppConfig {
 export type ApprovalDecision = 'allow_once' | 'allow_site' | 'deny';
 
 export type TimelineItem =
-  | { kind: 'user'; id: string; text: string }
+  | { kind: 'user'; id: string; text: string; image?: string; regionInfo?: { w: number; h: number } }
   | { kind: 'assistant'; id: string; text: string; done: boolean }
   | {
       kind: 'tool';
@@ -244,13 +244,23 @@ export interface DemonstratedAction {
   };
 }
 
+export interface RegionSnippet {
+  data: string; // base64
+  mediaType: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  elementsSummary?: string;
+}
+
 // ============================================================
 // 面板 <-> 后台 消息协议
 // ============================================================
 
 export type PanelToBg =
   | { type: 'hello'; windowId: number }
-  | { type: 'send'; text: string }
+  | { type: 'send'; text: string; region?: RegionSnippet }
   | { type: 'continue' }
   | { type: 'abort' }
   | { type: 'new_chat' }
@@ -267,7 +277,8 @@ export type PanelToBg =
   | { type: 'list_skills' }
   | { type: 'resolve_human_intervention'; id: string }
   | { type: 'start_recording' }
-  | { type: 'stop_recording'; learn: boolean };
+  | { type: 'stop_recording'; learn: boolean }
+  | { type: 'start_region_select' };
 
 export type BgToPanel =
   | {
@@ -297,4 +308,6 @@ export type BgToPanel =
       contextBudget?: number;
     }
   | { type: 'skills_list'; skills: import('../shared/skill').SkillMeta[] }
-  | { type: 'recording_state'; recording: boolean; count: number; lastAction?: string };
+  | { type: 'recording_state'; recording: boolean; count: number; lastAction?: string }
+  | { type: 'region_selected'; region: RegionSnippet }
+  | { type: 'region_select_canceled' };

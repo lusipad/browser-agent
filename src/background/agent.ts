@@ -10,6 +10,7 @@ import type {
   ModelBinding,
   ModelConfig,
   ProviderConfig,
+  RegionSnippet,
   TextBlock,
   ToolUseBlock,
 } from '../shared/types';
@@ -25,10 +26,37 @@ const VALIDATOR_CAP = 2;
 export async function runTurn(
   session: Session,
   userText: string,
-  opts?: { continuation?: boolean },
+  opts?: { continuation?: boolean; region?: RegionSnippet },
 ): Promise<void> {
   const continuation = !!opts?.continuation;
   session.cfg = await loadConfig();
+
+  if (!continuation) {
+    const region = opts?.region;
+    const userBlocks: ContentBlock[] = [];
+    let promptText = userText.trim();
+    if (region) {
+      const regionPrefix = `[User focused/selected region at viewport coordinates (x: ${region.x}, y: ${region.y}, width: ${region.w}, height: ${region.h})${
+        region.elementsSummary ? ` containing elements: ${region.elementsSummary}` : ''
+      }]:\n`;
+      promptText = regionPrefix + (promptText || 'Please analyze, extract, or interact with this selected region.');
+      userBlocks.push({
+        type: 'image',
+        data: region.data,
+        mediaType: region.mediaType,
+      });
+    }
+    userBlocks.unshift({ type: 'text', text: promptText || userText });
+    session.messages.push({ role: 'user', content: userBlocks });
+    session.upsert({
+      kind: 'user',
+      id: uid('u'),
+      text: userText.trim() || (region ? '🎯 选区操作与解析' : ''),
+      image: region ? `data:${region.mediaType};base64,${region.data}` : undefined,
+      regionInfo: region ? { w: region.w, h: region.h } : undefined,
+    });
+  }
+
   const binding = session.cfg.bindings.find((b) => b.id === session.bindingId);
   const model = binding && session.cfg.models.find((m) => m.id === binding.modelId);
   if (!binding || !model || !isBindingEnabled(binding)) {
@@ -53,11 +81,6 @@ export async function runTurn(
   session.controller = new AbortController();
   session.emit({ type: 'run_state', running: true });
   const keepalive = setInterval(() => chrome.runtime.getPlatformInfo(() => {}), 15000);
-
-  if (!continuation) {
-    session.messages.push({ role: 'user', content: [{ type: 'text', text: userText }] });
-    session.upsert({ kind: 'user', id: uid('u'), text: userText });
-  }
 
   let sysBase = buildSystemPrompt({
     date: new Date().toISOString().slice(0, 10),

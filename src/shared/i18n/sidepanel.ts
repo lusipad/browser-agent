@@ -132,4 +132,9 @@ export const sidepanelDict = {
   'human.resumeBtn': { zh: '已完成验证，继续执行 ↵', en: 'Verification Solved, Resume ↵' },
   'human.abortBtn': { zh: '终止任务', en: 'Abort Task' },
   'human.resolved': { zh: '已人工完成验证，任务继续执行中…', en: 'Human intervention resolved. Resuming task...' },
+  // 选区指哪打哪
+  'composer.selectRegion': { zh: '🎯 框选页面区域 (Alt+S)', en: '🎯 Select Page Region (Alt+S)' },
+  'composer.regionSelected': { zh: '已选定区域', en: 'Region Selected' },
+  'composer.regionRemove': { zh: '移除选区', en: 'Remove selection' },
+  'composer.regionPlaceholder': { zh: '针对该选区下达指令（直接回车默认分析与提取）…', en: 'Instructions for this region (Enter to analyze/extract)...' },
 } as const;

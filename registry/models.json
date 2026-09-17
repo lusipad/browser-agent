@@ -1,6 +1,6 @@
 {
-  "version": 10,
-  "updatedAt": "2026-09-16",
+  "version": 11,
+  "updatedAt": "2026-09-17",
   "providers": [
     {
       "id": "openai",
@@ -256,7 +256,7 @@
       "model": "claude-sonnet-4-5",
       "label": "Claude Sonnet 4.5",
       "vision": true,
-      "contextWindow": 200000
+      "contextWindow": 1000000
     },
     {
       "id": "claude-haiku-4-5",
@@ -1424,8 +1424,8 @@
       "providerId": "openrouter",
       "apiModelName": "deepseek/deepseek-chat",
       "pricing": {
-        "input": 0.32,
-        "output": 0.89
+        "input": 0.26,
+        "output": 1.03
       }
     },
     {
@@ -1434,8 +1434,8 @@
       "providerId": "openrouter",
       "apiModelName": "qwen/qwen3-235b-a22b-2507",
       "pricing": {
-        "input": 0.22,
-        "output": 0.88
+        "input": 0.09,
+        "output": 0.35
       }
     },
     {

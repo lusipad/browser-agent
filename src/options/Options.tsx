@@ -25,7 +25,21 @@ const TABS: Array<{ id: Tab; labelKey: MsgKey }> = [
 
 export function Options() {
   const [cfg, setCfg] = useState<AppConfig | null>(null);
-  const [tab, setTab] = useState<Tab>('providers');
+
+  const initialParsed = useMemo(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const qTab = params.get('tab') || window.location.hash.replace('#', '');
+      const validTab = TABS.some((x) => x.id === qTab) ? (qTab as Tab) : 'providers';
+      const skillId = params.get('skillId');
+      return { tab: validTab, skillId };
+    } catch {
+      return { tab: 'providers' as Tab, skillId: null };
+    }
+  }, []);
+
+  const [tab, setTab] = useState<Tab>(initialParsed.tab);
+  const [targetSkillId, setTargetSkillId] = useState<string | null>(initialParsed.skillId);
   const [savedAt, setSavedAt] = useState(0);
   const [lang, setLang] = useState<Lang>(detectLang());
   const t = useMemo(() => makeT(lang), [lang]);
@@ -37,6 +51,25 @@ export function Options() {
       setLang(resolveLang(c.uiLang));
     });
     onConfigChange((c) => setLang(resolveLang(c.uiLang)));
+
+    const onLocationChange = () => {
+      try {
+        const p = new URLSearchParams(window.location.search);
+        const qTab = p.get('tab') || window.location.hash.replace('#', '');
+        if (TABS.some((x) => x.id === qTab)) {
+          setTab(qTab as Tab);
+        }
+        const sid = p.get('skillId');
+        if (sid) setTargetSkillId(sid);
+      } catch {}
+    };
+
+    window.addEventListener('popstate', onLocationChange);
+    window.addEventListener('hashchange', onLocationChange);
+    return () => {
+      window.removeEventListener('popstate', onLocationChange);
+      window.removeEventListener('hashchange', onLocationChange);
+    };
   }, []);
 
   async function update(next: AppConfig) {
@@ -87,7 +120,7 @@ export function Options() {
         <main className="content">
           {tab === 'providers' && <ProvidersPanel cfg={cfg} onChange={update} />}
           {tab === 'models' && <ModelsPanel cfg={cfg} onChange={update} />}
-          {tab === 'skills' && <SkillsPanel />}
+          {tab === 'skills' && <SkillsPanel initialSkillId={targetSkillId} />}
           {tab === 'safety' && <SafetyPanel cfg={cfg} onChange={update} />}
           {tab === 'sites' && <SitesPanel cfg={cfg} onChange={update} />}
           {tab === 'advanced' && <AdvancedPanel cfg={cfg} onChange={update} />}

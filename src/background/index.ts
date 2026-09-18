@@ -201,9 +201,18 @@ chrome.runtime.onConnect.addListener((port) => {
             }
             break;
           }
-          case 'open_options':
-            void chrome.runtime.openOptionsPage();
+          case 'open_options': {
+            if (msg.tab || msg.skillId) {
+              const query = new URLSearchParams();
+              if (msg.tab) query.set('tab', msg.tab);
+              if (msg.skillId) query.set('skillId', msg.skillId);
+              const url = chrome.runtime.getURL(`options.html?${query.toString()}`);
+              void chrome.tabs.create({ url });
+            } else {
+              void chrome.runtime.openOptionsPage();
+            }
             break;
+          }
           case 'list_skills': {
             const skills = await listSkills();
             bound?.emit({ type: 'skills_list', skills });
@@ -219,6 +228,7 @@ chrome.runtime.onConnect.addListener((port) => {
                 bound.info(bound.t('bg.skillSaved', [skill.name]));
                 const skills = await listSkills();
                 bound.emit({ type: 'skills_list', skills });
+                bound.emit({ type: 'skill_saved', skillId: skill.id });
               } catch (e: any) {
                 bound.error(bound.t('bg.skillGenFail', [e?.message || String(e)]));
               }
@@ -294,6 +304,7 @@ chrome.runtime.onConnect.addListener((port) => {
                   bound.info(bound.t('bg.skillSaved', [skill.name]));
                   const skills = await listSkills();
                   bound.emit({ type: 'skills_list', skills });
+                  bound.emit({ type: 'skill_saved', skillId: skill.id });
                 } catch (e: any) {
                   bound.error(bound.t('bg.skillGenFail', [e?.message || String(e)]));
                 }

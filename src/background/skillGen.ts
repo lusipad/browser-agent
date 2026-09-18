@@ -42,8 +42,8 @@ Rules:
 1. Each step must describe INTENT in natural language (e.g. "Search for {{keyword}} in the search box"), NOT DOM selectors or ref numbers.
 2. Replace specific values (URLs, search terms, form content, quantities) with {{variable_name}} template placeholders.
 3. CRITICAL - DEFAULT VALUES: Every variable MUST include a realistic "default" value extracted directly from the concrete values used during this recorded trajectory! (e.g. If the user originally searched for "机械键盘", the variable "keyword" MUST have default: "机械键盘"). This allows the user to re-run the skill immediately with the recorded parameters without manual typing.
-4. Set "required": false by default so the workflow can always run or auto-infer even if the user leaves fields blank.
-5. Provide a helpful "placeholder" hint (e.g. "留空将由智能体根据页面自主推导").
+4. Set "required": false for all variables. All parameters can be left empty for the agent to auto-infer from page context.
+5. Provide a helpful "placeholder" hint (e.g. "留空由智能体根据页面自主推导").
 6. Merge repeated operations (like pagination) into a single step with a note like "repeat until page {{max_pages}}".
 7. Keep steps concise — typically 3–8 steps for most tasks.
 8. Choose an appropriate emoji icon for the skill.
@@ -166,9 +166,9 @@ export function parseSkillJson(text: string, sourceConvId?: string): Skill {
     name: String(v.name ?? ''),
     label: String(v.label ?? v.name ?? ''),
     type: v.type === 'number' ? 'number' : v.type === 'boolean' ? 'boolean' : 'string',
-    required: v.required === true, // 默认非强制必填，允许用户留空由智能体自主推导
+    required: false, // 生成的技能变量始终默认为非必填，允许用户留空由智能体根据页面自主推导
     default: v.default !== undefined ? v.default : '',
-    placeholder: v.placeholder || (v.default != null && v.default !== '' ? String(v.default) : '留空将由智能体根据页面自主推导'),
+    placeholder: v.placeholder || (v.default != null && v.default !== '' ? String(v.default) : '留空由智能体根据页面自主推导'),
   }));
 
   const steps: SkillStep[] = (raw.steps ?? []).map((s: any) => ({

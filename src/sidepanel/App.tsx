@@ -33,6 +33,8 @@ export function App() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [skills, setSkills] = useState<SkillMeta[]>([]);
   const [skillDrawerOpen, setSkillDrawerOpen] = useState(false);
+  const [drawerSkillId, setDrawerSkillId] = useState<string | null>(null);
+  const [drawerMode, setDrawerMode] = useState<'run' | 'edit'>('run');
   const [recording, setRecording] = useState(false);
   const [recordingCount, setRecordingCount] = useState(0);
   const [recordingLastAction, setRecordingLastAction] = useState<string | undefined>();
@@ -107,6 +109,11 @@ export function App() {
         case 'skills_list':
           setSkills(msg.skills);
           break;
+        case 'skill_saved':
+          setDrawerSkillId(msg.skillId);
+          setDrawerMode('edit');
+          setSkillDrawerOpen(true);
+          break;
         case 'recording_state':
           setRecording(msg.recording);
           setRecordingCount(msg.count);
@@ -158,7 +165,11 @@ export function App() {
         }}
         onNewChat={() => port.post({ type: 'new_chat' })}
         onHistory={() => setHistoryOpen((o) => !o)}
-        onSkills={() => setSkillDrawerOpen((o) => !o)}
+        onSkills={() => {
+          setDrawerSkillId(null);
+          setDrawerMode('run');
+          setSkillDrawerOpen((o) => !o);
+        }}
         onOptions={() => port.post({ type: 'open_options' })}
         onDetach={() => port.post({ type: 'detach' })}
         running={running}
@@ -184,11 +195,17 @@ export function App() {
         <SkillDrawer
           skills={skills}
           running={running}
-          onClose={() => setSkillDrawerOpen(false)}
+          onClose={() => {
+            setSkillDrawerOpen(false);
+            setDrawerSkillId(null);
+            setDrawerMode('run');
+          }}
           onRun={(skillId, variables) => port.post({ type: 'run_skill', skillId, variables })}
           onDelete={(id) => port.post({ type: 'delete_skill', id })}
-          onOptions={() => port.post({ type: 'open_options' })}
+          onOptions={(skillId) => port.post({ type: 'open_options', tab: 'skills', skillId })}
           onStartRecording={() => port.post({ type: 'start_recording' })}
+          initialSkillId={drawerSkillId}
+          initialMode={drawerMode}
         />
       )}
       <RecordingBanner

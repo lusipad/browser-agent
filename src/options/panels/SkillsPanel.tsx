@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { parseImportedSkills, type Skill, type SkillSchedule, type SkillStep, type SkillVariable } from '../../shared/skill';
-import { deleteSkill, loadAllSkills, saveSkill } from '../../shared/skillsStore';
+import { deleteSkill, loadAllSkills, onSkillsChange, saveSkill } from '../../shared/skillsStore';
 import { uid } from '../../shared/util';
 import { useT } from '../../shared/i18nReact';
 import { Field } from './common';
 
-export function SkillsPanel() {
+export function SkillsPanel({ initialSkillId }: { initialSkillId?: string | null } = {}) {
   const t = useT();
   const [skills, setSkills] = useState<Skill[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -16,10 +16,22 @@ export function SkillsPanel() {
   useEffect(() => {
     void loadAllSkills().then((list) => {
       setSkills(list);
-      if (list.length && !selectedId) {
-        setSelectedId(list[0].id);
-        setEditing(structuredClone(list[0]));
+      if (list.length) {
+        const target =
+          (initialSkillId && list.find((s) => s.id === initialSkillId)) ||
+          (selectedId && list.find((s) => s.id === selectedId)) ||
+          list[0];
+        setSelectedId(target.id);
+        setEditing(structuredClone(target));
       }
+    });
+  }, [initialSkillId]);
+
+  useEffect(() => {
+    onSkillsChange(() => {
+      void loadAllSkills().then((list) => {
+        setSkills(list);
+      });
     });
   }, []);
 

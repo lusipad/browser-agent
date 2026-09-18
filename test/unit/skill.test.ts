@@ -239,8 +239,8 @@ test('skill: parseSkillJson 支持提取默认值并默认为非必填', () => {
   "description": "自动比价",
   "icon": "🛒",
   "variables": [
-    { "name": "prod", "label": "商品名称", "type": "string", "default": "4K显示器", "placeholder": "输入商品名" },
-    { "name": "sort", "label": "排序方式", "type": "string" }
+    { "name": "prod", "label": "商品名称", "type": "string", "default": "4K显示器", "placeholder": "输入商品名", "required": true },
+    { "name": "sort", "label": "排序方式", "type": "string", "required": true }
   ],
   "steps": [{ "intent": "搜索 {{prod}}" }]
 }
@@ -248,8 +248,46 @@ test('skill: parseSkillJson 支持提取默认值并默认为非必填', () => {
 
   const parsed = parseSkillJson(jsonWithDefaults);
   assert.equal(parsed.variables[0].default, '4K显示器');
-  assert.equal(parsed.variables[0].required, false); // 默认允许留空
+  assert.equal(parsed.variables[0].required, false); // 强制覆盖为非必填，支持留空自主分析
   assert.equal(parsed.variables[1].required, false);
   assert.ok(parsed.variables[1].placeholder.includes('自主推导'));
 });
+
+test('skill: 编辑技能并保存验证', async () => {
+  installMemStorage();
+  const original = makeSkill('edit-test-1', '原始技能', 1000);
+  await saveSkill(original);
+
+  const loaded = await loadSkill('edit-test-1');
+  assert.ok(loaded);
+  assert.equal(loaded.name, '原始技能');
+
+  // 模拟用户在 SkillDrawer 或设置页中的编辑操作
+  const modified: Skill = {
+    ...loaded,
+    name: '修改后的技能名称',
+    icon: '🚀',
+    description: '新描述',
+    steps: [
+      { intent: '第一步修改后的操作 {{keyword}}' },
+      { intent: '新增的第二步操作' },
+    ],
+    variables: [
+      { name: 'keyword', label: '自定义搜索词', type: 'string', required: false, default: 'MacBook' },
+    ],
+    updatedAt: 2000,
+  };
+  await saveSkill(modified);
+
+  const updated = await loadSkill('edit-test-1');
+  assert.ok(updated);
+  assert.equal(updated.name, '修改后的技能名称');
+  assert.equal(updated.icon, '🚀');
+  assert.equal(updated.description, '新描述');
+  assert.equal(updated.steps.length, 2);
+  assert.equal(updated.steps[0].intent, '第一步修改后的操作 {{keyword}}');
+  assert.equal(updated.variables.length, 1);
+  assert.equal(updated.variables[0].default, 'MacBook');
+});
+
 

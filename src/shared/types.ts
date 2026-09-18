@@ -270,7 +270,7 @@ export type PanelToBg =
   | { type: 'set_vision'; enabled: boolean }
   | { type: 'approval'; id: string; decision: ApprovalDecision }
   | { type: 'detach' }
-  | { type: 'open_options' }
+  | { type: 'open_options'; tab?: string; skillId?: string }
   | { type: 'save_skill' }
   | { type: 'run_skill'; skillId: string; variables: Record<string, string | number | boolean> }
   | { type: 'delete_skill'; id: string }
@@ -308,6 +308,7 @@ export type BgToPanel =
       contextBudget?: number;
     }
   | { type: 'skills_list'; skills: import('../shared/skill').SkillMeta[] }
+  | { type: 'skill_saved'; skillId: string }
   | { type: 'recording_state'; recording: boolean; count: number; lastAction?: string }
   | { type: 'region_selected'; region: RegionSnippet }
   | { type: 'region_select_canceled' };

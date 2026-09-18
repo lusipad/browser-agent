@@ -1065,24 +1065,35 @@ body {
   color: var(--text-dim);
 }
 
-.skill-del {
+.skill-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.skill-item:hover .skill-item-actions {
+  opacity: 1;
+}
+
+.skill-action-btn {
   background: none;
   border: none;
   color: var(--text-dim);
   cursor: pointer;
-  opacity: 0;
-  padding: 4px;
-  font-size: 14px;
+  padding: 4px 6px;
+  font-size: 13px;
   border-radius: 4px;
-  transition: opacity 0.15s, color 0.15s;
+  transition: all 0.15s;
 }
 
-.skill-item:hover .skill-del {
-  opacity: 0.7;
+.skill-action-btn:hover {
+  background: var(--bg-soft);
+  color: var(--text);
 }
 
-.skill-del:hover {
-  opacity: 1 !important;
+.skill-action-btn.skill-del-action:hover {
   color: var(--err);
 }
 
@@ -1099,6 +1110,45 @@ body {
 }
 
 /* Run View */
+.drawer-head-left {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.skill-mode-toggle {
+  display: flex;
+  align-items: center;
+  background: var(--bg-soft);
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  gap: 2px;
+}
+
+.skill-mode-tab {
+  background: none;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-dim);
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.skill-mode-tab:hover {
+  color: var(--text);
+}
+
+.skill-mode-tab.active {
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 .skill-hero {
   display: flex;
   align-items: center;
@@ -1114,6 +1164,11 @@ body {
   flex-shrink: 0;
 }
 
+.skill-hero-content {
+  flex: 1;
+  min-width: 0;
+}
+
 .skill-hero-name {
   font-size: 14px;
   font-weight: 600;
@@ -1125,6 +1180,11 @@ body {
   color: var(--text-dim);
   margin-top: 2px;
   line-height: 1.4;
+}
+
+.skill-inline-edit-btn {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .skill-section-title {
@@ -1209,6 +1269,10 @@ body {
   box-sizing: border-box;
 }
 
+.skill-var-input.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 .skill-var-input:focus {
   outline: none;
   border-color: var(--accent);
@@ -1221,6 +1285,13 @@ body {
   cursor: pointer;
 }
 
+.skill-auto-infer-tip {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 8px;
+  padding: 0 2px;
+}
+
 .skill-run-foot {
   margin-top: auto;
   padding-top: 14px;
@@ -1231,6 +1302,266 @@ body {
   padding: 9px;
   font-size: 13px;
   font-weight: 600;
+}
+
+/* Edit View */
+.skill-edit-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 16px;
+  gap: 14px;
+}
+
+.skill-saved-badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--ok);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-align: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.skill-edit-section {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.skill-section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.skill-edit-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.skill-edit-grid-2 {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.skill-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.skill-edit-field label {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.skill-edit-field.icon-col {
+  width: 50px;
+}
+
+.skill-edit-field.icon-col input {
+  text-align: center;
+  font-size: 16px;
+}
+
+.skill-edit-field.name-col {
+  flex: 1;
+}
+
+.skill-edit-textarea {
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+/* Steps Edit */
+.skill-steps-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skill-step-edit-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.step-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.step-number {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--bg-soft);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--accent);
+}
+
+.step-card-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.step-btn,
+.step-del-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.step-btn:hover:not(:disabled),
+.step-del-btn:hover {
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
+.step-del-btn:hover {
+  border-color: var(--err);
+  color: var(--err);
+}
+
+.step-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.step-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.step-intent-input {
+  resize: vertical;
+  font-size: 12px;
+}
+
+.step-extra-input {
+  font-size: 11px;
+}
+
+/* Vars Edit */
+.skill-vars-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skill-var-edit-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.var-card-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.var-card-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.var-card-col label,
+.var-card-col-sm label {
+  font-size: 10.5px;
+  color: var(--text-dim);
+}
+
+.var-card-col-sm {
+  width: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.var-card-col-check {
+  padding-bottom: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.var-del-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 1px;
+}
+
+.var-del-btn:hover {
+  color: var(--err);
+  border-color: var(--err);
+}
+
+.skill-empty-tip {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 10px 0;
+}
+
+.skill-edit-foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.skill-edit-actions-main {
+  display: flex;
+  gap: 8px;
+}
+
+.skill-edit-actions-main button {
+  flex: 1;
+}
+
+.skill-open-opt-btn {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  padding: 4px;
+}
+
+.skill-open-opt-btn:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 /* ---------- 示教录制 (Teach Me) 录制条与控件 ---------- */

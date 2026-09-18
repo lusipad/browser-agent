@@ -1,6 +1,6 @@
 {
-  "version": 11,
-  "updatedAt": "2026-09-17",
+  "version": 12,
+  "updatedAt": "2026-09-18",
   "providers": [
     {
       "id": "openai",
@@ -496,7 +496,7 @@
       "model": "deepseek/deepseek-chat",
       "label": "DeepSeek V3 (OR)",
       "vision": false,
-      "contextWindow": 65536
+      "contextWindow": 163840
     },
     {
       "id": "qwen/qwen3-235b-a22b-2507",
@@ -1424,8 +1424,8 @@
       "providerId": "openrouter",
       "apiModelName": "deepseek/deepseek-chat",
       "pricing": {
-        "input": 0.26,
-        "output": 1.03
+        "input": 0.32,
+        "output": 0.89
       }
     },
     {

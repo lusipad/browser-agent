@@ -1,6 +1,6 @@
 {
-  "version": 16,
-  "updatedAt": "2026-09-22",
+  "version": 17,
+  "updatedAt": "2026-09-23",
   "providers": [
     {
       "id": "openai",
@@ -31,11 +31,6 @@
       "id": "google",
       "name": "Google AI Studio",
       "baseUrl": "https://generativelanguage.googleapis.com/v1beta/openai"
-    },
-    {
-      "id": "groq",
-      "name": "Groq（快速推理）",
-      "baseUrl": "https://api.groq.com/openai/v1"
     },
     {
       "id": "openrouter",
@@ -307,38 +302,6 @@
       "contextWindow": 500000
     },
     {
-      "id": "grok-4",
-      "providerId": "xai",
-      "model": "grok-4",
-      "label": "Grok 4",
-      "vision": false,
-      "contextWindow": 256000
-    },
-    {
-      "id": "grok-4-fast-reasoning",
-      "providerId": "xai",
-      "model": "grok-4-fast-reasoning",
-      "label": "Grok 4 Fast（推理）",
-      "vision": false,
-      "contextWindow": 2000000
-    },
-    {
-      "id": "grok-3",
-      "providerId": "xai",
-      "model": "grok-3",
-      "label": "Grok 3",
-      "vision": false,
-      "contextWindow": 131072
-    },
-    {
-      "id": "grok-3-mini",
-      "providerId": "xai",
-      "model": "grok-3-mini",
-      "label": "Grok 3 Mini",
-      "vision": false,
-      "contextWindow": 131072
-    },
-    {
       "id": "grok-code-fast",
       "providerId": "xai",
       "model": "grok-code-fast",
@@ -411,60 +374,12 @@
       "contextWindow": 1048576
     },
     {
-      "id": "gemini-2.0-flash",
-      "providerId": "google",
-      "model": "gemini-2.0-flash",
-      "label": "Gemini 2.0 Flash",
-      "vision": true,
-      "contextWindow": 1048576
-    },
-    {
-      "id": "llama-3.3-70b-versatile",
-      "providerId": "groq",
-      "model": "llama-3.3-70b-versatile",
-      "label": "Llama 3.3 70B (Groq·超快)",
-      "vision": false,
-      "contextWindow": 131072
-    },
-    {
-      "id": "meta-llama/llama-4-maverick-17b-128e-instruct",
-      "providerId": "groq",
-      "model": "meta-llama/llama-4-maverick-17b-128e-instruct",
-      "label": "Llama 4 Maverick (Groq)",
-      "vision": true,
-      "contextWindow": 131072
-    },
-    {
-      "id": "meta-llama/llama-4-scout-17b-16e-instruct",
-      "providerId": "groq",
-      "model": "meta-llama/llama-4-scout-17b-16e-instruct",
-      "label": "Llama 4 Scout (Groq)",
-      "vision": true,
-      "contextWindow": 131072
-    },
-    {
-      "id": "qwen/qwen3-32b",
-      "providerId": "groq",
-      "model": "qwen/qwen3-32b",
-      "label": "Qwen3 32B (Groq)",
-      "vision": false,
-      "contextWindow": 131000
-    },
-    {
       "id": "anthropic/claude-sonnet-4.6",
       "providerId": "openrouter",
       "model": "anthropic/claude-sonnet-4.6",
       "label": "Claude Sonnet 4.6 (OR)",
       "vision": true,
       "contextWindow": 1000000
-    },
-    {
-      "id": "anthropic/claude-opus-4",
-      "providerId": "openrouter",
-      "model": "anthropic/claude-opus-4",
-      "label": "Claude Opus 4 (OR)",
-      "vision": true,
-      "contextWindow": 200000
     },
     {
       "id": "anthropic/claude-haiku-4.5",
@@ -587,14 +502,6 @@
       "contextWindow": 262144
     },
     {
-      "id": "kimi-k2-thinking",
-      "providerId": "moonshot",
-      "model": "kimi-k2-thinking",
-      "label": "Kimi K2 Thinking（推理）",
-      "vision": false,
-      "contextWindow": 262144
-    },
-    {
       "id": "moonshot-v1-128k",
       "providerId": "moonshot",
       "model": "moonshot-v1-128k",
@@ -635,36 +542,12 @@
       "contextWindow": 1000000
     },
     {
-      "id": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
-      "providerId": "together",
-      "model": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
-      "label": "Llama 4 Maverick (Together)",
-      "vision": false,
-      "contextWindow": 128000
-    },
-    {
-      "id": "deepseek-ai/DeepSeek-R1",
-      "providerId": "together",
-      "model": "deepseek-ai/DeepSeek-R1",
-      "label": "DeepSeek R1 (Together)",
-      "vision": false,
-      "contextWindow": 128000
-    },
-    {
       "id": "deepseek-ai/DeepSeek-V3",
       "providerId": "together",
       "model": "deepseek-ai/DeepSeek-V3",
       "label": "DeepSeek V3 (Together)",
       "vision": false,
       "contextWindow": 65536
-    },
-    {
-      "id": "Qwen/Qwen3-235B-A22B-Thinking-2507",
-      "providerId": "together",
-      "model": "Qwen/Qwen3-235B-A22B-Thinking-2507",
-      "label": "Qwen3 235B Thinking (Together)",
-      "vision": false,
-      "contextWindow": 256000
     },
     {
       "id": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
@@ -679,14 +562,6 @@
       "providerId": "fireworks",
       "model": "accounts/fireworks/models/deepseek-v4-flash",
       "label": "DeepSeek V4 Flash (Fireworks)",
-      "vision": false,
-      "contextWindow": 1048576
-    },
-    {
-      "id": "accounts/fireworks/models/deepseek-v4-pro",
-      "providerId": "fireworks",
-      "model": "accounts/fireworks/models/deepseek-v4-pro",
-      "label": "DeepSeek V4 Pro (Fireworks)",
       "vision": false,
       "contextWindow": 1048576
     },
@@ -747,14 +622,6 @@
       "contextWindow": 131072
     },
     {
-      "id": "Qwen3-32B",
-      "providerId": "sambanova",
-      "model": "Qwen3-32B",
-      "label": "Qwen3 32B (SambaNova)",
-      "vision": false,
-      "contextWindow": 8192
-    },
-    {
       "id": "doubao-seed-2-0-pro-260215",
       "providerId": "volcengine",
       "model": "doubao-seed-2-0-pro-260215",
@@ -769,6 +636,14 @@
       "label": "豆包 Seed 2.0 Lite（火山）",
       "vision": true,
       "contextWindow": 256000
+    },
+    {
+      "id": "deepseek-ai/DeepSeek-R1",
+      "providerId": "siliconflow",
+      "model": "deepseek-ai/DeepSeek-R1",
+      "label": "DeepSeek R1（硅基流动·推理）",
+      "vision": false,
+      "contextWindow": 64000
     },
     {
       "id": "Qwen/Qwen2.5-VL-72B-Instruct",
@@ -1189,46 +1064,6 @@
       }
     },
     {
-      "id": "xai/grok-4",
-      "modelId": "grok-4",
-      "providerId": "xai",
-      "apiModelName": "grok-4",
-      "pricing": {
-        "input": 1.25,
-        "output": 2.5
-      }
-    },
-    {
-      "id": "xai/grok-4-fast-reasoning",
-      "modelId": "grok-4-fast-reasoning",
-      "providerId": "xai",
-      "apiModelName": "grok-4-fast-reasoning",
-      "pricing": {
-        "input": 1.25,
-        "output": 2.5
-      }
-    },
-    {
-      "id": "xai/grok-3",
-      "modelId": "grok-3",
-      "providerId": "xai",
-      "apiModelName": "grok-3",
-      "pricing": {
-        "input": 1.25,
-        "output": 2.5
-      }
-    },
-    {
-      "id": "xai/grok-3-mini",
-      "modelId": "grok-3-mini",
-      "providerId": "xai",
-      "apiModelName": "grok-3-mini",
-      "pricing": {
-        "input": 1.25,
-        "output": 2.5
-      }
-    },
-    {
       "id": "xai/grok-code-fast",
       "modelId": "grok-code-fast",
       "providerId": "xai",
@@ -1319,56 +1154,6 @@
       }
     },
     {
-      "id": "google/gemini-2.0-flash",
-      "modelId": "gemini-2.0-flash",
-      "providerId": "google",
-      "apiModelName": "gemini-2.0-flash",
-      "pricing": {
-        "input": 0.1,
-        "output": 0.4
-      }
-    },
-    {
-      "id": "groq/llama-3.3-70b-versatile",
-      "modelId": "llama-3.3-70b-versatile",
-      "providerId": "groq",
-      "apiModelName": "llama-3.3-70b-versatile",
-      "pricing": {
-        "input": 0.59,
-        "output": 0.79
-      }
-    },
-    {
-      "id": "groq/meta-llama/llama-4-maverick-17b-128e-instruct",
-      "modelId": "meta-llama/llama-4-maverick-17b-128e-instruct",
-      "providerId": "groq",
-      "apiModelName": "meta-llama/llama-4-maverick-17b-128e-instruct",
-      "pricing": {
-        "input": 0.2,
-        "output": 0.6
-      }
-    },
-    {
-      "id": "groq/meta-llama/llama-4-scout-17b-16e-instruct",
-      "modelId": "meta-llama/llama-4-scout-17b-16e-instruct",
-      "providerId": "groq",
-      "apiModelName": "meta-llama/llama-4-scout-17b-16e-instruct",
-      "pricing": {
-        "input": 0.11,
-        "output": 0.34
-      }
-    },
-    {
-      "id": "groq/qwen/qwen3-32b",
-      "modelId": "qwen/qwen3-32b",
-      "providerId": "groq",
-      "apiModelName": "qwen/qwen3-32b",
-      "pricing": {
-        "input": 0.29,
-        "output": 0.59
-      }
-    },
-    {
       "id": "openrouter/anthropic/claude-sonnet-4.6",
       "modelId": "anthropic/claude-sonnet-4.6",
       "providerId": "openrouter",
@@ -1376,16 +1161,6 @@
       "pricing": {
         "input": 3,
         "output": 15
-      }
-    },
-    {
-      "id": "openrouter/anthropic/claude-opus-4",
-      "modelId": "anthropic/claude-opus-4",
-      "providerId": "openrouter",
-      "apiModelName": "anthropic/claude-opus-4",
-      "pricing": {
-        "input": 15,
-        "output": 75
       }
     },
     {
@@ -1531,16 +1306,6 @@
       }
     },
     {
-      "id": "moonshot/kimi-k2-thinking",
-      "modelId": "kimi-k2-thinking",
-      "providerId": "moonshot",
-      "apiModelName": "kimi-k2-thinking",
-      "pricing": {
-        "input": 0.6,
-        "output": 2.5
-      }
-    },
-    {
       "id": "moonshot/moonshot-v1-128k",
       "modelId": "moonshot-v1-128k",
       "providerId": "moonshot",
@@ -1591,36 +1356,6 @@
       }
     },
     {
-      "id": "together/meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
-      "modelId": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
-      "providerId": "together",
-      "apiModelName": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
-      "pricing": {
-        "input": 0.27,
-        "output": 0.85
-      }
-    },
-    {
-      "id": "together/meta-llama/Llama-4-Scout-17B-16E-Instruct",
-      "modelId": "meta-llama/llama-4-scout-17b-16e-instruct",
-      "providerId": "together",
-      "apiModelName": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
-      "pricing": {
-        "input": 0.18,
-        "output": 0.59
-      }
-    },
-    {
-      "id": "together/deepseek-ai/DeepSeek-R1",
-      "modelId": "deepseek-ai/DeepSeek-R1",
-      "providerId": "together",
-      "apiModelName": "deepseek-ai/DeepSeek-R1",
-      "pricing": {
-        "input": 3,
-        "output": 7
-      }
-    },
-    {
       "id": "together/deepseek-ai/DeepSeek-V3",
       "modelId": "deepseek-ai/DeepSeek-V3",
       "providerId": "together",
@@ -1628,16 +1363,6 @@
       "pricing": {
         "input": 1.25,
         "output": 1.25
-      }
-    },
-    {
-      "id": "together/Qwen/Qwen3-235B-A22B-Thinking-2507",
-      "modelId": "Qwen/Qwen3-235B-A22B-Thinking-2507",
-      "providerId": "together",
-      "apiModelName": "Qwen/Qwen3-235B-A22B-Thinking-2507",
-      "pricing": {
-        "input": 0.65,
-        "output": 3
       }
     },
     {
@@ -1658,16 +1383,6 @@
       "pricing": {
         "input": 0.14,
         "output": 0.28
-      }
-    },
-    {
-      "id": "fireworks/accounts/fireworks/models/deepseek-v4-pro",
-      "modelId": "accounts/fireworks/models/deepseek-v4-pro",
-      "providerId": "fireworks",
-      "apiModelName": "accounts/fireworks/models/deepseek-v4-pro",
-      "pricing": {
-        "input": 1.2,
-        "output": 1.2
       }
     },
     {
@@ -1738,16 +1453,6 @@
       "pricing": {
         "input": 0.6,
         "output": 1.2
-      }
-    },
-    {
-      "id": "sambanova/Qwen3-32B",
-      "modelId": "Qwen3-32B",
-      "providerId": "sambanova",
-      "apiModelName": "Qwen3-32B",
-      "pricing": {
-        "input": 0.4,
-        "output": 0.8
       }
     },
     {

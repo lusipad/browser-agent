@@ -1,6 +1,6 @@
 {
-  "version": 17,
-  "updatedAt": "2026-09-23",
+  "version": 18,
+  "updatedAt": "2026-09-24",
   "providers": [
     {
       "id": "openai",
@@ -542,6 +542,14 @@
       "contextWindow": 1000000
     },
     {
+      "id": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+      "providerId": "together",
+      "model": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+      "label": "Llama 4 Scout (Together)",
+      "vision": false,
+      "contextWindow": 1048576
+    },
+    {
       "id": "deepseek-ai/DeepSeek-V3",
       "providerId": "together",
       "model": "deepseek-ai/DeepSeek-V3",
@@ -562,6 +570,14 @@
       "providerId": "fireworks",
       "model": "accounts/fireworks/models/deepseek-v4-flash",
       "label": "DeepSeek V4 Flash (Fireworks)",
+      "vision": false,
+      "contextWindow": 1048576
+    },
+    {
+      "id": "accounts/fireworks/models/deepseek-v4-pro",
+      "providerId": "fireworks",
+      "model": "accounts/fireworks/models/deepseek-v4-pro",
+      "label": "DeepSeek V4 Pro (Fireworks)",
       "vision": false,
       "contextWindow": 1048576
     },
@@ -1356,6 +1372,16 @@
       }
     },
     {
+      "id": "together/meta-llama/Llama-4-Scout-17B-16E-Instruct",
+      "modelId": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+      "providerId": "together",
+      "apiModelName": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+      "pricing": {
+        "input": 0.18,
+        "output": 0.59
+      }
+    },
+    {
       "id": "together/deepseek-ai/DeepSeek-V3",
       "modelId": "deepseek-ai/DeepSeek-V3",
       "providerId": "together",
@@ -1383,6 +1409,16 @@
       "pricing": {
         "input": 0.14,
         "output": 0.28
+      }
+    },
+    {
+      "id": "fireworks/accounts/fireworks/models/deepseek-v4-pro",
+      "modelId": "accounts/fireworks/models/deepseek-v4-pro",
+      "providerId": "fireworks",
+      "apiModelName": "accounts/fireworks/models/deepseek-v4-pro",
+      "pricing": {
+        "input": 1.2,
+        "output": 1.2
       }
     },
     {

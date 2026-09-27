@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browser Agent · 新一代自主 AI 浏览器智能体 (v0.7.0)</title>
+  <meta name="description" content="新一代开源 Chrome 侧边栏自主 AI 浏览器智能体：快慢双核混合架构、Jev 200ms 直发点击、视觉局部框选、示教自学成才、原生 CDP 物理操控与 100% BYOK 本地主权。">
+  <link rel="icon" type="image/png" href="screenshots/icon-512.png">
+
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --sys1: #10b981;
+      --sys1-glow: rgba(16, 185, 129, 0.25);
+      --sys2: #3b82f6;
+      --sys2-glow: rgba(59, 130, 246, 0.25);
+      --accent: #8b5cf6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(100% 80% at 50% -20%, rgba(59, 130, 246, 0.18) 0%, rgba(0, 0, 0, 0) 60%),
+        radial-gradient(80% 50% at 85% 20%, rgba(16, 185, 129, 0.15) 0%, rgba(0, 0, 0, 0) 50%);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(9, 13, 22, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 16px 0;
+    }
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .brand img {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+    .version-tag {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--sys1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .nav-links a:hover {
+      color: #ffffff;
+      transition: color 0.2s;
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(37, 99, 235, 0.6);
+    }
+    .btn-sys1 {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .btn-sys1:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(16, 185, 129, 0.6);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: #e2e8f0;
+      border: 1px solid var(--card-border);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 80px 0 50px;
+      text-align: center;
+      position: relative;
+    }
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      backdrop-filter: blur(8px);
+    }
+    .hero h1 {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 820px;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+    }
+    .hero-cta {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    /* Video & Media Showcase */
+    .showcase-media {
+      margin: 0 auto;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12);
+      background: #000;
+      position: relative;
+    }
+    .showcase-media video {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Section Styling */
+    section {
+      padding: 80px 0;
+    }
+    .section-head {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .section-eyebrow {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--sys1);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      color: #ffffff;
+      margin-bottom: 12px;
+    }
+    .section-desc {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* Dual-Process Core Section */
+    .dual-process-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      margin-bottom: 40px;
+    }
+    .dp-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 32px;
+      backdrop-filter: blur(16px);
+      position: relative;
+      overflow: hidden;
+    }
+    .dp-card.sys1 {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.06) 0%, rgba(15, 23, 42, 0.8) 100%);
+    }
+    .dp-card.sys2 {
+      border-color: rgba(59, 130, 246, 0.35);
+      background: linear-gradient(180deg, rgba(59, 130, 246, 0.06) 0%, rgba(15, 23, 42, 0.8) 100%);
+    }
+    .dp-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .dp-title {
+      font-size: 22px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dp-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .dp-tag.green {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .dp-tag.blue {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+    .dp-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .dp-list li {
+      font-size: 14px;
+      color: #cbd5e1;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.5;
+    }
+    .dp-list li strong {
+      color: #ffffff;
+    }
+
+    /* Stats Banner */
+    .stats-banner {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px 36px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      text-align: center;
+      backdrop-filter: blur(16px);
+    }
+    .stat-item h3 {
+      font-size: 32px;
+      font-weight: 900;
+      color: #ffffff;
+      margin-bottom: 4px;
+      letter-spacing: -1px;
+    }
+    .stat-item p {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* 4 Superpowers Grid */
+    .superpowers-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px;
+    }
+    .power-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .power-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+    .power-img-wrap {
+      width: 100%;
+      height: 260px;
+      overflow: hidden;
+      background: #000;
+    }
+    .power-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .power-card:hover .power-img-wrap img {
+      transform: scale(1.02);
+    }
+    .power-content {
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .power-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .power-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Comparison Table */
+    .table-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th, td {
+      padding: 16px 24px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    th {
+      background: rgba(255, 255, 255, 0.04);
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+    td.highlight {
+      color: #34d399;
+      font-weight: 700;
+    }
+
+    /* Call to Action */
+    .cta-section {
+      background: radial-gradient(80% 80% at 50% 50%, rgba(37, 99, 235, 0.25) 0%, rgba(0, 0, 0, 0) 100%), var(--card-bg);
+      border: 1px solid rgba(37, 99, 235, 0.35);
+      border-radius: 24px;
+      padding: 60px 40px;
+      text-align: center;
+      margin: 60px auto;
+    }
+    .cta-section h2 {
+      font-size: 40px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+    }
+    .cta-section p {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto 32px;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 40px 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+    .footer-links a:hover {
+      color: #fff;
+    }
+
+    @media (max-width: 900px) {
+      .hero h1 { font-size: 36px; }
+      .dual-process-grid, .superpowers-grid { grid-template-columns: 1fr; }
+      .stats-banner { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="container nav-inner">
+      <div class="brand">
+        <img src="screenshots/icon-512.png" alt="Browser Agent Logo">
+        <span>Browser Agent</span>
+        <span class="version-tag">v0.7.0</span>
+      </div>
+      <div class="nav-links">
+        <a href="#dual-process">快慢双核</a>
+        <a href="#superpowers">核心能力</a>
+        <a href="#demo">真机演示</a>
+        <a href="#comparison">性能对比</a>
+        <a href="https://github.com/lusipad/browser-agent" target="_blank">文档与源码</a>
+      </div>
+      <div class="nav-actions">
+        <a href="https://github.com/lusipad/browser-agent" target="_blank" class="btn btn-secondary">
+          ⭐ Star on GitHub
+        </a>
+        <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak" target="_blank" class="btn btn-primary">
+          Chrome 商店安装
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero container">
+    <div class="badge-pill">
+      <span>⚡</span>
+      <span>v0.7.0 重磅发布：快慢双核认知混合架构 · 200ms 直发点击</span>
+    </div>
+    <h1>新一代自主 AI 浏览器智能体</h1>
+    <p>
+      运行在 Chrome 原生侧边栏中的数字副驾驶。Jev 毫秒级直觉反射 + DeepSeek 慢思考深度规划，
+      以人类专家的认知方式自主探索、操作复杂网页并交付确定性成果。
+    </p>
+    <div class="hero-cta">
+      <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak" target="_blank" class="btn btn-sys1" style="font-size: 15px; padding: 12px 28px;">
+        🚀 立即免费添加到 Chrome
+      </a>
+      <a href="https://github.com/lusipad/browser-agent/releases" target="_blank" class="btn btn-secondary" style="font-size: 15px; padding: 12px 24px;">
+        📦 下载离线 ZIP 安装包
+      </a>
+    </div>
+
+    <!-- Media Showcase (Video Player) -->
+    <div class="showcase-media" id="demo">
+      <video autoplay loop muted playsinline controls poster="screenshots/dual-process-hybrid.png">
+        <source src="videos/browser-agent-v0.7.0-demo.webm" type="video/webm">
+        您的浏览器暂不支持 WebM 视频播放，请直接下载体验。
+      </video>
+    </div>
+  </header>
+
+  <!-- Stats Banner -->
+  <div class="container">
+    <div class="stats-banner">
+      <div class="stat-item">
+        <h3 style="color: #34d399;">200ms</h3>
+        <p>System 1 毫秒级直觉点击响应</p>
+      </div>
+      <div class="stat-item">
+        <h3 style="color: #60a5fa;">-80%</h3>
+        <p>单步操作 Token 开销大幅压降</p>
+      </div>
+      <div class="stat-item">
+        <h3 style="color: #c084fc;">148 / 148</h3>
+        <p>自动化单元与逻辑测试 100% 通过</p>
+      </div>
+      <div class="stat-item">
+        <h3 style="color: #fbbf24;">100% BYOK</h3>
+        <p>密钥本地物理隔离 · 数据绝不上云</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dual-Process Section -->
+  <section class="container" id="dual-process">
+    <div class="section-head">
+      <div class="section-eyebrow">COGNITIVE DUAL-PROCESS ENGINE</div>
+      <h2 class="section-title">⚡ 快慢双核认知混合架构</h2>
+      <p class="section-desc">
+        将丹尼尔·卡尼曼《思考，快与慢》理论工程化落地：直觉反射负责极速操作，审慎大模型负责长程规划与精读。
+      </p>
+    </div>
+
+    <div class="dual-process-grid">
+      <!-- System 1 -->
+      <div class="dp-card sys1">
+        <div class="dp-head">
+          <div class="dp-title" style="color: #6ee7b7;">
+            <span>⚡ System 1 快思考</span>
+          </div>
+          <span class="dp-tag green">200ms – 800ms 直发</span>
+        </div>
+        <ul class="dp-list">
+          <li>
+            <span>⚡</span>
+            <div><strong>轻量级直觉模型</strong>：基于 TypeSafe Jev-2B 及离线 Laya 动作模型，毫秒内完成点击、输入和跳转决策。</div>
+          </li>
+          <li>
+            <span>🚀</span>
+            <div><strong>CDP 物理直发</strong>：常规按钮点击免传全屏大截图，响应速度提速 <strong>5~10 倍</strong>。</div>
+          </li>
+          <li>
+            <span>💰</span>
+            <div><strong>Token 暴降 80%</strong>：常规翻页和单选免除全屏图片 Token，告别昂贵计费。</div>
+          </li>
+          <li>
+            <span>🛡️</span>
+            <div><strong>自适应回退保护</strong>：决策置信度低于 0.7 自动移交慢思考接管，既快又稳。</div>
+          </li>
+        </ul>
+        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; padding: 12px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: #a7f3d0; font-weight: 700;">⚡ System 1 (Jev): 点击「排行榜」</span>
+          <span style="color: #34d399; font-weight: 700;">238ms · 置信度 94%</span>
+        </div>
+      </div>
+
+      <!-- System 2 -->
+      <div class="dp-card sys2">
+        <div class="dp-head">
+          <div class="dp-title" style="color: #93c5fd;">
+            <span>🧠 System 2 慢思考</span>
+          </div>
+          <span class="dp-tag blue">多模态长程推理</span>
+        </div>
+        <ul class="dp-list">
+          <li>
+            <span>🧭</span>
+            <div><strong>复杂目标全局规划</strong>：由 DeepSeek-V3 / Claude 3.7 / GPT-4o 掌舵，分解长程探索路径。</div>
+          </li>
+          <li>
+            <span>📖</span>
+            <div><strong>长篇文献与多列精读</strong>：深入阅读海量评论、长篇技术文档与数据表格，提炼核心洞见。</div>
+          </li>
+          <li>
+            <span>📊</span>
+            <div><strong>交付确定性结构化成果</strong>：产出严谨的推荐研报、决策比对与数据看板。</div>
+          </li>
+          <li>
+            <span>🔍</span>
+            <div><strong>自检验收闭环</strong>：依照成功判据进行页面结果校验，未完成自动纠偏重试。</div>
+          </li>
+        </ul>
+        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 12px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: #bfdbfe; font-weight: 700;">🧠 System 2 (DeepSeek): 精读影评并生成推荐</span>
+          <span style="color: #60a5fa; font-weight: 700;">交付完整结构化研报</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dual Process Big Visual -->
+    <div style="border-radius: 16px; overflow: hidden; border: 1px solid var(--card-border); box-shadow: 0 16px 36px rgba(0,0,0,0.5);">
+      <img src="screenshots/dual-process-hybrid.png" alt="快慢双核混合架构全景图" style="width: 100%; display: block;">
+    </div>
+  </section>
+
+  <!-- 4 Superpowers Section -->
+  <section class="container" id="superpowers">
+    <div class="section-head">
+      <div class="section-eyebrow">AGENT SUPERPOWERS</div>
+      <h2 class="section-title">🚀 突破性智能体能力</h2>
+      <p class="section-desc">
+        摆脱僵化的单步指令，智能体以人类使用浏览器的方式自主理解并执行复杂使命。
+      </p>
+    </div>
+
+    <div class="superpowers-grid">
+      <!-- Power 1: Region Selection -->
+      <div class="power-card">
+        <div class="power-img-wrap">
+          <img src="screenshots/region-selection.png" alt="视觉框选指哪打哪">
+        </div>
+        <div class="power-content">
+          <div class="power-title">
+            <span>🎯</span> 视觉局部框选 · 指哪打哪
+          </div>
+          <div class="power-desc">
+            按 <code>Alt + S</code> 唤起全屏准星蒙层，鼠标拖拽框选或点击吸附目标元素。1:1 无损裁剪局部区域，Token 消耗立减 80%，彻底消除长页面定位歧义。
+          </div>
+        </div>
+      </div>
+
+      <!-- Power 2: Teach-Me -->
+      <div class="power-card">
+        <div class="power-img-wrap">
+          <img src="screenshots/teach-me.png" alt="示教录制自学成才">
+        </div>
+        <div class="power-content">
+          <div class="power-title">
+            <span>🔴</span> 示教录制自学成才 (Teach-Me)
+          </div>
+          <div class="power-desc">
+            直接在网页中正常点击、打字和上传，后台静默捕获操作流；密码输入物理脱敏 (******)，大模型自动提炼为带参数的标准高复用 SKILL 技能。
+          </div>
+        </div>
+      </div>
+
+      <!-- Power 3: Cron & Intervention -->
+      <div class="power-card">
+        <div class="power-img-wrap">
+          <img src="screenshots/cron-intervention.png" alt="定时调度与验证码协同">
+        </div>
+        <div class="power-content">
+          <div class="power-title">
+            <span>⏰</span> 定时调度 & 🛡️ 验证码人机协同
+          </div>
+          <div class="power-desc">
+            支持周期或每日定时后台静默执行；遇到极验、滑块拼图或 Turnstile 智能阻断时主动安全挂起并推送桌面通知，用户完成后一键无缝恢复。
+          </div>
+        </div>
+      </div>
+
+      <!-- Power 4: CDP & SoM -->
+      <div class="power-card">
+        <div class="power-img-wrap">
+          <img src="screenshots/form-filling.png" alt="原生 CDP 物理操控">
+        </div>
+        <div class="power-content">
+          <div class="power-title">
+            <span>👁️</span> 原生 CDP 操控 & Set-of-Marks
+          </div>
+          <div class="power-desc">
+            通过 Chrome 官方 CDP 协议生成真实可信的物理鼠标与击键，穿透 Shadow DOM 与复杂单页应用；视觉编号框实现厘米级精准空间定位。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Section -->
+  <section class="container" id="comparison">
+    <div class="section-head">
+      <div class="section-eyebrow">HEAD-TO-HEAD COMPARISON</div>
+      <h2 class="section-title">传统 Agent vs Browser Agent v0.7.0</h2>
+      <p class="section-desc">从底层认知架构到实际用户体验的全面代际跨越。</p>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>特性维度</th>
+            <th>传统单模型浏览器 Agent</th>
+            <th>Browser Agent v0.7.0 (快慢双核)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>单步响应延迟</strong></td>
+            <td>3.5s ~ 5.2s（每步传全屏大图）</td>
+            <td class="highlight">⚡ 200ms ~ 800ms（毫秒直发，提速 10x）</td>
+          </tr>
+          <tr>
+            <td><strong>Token 消耗</strong></td>
+            <td>每次操作 1,600 ~ 2,400 Tokens</td>
+            <td class="highlight">💰 暴降 80%+（常规操作零图片开销）</td>
+          </tr>
+          <tr>
+            <td><strong>网页交互方式</strong></td>
+            <td>脆弱的合成 DOM 事件（易被拦截）</td>
+            <td class="highlight">🚀 原生 Chrome CDP 物理级击键与点击</td>
+          </tr>
+          <tr>
+            <td><strong>长页复杂定位</strong></td>
+            <td>截图缩放严重失真，定位漂移</td>
+            <td class="highlight">🎯 视觉 1:1 局部框选对焦 (Alt+S)</td>
+          </tr>
+          <tr>
+            <td><strong>工作流复用</strong></td>
+            <td>必须手写代码或复杂 RPA 配置</td>
+            <td class="highlight">🔴 示教自学录制，大模型自提炼 SKILL</td>
+          </tr>
+          <tr>
+            <td><strong>遇到验证码/滑块</strong></td>
+            <td>直接崩溃报错或盲目乱点封号</td>
+            <td class="highlight">🛡️ 优雅安全挂起，桌面通知人机协同一键恢复</td>
+          </tr>
+          <tr>
+            <td><strong>数据隐私与主权</strong></td>
+            <td>必须经由中心化付费云端中转</td>
+            <td class="highlight">🔒 100% BYOK，密钥本地物理隔离，数据纯留本机</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Call To Action -->
+  <div class="container">
+    <div class="cta-section">
+      <h2>准备好体验新一代浏览器副驾驶了吗？</h2>
+      <p>完全开源、纯本地主权、自带 API Key。5 分钟内完成安装，立刻开启极速自动化。</p>
+      <div style="display: flex; justify-content: center; gap: 16px;">
+        <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak" target="_blank" class="btn btn-sys1" style="font-size: 16px; padding: 14px 32px;">
+          🚀 Chrome 应用商店免费安装
+        </a>
+        <a href="https://github.com/lusipad/browser-agent" target="_blank" class="btn btn-secondary" style="font-size: 16px; padding: 14px 28px;">
+          ⭐ 在 GitHub 上 Star 支持
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-inner">
+      <div>
+        <strong>Browser Agent</strong> · Next-Gen Autonomous AI Web Copilot
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/lusipad/browser-agent" target="_blank">GitHub</a>
+        <a href="https://github.com/lusipad/browser-agent/releases" target="_blank">Releases</a>
+        <a href="architecture.md" target="_blank">架构文档</a>
+        <a href="testing.md" target="_blank">测试协议</a>
+        <a href="https://github.com/lusipad/browser-agent/blob/main/PRIVACY.md" target="_blank">隐私政策</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

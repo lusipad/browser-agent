@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ApprovalDecision, TimelineItem } from '../../shared/types';
 import { useT } from '../../shared/i18nReact';
 import { renderMarkdown } from '../markdown';
@@ -119,12 +119,11 @@ function Row({
       );
     case 'assistant':
       return (
-        <div className="row assistant">
-          <div
-            className={'md' + (item.done ? '' : ' streaming')}
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(item.text || (item.done ? '' : '…')) }}
-          />
-        </div>
+        <AssistantRow
+          item={item}
+          onSaveSkill={onSaveSkill}
+          running={running}
+        />
       );
     case 'tool':
       return <ToolRow item={item} onPreview={onPreview} />;
@@ -298,6 +297,159 @@ function HumanInterventionRow({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function AssistantRow({
+  item,
+  onSaveSkill,
+  running,
+}: {
+  item: Extract<TimelineItem, { kind: 'assistant' }>;
+  onSaveSkill?: () => void;
+  running: boolean;
+}) {
+  const t = useT();
+  const [copied, setCopied] = useState(false);
+  const [tableCopied, setTableCopied] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const hasTable = Boolean(item.text && /\|[ \t]*[-:]+[-| :]*\|/.test(item.text));
+
+  async function handleCopy() {
+    if (!item.text) return;
+    try {
+      await navigator.clipboard.writeText(item.text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  }
+
+  function extractMarkdownTable(text: string): string | null {
+    const lines = text.split('\n');
+    const tableLines: string[] = [];
+    let inTable = false;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+        inTable = true;
+        tableLines.push(trimmed);
+      } else if (inTable) {
+        break;
+      }
+    }
+    return tableLines.length >= 2 ? tableLines.join('\n') : null;
+  }
+
+  async function handleCopyTable() {
+    if (!item.text) return;
+    const tableMd = extractMarkdownTable(item.text);
+    if (!tableMd) return;
+    try {
+      await navigator.clipboard.writeText(tableMd);
+      setTableCopied(true);
+      setTimeout(() => setTableCopied(false), 1500);
+    } catch {}
+  }
+
+  function handleDownloadCsv() {
+    if (!item.text) return;
+    const tableMd = extractMarkdownTable(item.text);
+    if (!tableMd) return;
+
+    const lines = tableMd.split('\n');
+    const csvRows: string[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      if (i === 1 && /\|[ \t]*[-:]+/.test(lines[i])) continue;
+      const rawCells = lines[i].split('|').slice(1, -1);
+      const row = rawCells
+        .map((c) => {
+          const cell = c.trim().replace(/"/g, '""');
+          return `"${cell}"`;
+        })
+        .join(',');
+      csvRows.push(row);
+    }
+
+    const csvContent = '\uFEFF' + csvRows.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `table-data-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleContentClick(e: React.MouseEvent<HTMLDivElement>) {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('code-copy-btn')) {
+      const pre = target.closest('pre');
+      const code = pre?.querySelector('code')?.innerText ?? '';
+      if (code) {
+        void navigator.clipboard.writeText(code);
+        target.innerText = '✓';
+        setTimeout(() => {
+          target.innerText = '📋';
+        }, 1500);
+      }
+    }
+  }
+
+  return (
+    <div className="row assistant">
+      <div
+        ref={contentRef}
+        onClick={handleContentClick}
+        className={'md' + (item.done ? '' : ' streaming')}
+        dangerouslySetInnerHTML={{ __html: renderMarkdown(item.text || (item.done ? '' : '…')) }}
+      />
+      {item.done && item.text && (
+        <div className="msg-actions">
+          <button
+            type="button"
+            className={`msg-act-btn ${copied ? 'copied' : ''}`}
+            onClick={handleCopy}
+            title={copied ? t('msg.copied') : t('msg.copy')}
+          >
+            {copied ? `✓ ${t('msg.copied')}` : `📋 ${t('msg.copy')}`}
+          </button>
+          {hasTable && (
+            <>
+              <button
+                type="button"
+                className={`msg-act-btn ${tableCopied ? 'copied' : ''}`}
+                onClick={handleCopyTable}
+                title={t('msg.copyMarkdownTable')}
+              >
+                {tableCopied ? `✓ ${t('msg.copied')}` : `📊 ${t('msg.copyMarkdownTable')}`}
+              </button>
+              <button
+                type="button"
+                className="msg-act-btn"
+                onClick={handleDownloadCsv}
+                title={t('msg.downloadCsv')}
+              >
+                📥 {t('msg.downloadCsv')}
+              </button>
+            </>
+          )}
+          {onSaveSkill && (
+            <button
+              type="button"
+              className="msg-act-btn skill-act"
+              onClick={onSaveSkill}
+              disabled={running}
+              title={t('msg.saveAsSkill')}
+            >
+              🎯 {t('msg.saveAsSkill')}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

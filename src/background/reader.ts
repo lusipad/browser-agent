@@ -290,11 +290,13 @@ export function pageAgent(cmd: string, payload: any): any {
     /** 序列化的元素描述（供 SW 侧 set-of-marks 使用） */
     function serialize(d: Desc): any {
       const c = centerOf(d.tr);
+      const val = (d.el as any).value;
       return {
         ref: d.ref,
         role: d.role,
         name: d.name.slice(0, 60),
         label: shortLabel(d),
+        value: typeof val === 'string' && val ? val.slice(0, 60) : undefined,
         x: Math.round(d.tr.left),
         y: Math.round(d.tr.top),
         w: Math.round(d.tr.width),

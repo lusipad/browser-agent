@@ -19,3 +19,4 @@ import './scheduler.test';
 import './intervention.test';
 import './recorder.test';
 import './region.test';
+import './system1.test';

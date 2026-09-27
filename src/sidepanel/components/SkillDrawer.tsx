@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Skill, SkillMeta, SkillSchedule, SkillStep, SkillVariable } from '../../shared/skill';
-import { loadSkill, saveSkill } from '../../shared/skillsStore';
+import { BUILTIN_PRESET_SKILLS } from '../../shared/skill';
+import { installPresetSkills, loadSkill, saveSkill, togglePinSkill } from '../../shared/skillsStore';
 import { useT } from '../../shared/i18nReact';
 
 interface Props {
@@ -11,6 +12,8 @@ interface Props {
   onDelete: (id: string) => void;
   onOptions: (skillId?: string) => void;
   onStartRecording?: () => void;
+  onTogglePin?: (id: string) => void;
+  onInstallPresets?: () => void;
   initialSkillId?: string | null;
   initialMode?: 'run' | 'edit';
 }
@@ -23,18 +26,46 @@ export function SkillDrawer({
   onDelete,
   onOptions,
   onStartRecording,
+  onTogglePin,
+  onInstallPresets,
   initialSkillId,
   initialMode = 'run',
 }: Props) {
   const t = useT();
   const [selectedId, setSelectedId] = useState<string | null>(initialSkillId ?? null);
   const [mode, setMode] = useState<'run' | 'edit'>(initialMode);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [filterCategory, setFilterCategory] = useState<'all' | 'pinned' | 'preset' | 'custom'>('all');
   const [activeSkill, setActiveSkill] = useState<Skill | null>(null);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [formValues, setFormValues] = useState<Record<string, string | number | boolean>>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedNotice, setSavedNotice] = useState(false);
+  const [showPresetsModal, setShowPresetsModal] = useState(false);
+  const [activeTabInfo, setActiveTabInfo] = useState<{ url: string; title: string }>({ url: '', title: '' });
+
+  useEffect(() => {
+    if (initialSkillId !== undefined) {
+      setSelectedId(initialSkillId);
+    }
+  }, [initialSkillId]);
+
+  useEffect(() => {
+    if (initialMode) {
+      setMode(initialMode);
+    }
+  }, [initialMode]);
+
+  useEffect(() => {
+    if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
+      chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+        if (tab) {
+          setActiveTabInfo({ url: tab.url || '', title: tab.title || '' });
+        }
+      }).catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     if (!selectedId) {
@@ -49,17 +80,64 @@ export function SkillDrawer({
       setEditingSkill(sk ? structuredClone(sk) : null);
       if (sk) {
         const initial: Record<string, string | number | boolean> = {};
+        const d = new Date();
+        const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const nowStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
         for (const v of sk.variables) {
-          initial[v.name] = v.default != null ? v.default : v.type === 'boolean' ? false : '';
+          if (v.default != null && v.default !== '') {
+            initial[v.name] = v.default;
+          } else if (v.name === 'current_url' && activeTabInfo.url) {
+            initial[v.name] = activeTabInfo.url;
+          } else if (v.name === 'current_title' && activeTabInfo.title) {
+            initial[v.name] = activeTabInfo.title;
+          } else if (v.name === 'today') {
+            initial[v.name] = todayStr;
+          } else if (v.name === 'now') {
+            initial[v.name] = nowStr;
+          } else if (v.options && v.options.length > 0) {
+            initial[v.name] = v.options[0];
+          } else if (v.type === 'boolean') {
+            initial[v.name] = false;
+          } else {
+            initial[v.name] = '';
+          }
         }
         setFormValues(initial);
       }
       setLoading(false);
     });
-  }, [selectedId]);
+  }, [selectedId, activeTabInfo]);
 
   function handleFieldChange(name: string, val: string | number | boolean) {
     setFormValues((prev) => ({ ...prev, [name]: val }));
+  }
+
+  async function handleTogglePin(id: string) {
+    if (onTogglePin) {
+      onTogglePin(id);
+    } else {
+      await togglePinSkill(id);
+    }
+  }
+
+  async function handleInstallAllPresets() {
+    if (onInstallPresets) {
+      onInstallPresets();
+    } else {
+      await installPresetSkills();
+    }
+    setShowPresetsModal(false);
+  }
+
+  async function handleImportSinglePreset(preset: Skill) {
+    await saveSkill(structuredClone(preset));
+    if (onInstallPresets) {
+      onInstallPresets();
+    }
+    setShowPresetsModal(false);
+    setSelectedId(preset.id);
+    setMode('run');
   }
 
   function handleRun() {
@@ -162,6 +240,27 @@ export function SkillDrawer({
     });
   }
 
+  const isPreset = (id: string) => id.startsWith('builtin-preset-');
+
+  const filteredSkills = skills.filter((s) => {
+    if (filterCategory === 'pinned' && !s.pinned) return false;
+    if (filterCategory === 'preset' && !isPreset(s.id)) return false;
+    if (filterCategory === 'custom' && isPreset(s.id)) return false;
+
+    if (searchKeyword.trim()) {
+      const kw = searchKeyword.trim().toLowerCase();
+      const matchName = s.name.toLowerCase().includes(kw);
+      const matchDesc = (s.description || '').toLowerCase().includes(kw);
+      if (!matchName && !matchDesc) return false;
+    }
+
+    return true;
+  });
+
+  const pinnedCount = skills.filter((s) => s.pinned).length;
+  const presetCount = skills.filter((s) => isPreset(s.id)).length;
+  const customCount = skills.filter((s) => !isPreset(s.id)).length;
+
   const canRun = !running && !!activeSkill;
 
   return (
@@ -216,24 +315,127 @@ export function SkillDrawer({
               >
                 {t('skill.teachMeBtn')}
               </button>
+              <button
+                type="button"
+                className="btn secondary skill-preset-btn"
+                onClick={() => setShowPresetsModal(true)}
+              >
+                ✨ {t('skill.builtinPresets')}
+              </button>
             </div>
+
+            {skills.length > 0 && (
+              <div className="skill-search-section">
+                <div className="skill-search-wrap">
+                  <span className="skill-search-icon">🔍</span>
+                  <input
+                    type="text"
+                    className="skill-search-input"
+                    placeholder={t('skill.searchPlaceholder')}
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                  />
+                  {searchKeyword && (
+                    <button
+                      type="button"
+                      className="skill-search-clear"
+                      onClick={() => setSearchKeyword('')}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <div className="skill-filter-pills">
+                  <button
+                    type="button"
+                    className={`skill-filter-pill ${filterCategory === 'all' ? 'active' : ''}`}
+                    onClick={() => setFilterCategory('all')}
+                  >
+                    {t('skill.filterAll')} {skills.length}
+                  </button>
+                  {pinnedCount > 0 && (
+                    <button
+                      type="button"
+                      className={`skill-filter-pill ${filterCategory === 'pinned' ? 'active' : ''}`}
+                      onClick={() => setFilterCategory('pinned')}
+                    >
+                      {t('skill.filterPinned')} {pinnedCount}
+                    </button>
+                  )}
+                  {presetCount > 0 && (
+                    <button
+                      type="button"
+                      className={`skill-filter-pill ${filterCategory === 'preset' ? 'active' : ''}`}
+                      onClick={() => setFilterCategory('preset')}
+                    >
+                      {t('skill.filterOfficial')} {presetCount}
+                    </button>
+                  )}
+                  {customCount > 0 && (
+                    <button
+                      type="button"
+                      className={`skill-filter-pill ${filterCategory === 'custom' ? 'active' : ''}`}
+                      onClick={() => setFilterCategory('custom')}
+                    >
+                      {t('skill.filterCustom')} {customCount}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {skills.length === 0 ? (
-              <div className="drawer-empty">{t('skill.empty')}</div>
+              <div className="drawer-empty">
+                <p>{t('skill.empty')}</p>
+                <button
+                  type="button"
+                  className="btn primary skill-empty-preset-btn"
+                  onClick={handleInstallAllPresets}
+                >
+                  {t('skill.loadPresetsBtn')}
+                </button>
+              </div>
+            ) : filteredSkills.length === 0 ? (
+              <div className="drawer-empty skill-no-match">
+                <p>{t('skill.searchEmpty', [searchKeyword || filterCategory])}</p>
+                <button
+                  type="button"
+                  className="btn secondary btn-small"
+                  onClick={() => {
+                    setSearchKeyword('');
+                    setFilterCategory('all');
+                  }}
+                >
+                  重置筛选条件
+                </button>
+              </div>
             ) : (
               <ul className="skill-items">
-                {skills.map((s) => (
+                {filteredSkills.map((s) => (
                   <li
                     key={s.id}
-                    className="skill-item"
+                    className={`skill-item ${s.pinned ? 'pinned' : ''}`}
                     onClick={() => {
                       setSelectedId(s.id);
                       setMode('run');
                     }}
                   >
+                    <button
+                      type="button"
+                      className={`skill-pin-btn ${s.pinned ? 'pinned' : ''}`}
+                      title={s.pinned ? t('skill.unpin') : t('skill.pin')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleTogglePin(s.id);
+                      }}
+                    >
+                      {s.pinned ? '★' : '☆'}
+                    </button>
                     <span className="skill-icon">{s.icon || '⚡'}</span>
                     <div className="skill-info">
                       <div className="skill-name">
                         {s.name}
+                        {s.pinned && <span className="skill-pinned-tag" title="已置顶">{t('skill.pin')}</span>}
                         {s.scheduled && <span className="skill-sched-badge" title="已启用定时调度"> ⏰</span>}
                       </div>
                       {s.description && <div className="skill-desc">{s.description}</div>}
@@ -327,59 +529,106 @@ export function SkillDrawer({
             {activeSkill.variables.length > 0 && (
               <div className="skill-vars-form">
                 <div className="skill-section-title">{t('skill.varFill')}</div>
-                {activeSkill.variables.map((v) => (
-                  <div key={v.name} className="skill-var-field">
-                    <label className="skill-var-label">
-                      <span>{v.label || v.name}</span>
-                      <span className={`skill-var-tag ${v.required ? 'req' : 'opt'}`}>
-                        {v.required ? t('skill.required') : t('skill.optional')}
-                      </span>
-                    </label>
-                    {v.type === 'boolean' ? (
-                      <input
-                        type="checkbox"
-                        className="skill-var-checkbox"
-                        checked={!!formValues[v.name]}
-                        onChange={(e) => handleFieldChange(v.name, e.target.checked)}
-                      />
-                    ) : v.type === 'number' ? (
-                      <input
-                        type="number"
-                        className="skill-var-input"
-                        value={
-                          typeof formValues[v.name] === 'number' || typeof formValues[v.name] === 'string'
-                            ? (formValues[v.name] as number | string)
-                            : ''
-                        }
-                        placeholder={
-                          v.placeholder ||
-                          (v.default != null && v.default !== ''
-                            ? String(v.default)
-                            : t('skill.varAutoInferHint'))
-                        }
-                        onChange={(e) =>
-                          handleFieldChange(
-                            v.name,
-                            e.target.value === '' ? '' : Number(e.target.value),
-                          )
-                        }
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        className="skill-var-input"
-                        value={String(formValues[v.name] ?? '')}
-                        placeholder={
-                          v.placeholder ||
-                          (v.default != null && v.default !== ''
-                            ? String(v.default)
-                            : t('skill.varAutoInferHint'))
-                        }
-                        onChange={(e) => handleFieldChange(v.name, e.target.value)}
-                      />
-                    )}
-                  </div>
-                ))}
+                {activeSkill.variables.map((v) => {
+                  const isUrlOrTitle = v.name === 'current_url' || v.name === 'current_title' || v.name.includes('url');
+                  const isTimeOrDate = v.name === 'today' || v.name === 'now';
+                  return (
+                    <div key={v.name} className="skill-var-field">
+                      <label className="skill-var-label">
+                        <span className="skill-var-title-row">
+                          <span>{v.label || v.name}</span>
+                          {isUrlOrTitle && (
+                            <span className="skill-magic-badge" title={t('skill.magicPageBadge')}>
+                              ⚡ {t('skill.magicPageBadge')}
+                            </span>
+                          )}
+                          {isTimeOrDate && (
+                            <span className="skill-magic-badge" title={t('skill.magicTimeBadge')}>
+                              ⏰ {t('skill.magicTimeBadge')}
+                            </span>
+                          )}
+                        </span>
+                        <span className={`skill-var-tag ${v.required ? 'req' : 'opt'}`}>
+                          {v.required ? t('skill.required') : t('skill.optional')}
+                        </span>
+                      </label>
+                      {v.options && v.options.length > 0 ? (
+                        <select
+                          className="skill-var-input skill-var-select"
+                          value={String(formValues[v.name] ?? (v.default ?? v.options[0]))}
+                          onChange={(e) => handleFieldChange(v.name, e.target.value)}
+                        >
+                          {v.options.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                      ) : v.type === 'boolean' ? (
+                        <input
+                          type="checkbox"
+                          className="skill-var-checkbox"
+                          checked={!!formValues[v.name]}
+                          onChange={(e) => handleFieldChange(v.name, e.target.checked)}
+                        />
+                      ) : v.type === 'number' ? (
+                        <input
+                          type="number"
+                          className="skill-var-input"
+                          value={
+                            typeof formValues[v.name] === 'number' || typeof formValues[v.name] === 'string'
+                              ? (formValues[v.name] as number | string)
+                              : ''
+                          }
+                          placeholder={
+                            v.placeholder ||
+                            (v.default != null && v.default !== ''
+                              ? String(v.default)
+                              : t('skill.varAutoInferHint'))
+                          }
+                          onChange={(e) =>
+                            handleFieldChange(
+                              v.name,
+                              e.target.value === '' ? '' : Number(e.target.value),
+                            )
+                          }
+                        />
+                      ) : (
+                        <div className="skill-var-input-wrap">
+                          <input
+                            type="text"
+                            className="skill-var-input"
+                            value={String(formValues[v.name] ?? '')}
+                            placeholder={
+                              v.placeholder ||
+                              (v.default != null && v.default !== ''
+                                ? String(v.default)
+                                : isUrlOrTitle && activeTabInfo.url
+                                ? activeTabInfo.url
+                                : t('skill.varAutoInferHint'))
+                            }
+                            onChange={(e) => handleFieldChange(v.name, e.target.value)}
+                          />
+                          {isUrlOrTitle && activeTabInfo.url && (
+                            <button
+                              type="button"
+                              className="skill-var-fill-btn"
+                              title="填入当前页面地址"
+                              onClick={() =>
+                                handleFieldChange(
+                                  v.name,
+                                  v.name.includes('title') ? activeTabInfo.title : activeTabInfo.url,
+                                )
+                              }
+                            >
+                              当前页
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
                 <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '8px', padding: '0 2px' }}>
                   {t('skill.autoInferTip')}
                 </div>
@@ -443,6 +692,16 @@ export function SkillDrawer({
                     editingSkill && setEditingSkill({ ...editingSkill, description: e.target.value })
                   }
                 />
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={!!editingSkill?.pinned}
+                    onChange={(e) => editingSkill && setEditingSkill({ ...editingSkill, pinned: e.target.checked })}
+                  />
+                  <span style={{ fontSize: 12 }}>{t('skill.pinSkill')}</span>
+                </label>
               </div>
             </div>
 
@@ -605,6 +864,23 @@ export function SkillDrawer({
                           </label>
                         </div>
                       </div>
+
+                      <div className="var-card-row" style={{ marginTop: 6 }}>
+                        <div className="var-card-col" style={{ width: '100%' }}>
+                          <label>{t('skill.varOptions')}</label>
+                          <input
+                            type="text"
+                            className="skill-var-input"
+                            placeholder={t('skill.varOptionsPlaceholder')}
+                            value={Array.isArray(v.options) ? v.options.join(', ') : ''}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              const opts = raw ? raw.split(/[,，\n]/).map((s) => s.trim()).filter(Boolean) : undefined;
+                              updateVariable(idx, { options: opts && opts.length ? opts : undefined });
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -681,6 +957,56 @@ export function SkillDrawer({
               >
                 {t('skill.openInOptions')}
               </button>
+            </div>
+          </div>
+        )}
+
+        {showPresetsModal && (
+          <div className="presets-modal-overlay" onClick={() => setShowPresetsModal(false)}>
+            <div className="presets-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="presets-modal-head">
+                <span className="presets-modal-title">✨ {t('skill.presetsModalTitle')}</span>
+                <button type="button" className="icon-btn" onClick={() => setShowPresetsModal(false)}>
+                  ✕
+                </button>
+              </div>
+              <div className="presets-list">
+                {BUILTIN_PRESET_SKILLS.map((preset) => {
+                  const already = skills.some((s) => s.name === preset.name || s.id === preset.id);
+                  return (
+                    <div key={preset.id} className="preset-card">
+                      <span className="preset-card-icon">{preset.icon}</span>
+                      <div className="preset-card-body">
+                        <div className="preset-card-name">{preset.name}</div>
+                        <div className="preset-card-desc">{preset.description}</div>
+                        <div className="preset-card-tags">
+                          <span>{t('skill.stepsCount', [preset.steps.length])}</span>
+                          {preset.variables.length > 0 && (
+                            <span> · {t('skill.varsCount', [preset.variables.length])}</span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className={`btn-small ${already ? 'secondary' : 'primary'}`}
+                        disabled={already}
+                        onClick={() => handleImportSinglePreset(preset)}
+                      >
+                        {already ? t('skill.importedPreset') : t('skill.importPreset')}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="presets-modal-foot">
+                <button
+                  type="button"
+                  className="btn primary"
+                  onClick={handleInstallAllPresets}
+                >
+                  {t('skill.importAllPresets')}
+                </button>
+              </div>
             </div>
           </div>
         )}

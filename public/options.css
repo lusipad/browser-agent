@@ -714,6 +714,36 @@ nav {
   overflow-y: auto;
 }
 
+.skills-nav-search-wrap {
+  position: relative;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-soft);
+  display: flex;
+  align-items: center;
+}
+
+.skills-nav-search-input {
+  width: 100%;
+  padding: 6px 24px 6px 8px;
+  font-size: 12px;
+}
+
+.skills-nav-search-clear {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 11px;
+}
+
+.skills-nav-search-clear:hover {
+  color: var(--text);
+}
+
 .skills-nav-empty {
   padding: 24px 16px;
   text-align: center;
@@ -857,6 +887,7 @@ nav {
   padding: 8px 10px;
   background: var(--bg-soft);
   border-radius: 6px;
+  flex-wrap: wrap;
 }
 
 .skill-var-col {
@@ -984,4 +1015,39 @@ nav {
   display: flex;
   gap: 10px;
   padding-top: 10px;
+}
+
+.skills-nav-item.pinned {
+  border-left: 2px solid #f59e0b;
+}
+
+.skills-nav-item .skill-pin-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  border-radius: 4px;
+  margin-right: 2px;
+  transition: all 0.15s ease;
+}
+
+.skills-nav-item .skill-pin-btn:hover,
+.skills-nav-item .skill-pin-btn.pinned {
+  color: #f59e0b;
+}
+
+.skills-nav-item .skill-pinned-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 0 4px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
 }

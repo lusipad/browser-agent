@@ -6,7 +6,7 @@ import { runTurn } from './agent';
 import { detachAll } from './cdp';
 import { pickDiagnoseTab, runDiagnostics } from './diagnose';
 import { deleteConversation, listConversations, loadConversation, saveConversation } from './history';
-import { deleteSkill, listSkills, loadSkill, onSkillsChange, saveSkill } from './skills';
+import { deleteSkill, installPresetSkills, listSkills, loadSkill, onSkillsChange, saveSkill, togglePinSkill } from './skills';
 import { generateSkill, generateSkillFromDemonstration } from './skillGen';
 import { inPageRecorder } from './recorder';
 import { inPageRegionSelector } from './regionSelector';
@@ -239,7 +239,19 @@ chrome.runtime.onConnect.addListener((port) => {
             if (bound && !bound.running) {
               const skill = await loadSkill(msg.skillId);
               if (skill) {
-                const resolvedVars: Record<string, string | number | boolean> = {};
+                const activeTab = await activeTabIn(bound.windowId);
+                const pageUrl = activeTab?.url || '';
+                const pageTitle = activeTab?.title || '';
+                const d = new Date();
+                const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                const nowStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+                const resolvedVars: Record<string, string | number | boolean> = {
+                  current_url: pageUrl,
+                  current_title: pageTitle,
+                  today: todayStr,
+                  now: nowStr,
+                };
                 const displayVars: Array<[string, string]> = [];
 
                 for (const v of skill.variables) {
@@ -249,6 +261,14 @@ chrome.runtime.onConnect.addListener((port) => {
                     effectiveVal = inputVal;
                   } else if (v.default !== undefined && v.default !== null && v.default !== '') {
                     effectiveVal = v.default;
+                  } else if (v.name === 'current_url' && pageUrl) {
+                    effectiveVal = pageUrl;
+                  } else if (v.name === 'current_title' && pageTitle) {
+                    effectiveVal = pageTitle;
+                  } else if (v.name === 'today') {
+                    effectiveVal = todayStr;
+                  } else if (v.name === 'now') {
+                    effectiveVal = nowStr;
                   }
 
                   if (effectiveVal !== undefined) {
@@ -273,6 +293,23 @@ chrome.runtime.onConnect.addListener((port) => {
                   pushConversations(s);
                 });
               }
+            }
+            break;
+          }
+          case 'toggle_pin_skill': {
+            if (msg.id) {
+              await togglePinSkill(msg.id);
+              const skills = await listSkills();
+              bound?.emit({ type: 'skills_list', skills });
+            }
+            break;
+          }
+          case 'install_presets': {
+            const count = await installPresetSkills();
+            const skills = await listSkills();
+            bound?.emit({ type: 'skills_list', skills });
+            if (count > 0) {
+              bound?.info(bound.t('skill.presetsInstalled'));
             }
             break;
           }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { AdvancedSettings } from '../../shared/types';
+import type { AdvancedSettings, System1Config, System1ProviderType } from '../../shared/types';
+import { DEFAULT_SYSTEM1_CONFIG } from '../../shared/settings';
 import { useT } from '../../shared/i18nReact';
 import { Field, Toggle, type PanelProps } from './common';
 
@@ -66,8 +67,12 @@ function NumberInput({
 export function AdvancedPanel({ cfg, onChange }: PanelProps) {
   const t = useT();
   const a = cfg.advanced;
+  const sys1: System1Config = cfg.system1 ?? DEFAULT_SYSTEM1_CONFIG;
   function patch(p: Partial<AdvancedSettings>) {
     onChange({ ...cfg, advanced: { ...a, ...p } });
+  }
+  function patchSys1(p: Partial<System1Config>) {
+    onChange({ ...cfg, system1: { ...sys1, ...p } });
   }
 
   return (
@@ -214,6 +219,101 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
           label={t('opt.advanced.enableJs')}
           hint={t('opt.advanced.enableJsHint')}
         />
+      </div>
+
+      {/* ⚡ System 1 极速决策引擎 (Jev / Laya) */}
+      <div className="card">
+        <h2 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 8px 0' }}>{t('opt.system1.title')}</h2>
+        <p className="hint" style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: 'var(--muted, #666)' }}>
+          {t('opt.system1.lead')}
+        </p>
+        <Toggle
+          checked={sys1.enabled}
+          onChange={(v) => patchSys1({ enabled: v })}
+          label={t('opt.system1.enable')}
+          hint={t('opt.system1.enableHint')}
+        />
+        {sys1.enabled && (
+          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Field label={t('opt.system1.provider')}>
+              <select
+                value={sys1.provider}
+                onChange={(e) => {
+                  const p = e.target.value as System1ProviderType;
+                  if (p === 'typesafe') {
+                    patchSys1({
+                      provider: p,
+                      baseUrl: 'https://api.typesafe.ai/v1',
+                      model: 'jev',
+                    });
+                  } else if (p === 'laya-local') {
+                    patchSys1({
+                      provider: p,
+                      baseUrl: 'http://localhost:8000/v1',
+                      model: 'laya-modernbert-large',
+                    });
+                  } else {
+                    patchSys1({ provider: p });
+                  }
+                }}
+              >
+                <option value="typesafe">{t('opt.system1.provider.typesafe')}</option>
+                <option value="laya-local">{t('opt.system1.provider.laya')}</option>
+                <option value="custom">{t('opt.system1.provider.custom')}</option>
+              </select>
+            </Field>
+
+            <div className="card-row">
+              <Field label={t('opt.system1.baseUrl')}>
+                <input
+                  type="text"
+                  value={sys1.baseUrl}
+                  placeholder={sys1.provider === 'laya-local' ? 'http://localhost:8000/v1' : 'https://api.typesafe.ai/v1'}
+                  onChange={(e) => patchSys1({ baseUrl: e.target.value })}
+                />
+              </Field>
+              <Field label={t('opt.system1.apiKey')}>
+                <input
+                  type="password"
+                  value={sys1.apiKey}
+                  placeholder={sys1.provider === 'laya-local' ? '本地通常无需 Key (可选)' : 'ts-***'}
+                  onChange={(e) => patchSys1({ apiKey: e.target.value })}
+                />
+              </Field>
+            </div>
+
+            <div className="card-row">
+              <Field label={t('opt.system1.model')}>
+                <input
+                  type="text"
+                  value={sys1.model}
+                  placeholder={sys1.provider === 'laya-local' ? 'laya-modernbert-large' : 'jev'}
+                  onChange={(e) => patchSys1({ model: e.target.value })}
+                />
+              </Field>
+              <Field label={t('opt.system1.minConfidence')}>
+                <NumberInput
+                  value={sys1.minConfidence}
+                  min={0.1}
+                  max={1.0}
+                  step={0.05}
+                  fallback={0.6}
+                  onChange={(val) => patchSys1({ minConfidence: val ?? 0.6 })}
+                />
+              </Field>
+              <Field label={t('opt.system1.maxFastSteps')}>
+                <NumberInput
+                  value={sys1.maxConsecutiveFastSteps}
+                  min={1}
+                  max={50}
+                  step={1}
+                  fallback={8}
+                  onChange={(val) => patchSys1({ maxConsecutiveFastSteps: val ?? 8 })}
+                />
+              </Field>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

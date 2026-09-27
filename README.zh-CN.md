@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-v0.6.0-blue?logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
+  <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-v0.7.0-blue?logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
   <a href="https://github.com/lusipad/browser-agent/releases"><img src="https://img.shields.io/github/v/release/lusipad/browser-agent?color=success" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
   <img src="https://img.shields.io/badge/Manifest-V3-orange" alt="Manifest V3">
@@ -62,6 +62,7 @@
 
 告别死板的单步指令，智能体以人类使用浏览器的方式自主理解并执行复杂使命：
 
+- ⚡ **双系统认知混合架构 (System 1 快思考 + System 2 慢思考)**：毫秒级轻量模型（如 Jev-2B）作为 System 1 快速直觉路径，高置信度下瞬间完成直接点击、简单输入与页面跳转；遇复杂长程规划、深层阅读与结果验证时平滑移交 System 2 慢思考（DeepSeek/Claude/GPT-4o），兼顾极速体感与严谨闭环。
 - 🎯 **页面视觉框选与指哪打哪 (Visual ROI Selection & Point-and-Shoot)**：在输入框点击 `🎯` 或按快捷键 `Alt + S` 唤起全屏准星蒙层，支持拖拽矩形或点击单个元素吸附。后台通过 `OffscreenCanvas` 进行 1:1 像素级高清无损裁剪（**杜绝 Chrome CDP 黄色调试横幅警告**），直接对焦局部区域，**Token 消耗立减 70%~80%**，彻底解决复杂长页面、仪表盘卡片与多列信息流的定位歧义。
 - 🔴 **人操作，工具学习 (Learning from Demonstration / Teach-Me 示教系统)**：点击「🔴 示教录制新技能」，用户直接在真实网页中点击、打字、跳转或上传文件。后台静默捕获操作流，密码框自动物理脱敏 (`******`)；录制完成后，大模型将物理动作自动泛化为抗改版的高层意图与抽取关键参数（如搜索词、上传文件），一键沉淀为标准 SKILL。
 - ⏰ **定时调度与自动化运行 (Scheduled Skills / Cron)**：支持保存的技能按设定周期（15m / 30m / 1h / 6h / 12h / 24h）或每日固定时刻（如 09:30）在后台静默运行。基于 `chrome.alarms` 精准唤醒，执行完成后推送 Chrome 桌面系统通知，设置页提供清晰的运行状态与历史看板。
@@ -75,6 +76,7 @@
 
 ## 特性清单
 
+- **⚡ 双系统认知混合架构** — 毫秒级直觉 System 1 快路径 (Jev-2B) + 深度审慎 System 2 规划/校验器
 - **🎯 视觉局部框选** — 拖拽框选 / 单击吸附，1:1 高清无损裁剪，Token 消耗压降 80%，支持全屏 Lightbox 大图预览
 - **🔴 示教录制学习** — 手动操作无感捕获，击键防抖去重，密码脱敏，大模型自动泛化生成标准 SKILL
 - **⏰ 定时调度运行** — 周期 / 每日定时自动执行，系统桌面通知，设置页状态反馈

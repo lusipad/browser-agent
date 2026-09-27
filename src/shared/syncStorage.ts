@@ -43,8 +43,19 @@ export function extractLocalSecrets(cfg: AppConfig): {
     };
   });
 
+  let system1 = cfg.system1;
+  if (system1) {
+    if (system1.apiKey) {
+      secrets['__system1__'] = system1.apiKey;
+    }
+    system1 = {
+      ...system1,
+      apiKey: allowSyncKey ? system1.apiKey : '',
+    };
+  }
+
   return {
-    sanitized: { ...cfg, providers },
+    sanitized: { ...cfg, providers, ...(system1 ? { system1 } : {}) },
     secrets,
   };
 }
@@ -62,7 +73,16 @@ export function mergeLocalSecrets(
     };
   });
 
-  return { ...config, providers };
+  let system1 = config.system1;
+  if (system1) {
+    const localSys1Key = secrets['__system1__'];
+    system1 = {
+      ...system1,
+      apiKey: system1.apiKey || localSys1Key || '',
+    };
+  }
+
+  return { ...config, providers, ...(system1 ? { system1 } : {}) };
 }
 
 /** 从本地存储读取独立密钥库 */

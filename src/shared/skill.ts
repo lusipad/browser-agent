@@ -13,6 +13,8 @@ export interface SkillVariable {
   default?: string | number | boolean;
   /** 输入框占位提示 */
   placeholder?: string;
+  /** 下拉候选选项（配置时在运行界面呈现为 select 下拉框） */
+  options?: string[];
 }
 
 /** 技能步骤（语义化意图，而非 DOM 选择器） */
@@ -57,6 +59,8 @@ export interface Skill {
   schedule?: SkillSchedule;
   /** 来源对话 ID（用于溯源） */
   sourceConvId?: string;
+  /** 是否置顶收藏 */
+  pinned?: boolean;
   createdAt: number;
   updatedAt: number;
 }
@@ -71,6 +75,8 @@ export interface SkillMeta {
   stepCount: number;
   /** 是否配置并启用了定时运行 */
   scheduled?: boolean;
+  /** 是否置顶收藏 */
+  pinned?: boolean;
   updatedAt: number;
 }
 
@@ -84,11 +90,12 @@ export function toSkillMeta(s: Skill): SkillMeta {
     variableCount: s.variables.length,
     stepCount: s.steps.length,
     scheduled: !!s.schedule?.enabled,
+    pinned: !!s.pinned,
     updatedAt: s.updatedAt,
   };
 }
 
-/** 将技能步骤中的 {{变量}} 模板替换为实际值（支持变量默认值回退与未提供时的自主推导标记） */
+/** 将技能步骤中的 {{变量}} 模板替换为实际值（支持变量默认值回退、系统魔法变量动态解析与未提供时的自主推导标记） */
 export function resolveSkillTemplate(
   template: string,
   variables: Record<string, string | number | boolean>,
@@ -103,6 +110,16 @@ export function resolveSkillTemplate(
     const def = variableDefs?.find((d) => d.name === name);
     if (def?.default !== undefined && def.default !== null && def.default !== '') {
       return String(def.default);
+    }
+    // 魔法系统动态变量回退（若调用方未显式传入且无默认值）
+    const lowerName = name.toLowerCase();
+    if (lowerName === 'today') {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+    if (lowerName === 'now') {
+      const d = new Date();
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     }
     // 若均未提供，生成显式的自主推导指示标记，避免被替换为空字符串导致语义破损
     if (def) {
@@ -142,6 +159,7 @@ export function parseImportedSkills(raw: unknown): Skill[] {
             required: v.required !== false,
             default: v.default,
             placeholder: v.placeholder,
+            options: Array.isArray(v.options) ? v.options.map(String).filter(Boolean) : undefined,
           }))
         : [];
 
@@ -178,6 +196,7 @@ export function parseImportedSkills(raw: unknown): Skill[] {
         variables,
         steps,
         schedule,
+        pinned: !!obj.pinned,
         createdAt: typeof obj.createdAt === 'number' ? obj.createdAt : now,
         updatedAt: now,
       });
@@ -186,4 +205,169 @@ export function parseImportedSkills(raw: unknown): Skill[] {
 
   return valid;
 }
+
+/** 官方精选预置技能（开箱即用模板） */
+export const BUILTIN_PRESET_SKILLS: Skill[] = [
+  {
+    id: 'preset_page_summary',
+    name: '网页深度精读与核心要点总结',
+    description: '自动提取当前网页正文，提炼核心结论、论据与行动建议',
+    icon: '📄',
+    version: 1,
+    pinned: true,
+    variables: [
+      {
+        name: 'focus',
+        label: '关注重点',
+        type: 'string',
+        required: false,
+        default: '综合要点与行动项',
+        options: ['综合要点与行动项', '核心商业模式与数据', '技术实现与关键架构', '潜在风险与争议点'],
+      },
+    ],
+    steps: [
+      {
+        intent: '阅读并分析当前活动网页的正文内容',
+      },
+      {
+        intent: '提取文章主旨并围绕重点「{{focus}}」进行深度梳理，输出 100 字核心结论、3~5 条关键要点清单，以及后续行动建议 (Action Items)',
+      },
+    ],
+    createdAt: 1700000000000,
+    updatedAt: 1700000000000,
+  },
+  {
+    id: 'preset_table_extract',
+    name: '当前页面表格与列表数据提取',
+    description: '智能穿透当前页面的表格、列表等结构化数据，清洗并整理为规范格式',
+    icon: '📊',
+    version: 1,
+    pinned: true,
+    variables: [
+      {
+        name: 'output_format',
+        label: '输出数据格式',
+        type: 'string',
+        required: false,
+        default: 'Markdown表格',
+        options: ['Markdown表格', 'CSV格式', 'JSON数组'],
+      },
+      {
+        name: 'filter_condition',
+        label: '筛选条件说明',
+        type: 'string',
+        required: false,
+        placeholder: '如“仅保留价格大于100的项”或留空提取全部',
+      },
+    ],
+    steps: [
+      {
+        intent: '调用 extract 工具扫描当前页面中的数据表格或列表结构',
+      },
+      {
+        intent: '根据筛选条件「{{filter_condition}}」清洗数据表头与行，并以 {{output_format}} 格式整齐输出',
+      },
+    ],
+    createdAt: 1700000000000,
+    updatedAt: 1700000000000,
+  },
+  {
+    id: 'preset_github_trending',
+    name: 'GitHub 热门趋势速览与对比',
+    description: '检索 GitHub Trending 热门开源仓库，快速生成技术特色与 Star 增速对比简报',
+    icon: '🐙',
+    version: 1,
+    pinned: false,
+    variables: [
+      {
+        name: 'keyword',
+        label: '技术主题/关键字',
+        type: 'string',
+        required: false,
+        default: 'AI Agent',
+        placeholder: '如 AI Agent, Rust, WebAssembly 等',
+      },
+      {
+        name: 'time_range',
+        label: '趋势时间跨度',
+        type: 'string',
+        required: false,
+        default: '今日热门 (daily)',
+        options: ['今日热门 (daily)', '本周热门 (weekly)', '本月热门 (monthly)'],
+      },
+    ],
+    steps: [
+      {
+        intent: '导航到 GitHub Trending 页面，查找与 {{keyword}} 相关的 {{time_range}} 开源项目',
+        url: 'https://github.com/trending',
+      },
+      {
+        intent: '提取排名前 3 的热门仓库信息（包含 Star 增长量、项目定位、技术特色及应用场景），生成结构化对比简报',
+      },
+    ],
+    createdAt: 1700000000000,
+    updatedAt: 1700000000000,
+  },
+  {
+    id: 'preset_game_2048',
+    name: '2048 智能通关挑战',
+    description: '在权威 2048 游戏网站运用角落堆叠策略（Corner Strategy）进行连续走子与高分冲击',
+    icon: '🎮',
+    version: 1,
+    pinned: true,
+    variables: [
+      {
+        name: 'strategy',
+        label: '运筹策略',
+        type: 'string',
+        required: false,
+        default: '右下角堆叠策略 (Corner Strategy: 优先下与右，次选左，避免上)',
+        options: [
+          '右下角堆叠策略 (Corner Strategy: 优先下与右，次选左，避免上)',
+          '左下角堆叠策略 (Corner Strategy: 优先下与左，次选右，避免上)',
+        ],
+      },
+    ],
+    steps: [
+      {
+        intent: '若当前页面未在 2048 游戏页面，则导航到 https://2048game.com/',
+        url: 'https://2048game.com/',
+      },
+      {
+        intent: '观察 4x4 棋盘上的数字方块分布，按照「{{strategy}}」调用键盘事件（down/right/left）连续进行最优合并，保持最大数字锁定在角落，持续推进并汇报当前最高方块与得分',
+      },
+    ],
+    createdAt: 1700000000000,
+    updatedAt: 1700000000000,
+  },
+  {
+    id: 'preset_game_minesweeper',
+    name: '扫雷地狱全自动排雷挑战',
+    description: '在权威扫雷网站运用多阶命题逻辑与子集约束推演，全自动精准排查所有地雷并安全通关',
+    icon: '💣',
+    version: 1,
+    pinned: true,
+    variables: [
+      {
+        name: 'difficulty',
+        label: '难度模式',
+        type: 'string',
+        required: false,
+        default: '初级 (Beginner)',
+        options: ['初级 (Beginner)', '中级 (Intermediate)', '专家 (Expert)'],
+      },
+    ],
+    steps: [
+      {
+        intent: '导航至权威扫雷官方网站 https://minesweeperonline.com/',
+        url: 'https://minesweeperonline.com/',
+      },
+      {
+        intent: '扫描全网格数字与未翻开状态，运行多阶约束逻辑推演（CSP），精准识别地雷并插旗，毫秒级快速揭开所有安全格子，直至达成胜利 (facewin)',
+      },
+    ],
+    createdAt: 1700000000000,
+    updatedAt: 1700000000000,
+  },
+];
 

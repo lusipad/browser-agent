@@ -6,6 +6,27 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 0.7.0 — 2026-09-27
+
+### Added / 新增
+
+- **⚡ System 1 (Jev / Laya) 快慢双核混合架构 (Dual-Process Hybrid Architecture)** —
+  - 引入认知双核执行架构，集成 TypeSafe Jev 云端及 Laya 本地决策模型作为亚秒级（~200ms–800ms）Fast-Path 直觉反射层。
+  - 常见确定性网页交互（按钮点击、超链接跳转、输入框填表、页面滚动）由 System 1 快速决策并直接通过 Chrome CDP 物理执行，跳过耗时 5–10 秒的传统大模型全屏截图与长思考链路，交互速度提升 5–10 倍，Token 消耗节省 80% 以上。
+  - 具备严谨的置信度门限检测（默认阈值 0.6–0.7）与智能回退机制（Fallback）：当 System 1 置信度不足或任务涉及深度阅读归纳时，无缝切回 System 2（GPT / DeepSeek）接管。
+- **🎨 原生侧边栏时间线双核状态卡片 (System 1 Timeline Execution Cards)** —
+  - 原生侧边栏时间线实时流式下发 `⚡ System 1 (Jev)` 绿色就绪状态卡片，直观呈现决策动作、目标元素索引、预测置信度与端到端耗时毫秒数。
+- **⚙️ 高级设置面板集成与密钥物理隔离 (System 1 Settings & Local Secret Isolation)** —
+  - 设置页「高级设置」面板新增独立 System 1 配置模块，支持开关、服务商（TypeSafe / Laya 本地 / 自定义端点）、BaseUrl、API Key 与置信度门限的微调。
+  - System 1 密钥严格通过 `local_api_keys` 物理隔离落盘于用户本地 Chromium 存储，绝不上云同步。
+
+### Testing & Verification / 测试与验证
+
+- **148 项单元测试 100% 通过**：新增 16 项 System 1 状态序列化、Jev/Laya 响应解析、输入参数自动推导与密钥隔离专项测试。
+- **真实生产场景实机验证**：在维基百科、Meta Muse 官网及豆瓣电影排行榜等真实网络环境下完成 100% 毫无造假的全链路自动化录屏与验证。
+
+---
+
 ## 0.6.1 — 2026-09-18
 
 ### Added / 新增

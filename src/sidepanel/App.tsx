@@ -204,6 +204,8 @@ export function App() {
           onDelete={(id) => port.post({ type: 'delete_skill', id })}
           onOptions={(skillId) => port.post({ type: 'open_options', tab: 'skills', skillId })}
           onStartRecording={() => port.post({ type: 'start_recording' })}
+          onTogglePin={(id) => port.post({ type: 'toggle_pin_skill', id })}
+          onInstallPresets={() => port.post({ type: 'install_presets' })}
           initialSkillId={drawerSkillId}
           initialMode={drawerMode}
         />
@@ -230,8 +232,14 @@ export function App() {
       <Composer
         running={running}
         region={selectedRegion}
+        skills={skills}
         onClearRegion={() => setSelectedRegion(null)}
         onSelectRegion={() => port.post({ type: 'start_region_select' })}
+        onSelectSkill={(skillId) => {
+          setDrawerSkillId(skillId);
+          setDrawerMode('run');
+          setSkillDrawerOpen(true);
+        }}
         onSend={(text, region) => port.post({ type: 'send', text, region })}
         onAbort={() => port.post({ type: 'abort' })}
         hasModel={!!bindingId}

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { parseImportedSkills, type Skill, type SkillSchedule, type SkillStep, type SkillVariable } from '../../shared/skill';
-import { deleteSkill, loadAllSkills, onSkillsChange, saveSkill } from '../../shared/skillsStore';
+import { deleteSkill, installPresetSkills, loadAllSkills, onSkillsChange, saveSkill, togglePinSkill } from '../../shared/skillsStore';
 import { uid } from '../../shared/util';
 import { useT } from '../../shared/i18nReact';
-import { Field } from './common';
+import { Field, Toggle } from './common';
 
 export function SkillsPanel({ initialSkillId }: { initialSkillId?: string | null } = {}) {
   const t = useT();
@@ -11,6 +11,7 @@ export function SkillsPanel({ initialSkillId }: { initialSkillId?: string | null
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Skill | null>(null);
   const [savedNotice, setSavedNotice] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -38,6 +39,26 @@ export function SkillsPanel({ initialSkillId }: { initialSkillId?: string | null
   function selectSkill(s: Skill) {
     setSelectedId(s.id);
     setEditing(structuredClone(s));
+  }
+
+  async function handleTogglePin(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    await togglePinSkill(id);
+    const list = await loadAllSkills();
+    setSkills(list);
+    if (editing && editing.id === id) {
+      setEditing({ ...editing, pinned: !editing.pinned });
+    }
+  }
+
+  async function handleLoadPresets() {
+    const count = await installPresetSkills();
+    const list = await loadAllSkills();
+    setSkills(list);
+    if (list.length && !selectedId) {
+      selectSkill(list[0]);
+    }
+    alert(t('opt.skills.presetsLoaded', [count]));
   }
 
   function createNewSkill() {
@@ -241,16 +262,25 @@ export function SkillsPanel({ initialSkillId }: { initialSkillId?: string | null
     setEditing({ ...editing, steps: next });
   }
 
+  const filteredSkills = skills.filter((s) => {
+    if (!searchKeyword.trim()) return true;
+    const kw = searchKeyword.trim().toLowerCase();
+    return s.name.toLowerCase().includes(kw) || (s.description || '').toLowerCase().includes(kw);
+  });
+
   return (
-    <div className="panel skills-panel">
-      <div className="panel-header-row">
+    <div className="tab-pane">
+      <div className="pane-head">
         <div>
-          <h1>{t('opt.skills.title')}</h1>
+          <h2>{t('opt.skills.title')}</h2>
           <p className="lead">{t('opt.skills.lead')}</p>
         </div>
         <div className="skills-top-actions">
           <button className="btn secondary" onClick={createNewSkill}>
             {t('opt.skills.new')}
+          </button>
+          <button className="btn secondary" onClick={handleLoadPresets}>
+            {t('opt.skills.loadPresets')}
           </button>
           <button className="btn secondary" onClick={handleExportAll} disabled={!skills.length}>
             {t('opt.skills.exportAll')}
@@ -271,22 +301,55 @@ export function SkillsPanel({ initialSkillId }: { initialSkillId?: string | null
       <div className="skills-layout">
         {/* 左侧：技能列表 */}
         <div className="skills-nav">
+          <div className="skills-nav-search-wrap">
+            <input
+              type="text"
+              className="input-text skills-nav-search-input"
+              placeholder={t('opt.skills.searchPlaceholder')}
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+            />
+            {searchKeyword && (
+              <button
+                type="button"
+                className="skills-nav-search-clear"
+                onClick={() => setSearchKeyword('')}
+              >
+                ✕
+              </button>
+            )}
+          </div>
           {skills.length === 0 ? (
             <div className="skills-nav-empty">
               <p>{t('opt.skills.empty')}</p>
               <span className="skills-nav-tip">{t('opt.skills.emptyTip')}</span>
             </div>
+          ) : filteredSkills.length === 0 ? (
+            <div className="skills-nav-empty">
+              <p>未找到匹配的技能</p>
+            </div>
           ) : (
             <ul className="skills-nav-list">
-              {skills.map((s) => (
+              {filteredSkills.map((s) => (
                 <li
                   key={s.id}
-                  className={`skills-nav-item ${s.id === selectedId ? 'active' : ''}`}
+                  className={`skills-nav-item ${s.id === selectedId ? 'active' : ''} ${s.pinned ? 'pinned' : ''}`}
                   onClick={() => selectSkill(s)}
                 >
+                  <button
+                    type="button"
+                    className={`skill-pin-btn ${s.pinned ? 'pinned' : ''}`}
+                    title={s.pinned ? t('opt.skills.unpin') : t('opt.skills.pin')}
+                    onClick={(e) => void handleTogglePin(e, s.id)}
+                  >
+                    {s.pinned ? '★' : '☆'}
+                  </button>
                   <span className="skills-nav-icon">{s.icon || '⚡'}</span>
                   <div className="skills-nav-info">
-                    <div className="skills-nav-name">{s.name}</div>
+                    <div className="skills-nav-name">
+                      {s.name}
+                      {s.pinned && <span className="skill-pinned-tag">{t('opt.skills.pin')}</span>}
+                    </div>
                     <div className="skills-nav-meta">
                       {s.steps.length} 步 · {s.variables.length} 变量
                     </div>
@@ -334,6 +397,13 @@ export function SkillsPanel({ initialSkillId }: { initialSkillId?: string | null
                     onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                   />
                 </Field>
+                <div style={{ marginTop: 12 }}>
+                  <Toggle
+                    checked={!!editing.pinned}
+                    onChange={(v) => setEditing({ ...editing, pinned: v })}
+                    label={t('opt.skills.pinned')}
+                  />
+                </div>
               </div>
 
               {/* 参数变量 */}
@@ -413,6 +483,20 @@ export function SkillsPanel({ initialSkillId }: { initialSkillId?: string | null
                         >
                           ✕
                         </button>
+                        <div className="skill-var-col skill-var-col-options" style={{ width: '100%', gridColumn: '1 / -1', marginTop: 4 }}>
+                          <label>{t('opt.skills.varOptions')}</label>
+                          <input
+                            type="text"
+                            className="input-text"
+                            placeholder={t('opt.skills.varOptionsPlaceholder')}
+                            value={Array.isArray(v.options) ? v.options.join(', ') : ''}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              const opts = raw ? raw.split(/[,，\n]/).map((x) => x.trim()).filter(Boolean) : undefined;
+                              updateVariable(idx, { options: opts && opts.length ? opts : undefined });
+                            }}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -1,4 +1,4 @@
-import type { AppConfig, ModelBinding, ModelConfig } from './types';
+import type { AppConfig, ModelBinding, ModelConfig, System1Config } from './types';
 import {
   extractLocalSecrets,
   loadLocalSecrets,
@@ -7,6 +7,16 @@ import {
   saveLocalSecrets,
   writeSynced,
 } from './syncStorage';
+
+export const DEFAULT_SYSTEM1_CONFIG: System1Config = {
+  enabled: false,
+  provider: 'typesafe',
+  baseUrl: 'https://api.typesafe.ai/v1',
+  apiKey: '',
+  model: 'jev',
+  minConfidence: 0.6,
+  maxConsecutiveFastSteps: 8,
+};
 
 export const DEFAULT_CONFIG: AppConfig = {
   version: 2,
@@ -59,6 +69,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     planning: true,
     enableJavascriptTool: false,
   },
+  system1: DEFAULT_SYSTEM1_CONFIG,
   uiLang: 'auto',
   sites: {
     allowed: [],
@@ -156,6 +167,7 @@ export function mergeConfig(raw: unknown): AppConfig {
     defaultBindingId,
     safety: { ...DEFAULT_CONFIG.safety, ...(r.safety ?? {}) },
     advanced: { ...DEFAULT_CONFIG.advanced, ...(r.advanced ?? {}) },
+    system1: { ...DEFAULT_SYSTEM1_CONFIG, ...(r.system1 ?? {}) },
     uiLang: r.uiLang === 'zh' || r.uiLang === 'en' ? r.uiLang : 'auto',
     sites: {
       allowed: r.sites?.allowed ?? DEFAULT_CONFIG.sites.allowed,

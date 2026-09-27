@@ -258,6 +258,27 @@ export const optionsDict = {
     en: '⚠️ Power is also attack surface: once on, the model can run arbitrary JavaScript on the page (still confirmed each time). Off by default for safety; keep it off unless you need it',
   },
 
+  // System 1 极速决策引擎 (Jev / Laya)
+  'opt.system1.title': { zh: '⚡ System 1 极速决策引擎 (Jev / Laya)', en: '⚡ System 1 Fast Decision Engine (Jev / Laya)' },
+  'opt.system1.lead': {
+    zh: '支持 TypeSafe Jev 与 Convai Laya（ModernBERT-large 421M）等 System 1 快决策模型。在点击、选择、翻页等机械操作中跳过传统 LLM 的慢速逐 Token 生成，实现 30ms~200ms 的极速决策与近乎零 Token 消耗；遇到复杂推理或意图不明确时自动交还主模型。',
+    en: 'Supports System 1 decision models like TypeSafe Jev and Convai Laya (ModernBERT-large 421M). Bypasses slow token-by-token generation during mechanical clicks and scrolls, achieving 30ms–200ms reflex decisions and near-zero token costs while delegating complex reasoning back to the primary LLM.',
+  },
+  'opt.system1.enable': { zh: '启用 System 1 极速决策接管', en: 'Enable System 1 Fast Decision Takeover' },
+  'opt.system1.enableHint': {
+    zh: '开启后将在页面操作循环中作为反射神经接管高置信度的点击、滚动与简单输入',
+    en: 'When enabled, acts as a fast reflex layer in page loops to execute high-confidence clicks, scrolls, and simple inputs',
+  },
+  'opt.system1.provider': { zh: '决策引擎提供商', en: 'Decision Engine Provider' },
+  'opt.system1.provider.typesafe': { zh: 'TypeSafe AI (Jev - 云端专用决策模型)', en: 'TypeSafe AI (Jev - Cloud decision model)' },
+  'opt.system1.provider.laya': { zh: 'Laya (Convai ModernBERT - 本地极速与隐私)', en: 'Laya (Convai ModernBERT - Local ultra-fast & private)' },
+  'opt.system1.provider.custom': { zh: '自定义 (Custom REST / System 1 端点)', en: 'Custom (REST / System 1 endpoint)' },
+  'opt.system1.baseUrl': { zh: 'API Base URL', en: 'API Base URL' },
+  'opt.system1.apiKey': { zh: 'API Key (本地服务可留空)', en: 'API Key (optional for local)' },
+  'opt.system1.model': { zh: '模型名称', en: 'Model Name' },
+  'opt.system1.minConfidence': { zh: '最低置信度阈值 (低于此值回退主模型)', en: 'Min Confidence Threshold (falls back to LLM below this)' },
+  'opt.system1.maxFastSteps': { zh: '单次连续快决策上限', en: 'Max Consecutive Fast Steps' },
+
   // 诊断
   'opt.diagnostics.title': { zh: '诊断', en: 'Diagnostics' },
   'opt.diagnostics.lead': {
@@ -285,6 +306,7 @@ export const optionsDict = {
     en: 'Manage your saved skills. Edit parameters and steps, create new skills, or import/export JSON configurations.',
   },
   'opt.skills.new': { zh: '＋ 新建技能', en: '＋ New Skill' },
+  'opt.skills.searchPlaceholder': { zh: '搜索技能...', en: 'Search skills...' },
   'opt.skills.exportAll': { zh: '导出全部', en: 'Export All' },
   'opt.skills.import': { zh: '导入 JSON', en: 'Import JSON' },
   'opt.skills.empty': { zh: '暂无已保存的技能', en: 'No saved skills' },
@@ -314,6 +336,13 @@ export const optionsDict = {
   'opt.skills.delConfirm': { zh: '确定删除技能「{0}」？此操作不可撤销。', en: 'Delete skill "{0}"? This cannot be undone.' },
   'opt.skills.importSuccess': { zh: '成功导入 {0} 个技能。', en: 'Successfully imported {0} skill(s).' },
   'opt.skills.importFail': { zh: '导入失败：JSON 格式不正确。', en: 'Import failed: invalid JSON format.' },
+  'opt.skills.pinned': { zh: '置顶显示', en: 'Pin to top' },
+  'opt.skills.pin': { zh: '置顶', en: 'Pin' },
+  'opt.skills.unpin': { zh: '取消置顶', en: 'Unpin' },
+  'opt.skills.varOptions': { zh: '候选下拉选项 (逗号或换行分隔)', en: 'Dropdown Options (comma separated)' },
+  'opt.skills.varOptionsPlaceholder': { zh: '如: 选项A, 选项B, 选项C', en: 'e.g. Option A, Option B, Option C' },
+  'opt.skills.loadPresets': { zh: '✨ 载入官方预置技能', en: '✨ Load Official Presets' },
+  'opt.skills.presetsLoaded': { zh: '成功载入 {0} 个官方预置技能！', en: 'Successfully loaded {0} official preset(s)!' },
   // 技能定时调度
   'opt.skills.scheduleTitle': { zh: '⏰ 定时调度与自动化执行 (Cron)', en: '⏰ Scheduled Automation (Cron)' },
   'opt.skills.enableSchedule': { zh: '启用定时执行', en: 'Enable scheduled execution' },

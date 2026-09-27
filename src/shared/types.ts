@@ -118,6 +118,29 @@ export interface AdvancedSettings {
   enableJavascriptTool: boolean;
 }
 
+// ============================================================
+// System 1 极速决策引擎配置 (Jev / Laya)
+// ============================================================
+
+export type System1ProviderType = 'typesafe' | 'laya-local' | 'custom';
+
+export interface System1Config {
+  /** 是否启用 System 1 快速决策接管 */
+  enabled: boolean;
+  /** 决策模型提供商 */
+  provider: System1ProviderType;
+  /** API 根路径 (如 https://api.typesafe.ai/v1 或 http://localhost:8000/v1) */
+  baseUrl: string;
+  /** 访问凭证 (本地服务可留空) */
+  apiKey: string;
+  /** 模型名称标识 (如 jev 或 laya-modernbert-large) */
+  model: string;
+  /** 决策置信度阈值 (0.0~1.0)，低于此值自动回退 System 2 生成式模型 */
+  minConfidence: number;
+  /** 单次连续快决策最大步数，防止死循环 */
+  maxConsecutiveFastSteps: number;
+}
+
 export interface SitePermissions {
   allowed: string[];
   blocked: string[];
@@ -138,6 +161,7 @@ export interface AppConfig {
   defaultBindingId: string;
   safety: SafetySettings;
   advanced: AdvancedSettings;
+  system1?: System1Config;
   sites: SitePermissions;
   sync?: SyncSettings;
   /** 界面语言：'auto' 跟随浏览器，或强制 'zh' / 'en' */
@@ -275,6 +299,8 @@ export type PanelToBg =
   | { type: 'run_skill'; skillId: string; variables: Record<string, string | number | boolean> }
   | { type: 'delete_skill'; id: string }
   | { type: 'list_skills' }
+  | { type: 'toggle_pin_skill'; id: string }
+  | { type: 'install_presets' }
   | { type: 'resolve_human_intervention'; id: string }
   | { type: 'start_recording' }
   | { type: 'stop_recording'; learn: boolean }

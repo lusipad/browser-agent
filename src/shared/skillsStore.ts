@@ -1,6 +1,6 @@
 // 技能持久化存储：支持 chrome.storage.sync 跨设备云同步 + 本地离线镜像 + 配额保护
 import type { Skill, SkillMeta } from './skill';
-import { toSkillMeta } from './skill';
+import { BUILTIN_PRESET_SKILLS, toSkillMeta } from './skill';
 import { readSynced, removeSynced, writeSynced } from './syncStorage';
 
 const INDEX_KEY = 'skill_index';
@@ -22,7 +22,13 @@ function sanitizeSkillSecrets(skill: Skill): Skill {
 export async function listSkills(): Promise<SkillMeta[]> {
   try {
     const idx = await readSynced<SkillMeta[]>(INDEX_KEY);
-    return Array.isArray(idx) ? idx.slice().sort((a, b) => b.updatedAt - a.updatedAt) : [];
+    return Array.isArray(idx)
+      ? idx.slice().sort((a, b) => {
+          const pinDiff = (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
+          if (pinDiff !== 0) return pinDiff;
+          return b.updatedAt - a.updatedAt;
+        })
+      : [];
   } catch {
     return [];
   }
@@ -38,6 +44,11 @@ export async function saveSkill(skill: Skill): Promise<void> {
   const meta = toSkillMeta(cleanSkill);
   const list = (await listSkills()).filter((s) => s.id !== cleanSkill.id);
   list.unshift(meta);
+  list.sort((a, b) => {
+    const pinDiff = (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
+    if (pinDiff !== 0) return pinDiff;
+    return b.updatedAt - a.updatedAt;
+  });
 
   // 超量时淘汰最旧
   const overflow = list.slice(MAX_SKILLS);
@@ -49,6 +60,32 @@ export async function saveSkill(skill: Skill): Promise<void> {
   } catch {
     /* 容错保护 */
   }
+}
+
+/** 切换技能的置顶/取消置顶状态 */
+export async function togglePinSkill(id: string): Promise<boolean> {
+  const skill = await loadSkill(id);
+  if (!skill) return false;
+  skill.pinned = !skill.pinned;
+  skill.updatedAt = Date.now();
+  await saveSkill(skill);
+  return !!skill.pinned;
+}
+
+/** 导入内置官方预置技能模板（若已存在同名或同 ID 则跳过） */
+export async function installPresetSkills(): Promise<number> {
+  const existing = await loadAllSkills();
+  const existingIds = new Set(existing.map((s) => s.id));
+  const existingNames = new Set(existing.map((s) => s.name));
+
+  let installedCount = 0;
+  for (const preset of BUILTIN_PRESET_SKILLS) {
+    if (!existingIds.has(preset.id) && !existingNames.has(preset.name)) {
+      await saveSkill(structuredClone(preset));
+      installedCount++;
+    }
+  }
+  return installedCount;
 }
 
 export async function loadSkill(id: string): Promise<Skill | null> {

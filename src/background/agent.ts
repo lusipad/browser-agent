@@ -20,6 +20,8 @@ import { runInPage } from './inject';
 import type { Session } from './session';
 import { executeToolUse, shotBlocks, toolSpecs } from './tools/registry';
 import { isBindingEnabled } from '../shared/models';
+import { executeSystem1Decision, executeFastAction, type FastStepResult } from '../system1';
+import { activeTabIn, pickTargetTab } from './tabs';
 
 const VALIDATOR_CAP = 2;
 
@@ -59,18 +61,22 @@ export async function runTurn(
 
   const binding = session.cfg.bindings.find((b) => b.id === session.bindingId);
   const model = binding && session.cfg.models.find((m) => m.id === binding.modelId);
-  if (!binding || !model || !isBindingEnabled(binding)) {
-    session.error(session.t('bg.noModel'));
-    return;
-  }
-  const provider = session.cfg.providers.find((p) => p.id === binding.providerId);
-  if (!provider) {
-    session.error(session.t('bg.providerMissing', [model.label]));
-    return;
-  }
-  if (!provider.apiKey.trim()) {
-    session.error(session.t('bg.noApiKey', [provider.name]));
-    return;
+  const provider = binding && session.cfg.providers.find((p) => p.id === binding.providerId);
+  const hasSystem2 = !!(binding && model && isBindingEnabled(binding) && provider && provider.apiKey.trim());
+
+  if (!hasSystem2 && !session.cfg.system1?.enabled) {
+    if (!binding || !model || !isBindingEnabled(binding)) {
+      session.error(session.t('bg.noModel'));
+      return;
+    }
+    if (!provider) {
+      session.error(session.t('bg.providerMissing', [model.label]));
+      return;
+    }
+    if (!provider.apiKey.trim()) {
+      session.error(session.t('bg.noApiKey', [provider.name]));
+      return;
+    }
   }
 
   const adv = session.cfg.advanced;
@@ -116,14 +122,58 @@ export async function runTurn(
 
   try {
     // ---------- Planner ----------
-    if (adv.planning && firstTurn && !continuation && !session.aborted) {
+    if (hasSystem2 && provider && model && binding && adv.planning && firstTurn && !continuation && !session.aborted) {
       const crit = await runPlanner(session, provider, model, binding, sysBase, userText);
       if (crit) successCriteria = crit;
     }
 
-    // ---------- Navigator（含内联 Validator） ----------
+    // ---------- Navigator（含 System 1 极速拦截与内联 Validator） ----------
+    let consecutiveFastSteps = 0;
+    const maxFastSteps = session.cfg.system1?.maxConsecutiveFastSteps ?? 8;
+
     for (let iter = 0; iter < adv.maxIterations; iter++) {
       if (session.aborted) break;
+
+      // ⚡ System 1 极速动作拦截（双核加速）
+      if (session.cfg.system1?.enabled && consecutiveFastSteps < maxFastSteps) {
+        const fastResult = await trySystem1FastStep(session, userText);
+        if (fastResult) {
+          if (fastResult.executed) {
+            consecutiveFastSteps++;
+            if (fastResult.isDone) {
+              if (hasSystem2 && provider && model && binding && adv.planning && validatorRounds < VALIDATOR_CAP && !session.aborted) {
+                const verdict = await runValidator(session, provider, model, binding, sysBase, userText, successCriteria);
+                if (verdict.done) {
+                  session.upsert({ kind: 'info', id: uid('i'), text: session.t('bg.validatorPass') });
+                  break;
+                } else {
+                  validatorRounds++;
+                  session.upsert({
+                    kind: 'info',
+                    id: uid('i'),
+                    text: session.t('bg.validatorFail', [
+                      verdict.reason || session.t('bg.validatorFailReason'),
+                      verdict.next ? session.t('bg.validatorNext', [verdict.next]) : '',
+                    ]),
+                  });
+                  consecutiveFastSteps = 0;
+                }
+              } else {
+                session.upsert({ kind: 'info', id: uid('i'), text: '✓ ⚡ System 1 判定任务已达成' });
+                break;
+              }
+            }
+            continue;
+          }
+        }
+      }
+
+      if (!hasSystem2 || !provider || !model || !binding) {
+        session.error('⚡ System 1 无法独立完成此步骤，需要主大模型协助，请在设置中配置并启用至少一个模型。');
+        break;
+      }
+
+      consecutiveFastSteps = 0;
 
       const asstId = uid('a');
       let streamed = '';
@@ -497,3 +547,125 @@ function summarizeArgs(name: string, input: Record<string, any>): string {
     }
   }
 }
+
+async function trySystem1FastStep(
+  session: Session,
+  userText: string,
+): Promise<FastStepResult | null> {
+  const sys1Cfg = session.cfg.system1;
+  if (!sys1Cfg || !sys1Cfg.enabled) return null;
+
+  let tabId = session.currentTabId;
+  if (tabId == null) {
+    const act = (await pickTargetTab(session.windowId)) || (await activeTabIn(session.windowId));
+    if (act?.id != null) {
+      tabId = act.id;
+      session.currentTabId = act.id;
+    }
+  }
+  if (tabId == null) return null;
+
+  let tab: chrome.tabs.Tab | undefined;
+  try {
+    tab = await chrome.tabs.get(tabId);
+  } catch {
+    return null;
+  }
+
+  if (!tab.url || !/^https?:/.test(tab.url)) return null;
+
+  let collected: any;
+  try {
+    collected = await runInPage(tabId, 'collect');
+  } catch {
+    return null;
+  }
+  const elements = (collected?.elements ?? []) as any[];
+  if (!elements.length) return null;
+
+  const s1Elements = elements.map((e) => ({
+    ref: String(e.ref),
+    role: String(e.role || 'element'),
+    name: String(e.name || e.label || ''),
+    value: e.value ? String(e.value) : undefined,
+    inView: !!e.inView,
+    x: e.x,
+    y: e.y,
+  }));
+
+  let goal = userText;
+  let stepContext: string | undefined;
+  if (session.activeSkill) {
+    const skill = session.activeSkill;
+    goal = `Active skill: ${skill.name}. Goal: ${skill.description}`;
+    stepContext = `Workflow steps:\n` + skill.steps.map((s, idx) => `${idx + 1}. ${s.intent}`).join('\n');
+  }
+
+  try {
+    const decision = await executeSystem1Decision(
+      sys1Cfg,
+      {
+        goal,
+        elements: s1Elements,
+        pageUrl: tab.url,
+        pageTitle: tab.title,
+        stepContext,
+      },
+      session.controller?.signal,
+    );
+
+    if (decision.confidence < (sys1Cfg.minConfidence ?? 0.6)) {
+      return null;
+    }
+
+    // 若动作为打字且缺少文本，尝试从引号内容或预设技能变量中推导
+    if (decision.action === 'TYPE_TEXT' && !decision.text) {
+      const quoted = userText.match(/["“'‘]([^"”'’]+)["”'’]/);
+      if (quoted) {
+        decision.text = quoted[1];
+      } else if (session.activeSkill?.resolvedVars?.length) {
+        const targetEl = s1Elements.find((e) => e.ref === decision.targetRef);
+        const targetName = (targetEl?.name || '').toLowerCase();
+        const matched = session.activeSkill.resolvedVars.find(([k]) => targetName.includes(k.toLowerCase()));
+        decision.text = matched ? matched[1] : session.activeSkill.resolvedVars[0][1];
+      }
+    }
+
+    const providerLabel =
+      sys1Cfg.provider === 'laya-local' ? 'Laya (本地)' : sys1Cfg.provider === 'typesafe' ? 'Jev' : 'Custom';
+    const toolItemId = uid('t');
+    const summary = `${decision.action}${decision.targetRef ? ` [${decision.targetRef}]` : ''} (置信度: ${(decision.confidence * 100).toFixed(0)}%, 耗时: ${decision.latencyMs ?? 0}ms)`;
+
+    session.upsert({
+      kind: 'tool',
+      id: toolItemId,
+      name: `⚡ System 1 (${providerLabel})`,
+      summary,
+      status: 'running',
+    });
+
+    const res = await executeFastAction(session, decision, s1Elements);
+
+    session.upsert({
+      kind: 'tool',
+      id: toolItemId,
+      name: `⚡ System 1 (${providerLabel})`,
+      summary,
+      status: res.executed ? 'ok' : 'error',
+      detail: res.summary,
+    });
+
+    if (res.executed) {
+      session.messages.push({
+        role: 'assistant',
+        content: [{ type: 'text', text: `⚡ System 1: ${res.summary}` }],
+      });
+    }
+
+    return res;
+  } catch (e) {
+    session.info(`⚡ System 1 快决策跳过: ${truncate(errText(e), 120)}`);
+    return null;
+  }
+}
+

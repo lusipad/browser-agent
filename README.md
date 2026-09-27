@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-v0.6.0-blue?logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
+  <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-v0.7.0-blue?logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
   <a href="https://github.com/lusipad/browser-agent/releases"><img src="https://img.shields.io/github/v/release/lusipad/browser-agent?color=success" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
   <img src="https://img.shields.io/badge/Manifest-V3-orange" alt="Manifest V3">
@@ -62,6 +62,7 @@
 
 Break free from rigid single-step commands. The agent navigates the web with human-like cognitive agency:
 
+- ⚡ **Dual-Process Cognitive Engine (System 1 + System 2 Hybrid)** — Reflexive sub-500ms fast jumps via specialized lightweight vision-language models (e.g. Jev-2B) for high-confidence immediate actions (clicks, simple navigation, search submit), paired with deliberative System 2 reasoning (DeepSeek, Claude, GPT-4o) for complex multi-step planning, page understanding, and verification.
 - 🎯 **Visual Region-of-Interest (ROI) Selection & Point-and-Shoot** — Click `🎯` in the Composer or press `Alt + S` to enter crosshair selection mode. Box-select any card, chart, or table (or snap-click an element). The agent crops the area 1:1 via `OffscreenCanvas` with **zero CDP debugger warning banners**, passes high-res visual context, and **cuts prompt token usage by 70%~80%** while eliminating target ambiguity.
 - 🔴 **Learning from Demonstration (Teach-Me)** — Click "🔴 Record New Skill" and interact with any webpage naturally (clicks, typing, navigations, file uploads). The agent silently intercepts user actions with automatic password redaction (`******`). When finished, an LLM abstracts raw selectors into resilient high-level intents and auto-extracts variable parameters into reusable SKILL workflows.
 - ⏰ **Scheduled Skills & Background Cron** — Automate recurring workflows. Configure saved skills to run periodically (every 15m, 1h, 6h, 24h) or daily at a specific time (e.g. 09:30). Powered by `chrome.alarms` with desktop system notifications upon completion and full status reporting in Settings.
@@ -75,6 +76,7 @@ Break free from rigid single-step commands. The agent navigates the web with hum
 
 ## Features
 
+- **⚡ Dual-Process Hybrid Engine** — sub-500ms reflexive System 1 fast path (Jev-2B) + deliberative System 2 planner/validator
 - **🎯 Visual ROI Box-Selection** — drag-to-select or snap-click, 1:1 pixel-perfect crop, 80% token reduction, full-resolution Lightbox preview
 - **🔴 Demonstration Learning (Teach-Me)** — silent event interception, password redaction, LLM generalization into standard SKILLs
 - **⏰ Scheduled Skills (Cron)** — periodic or daily background execution, desktop notifications, status feedback in Settings

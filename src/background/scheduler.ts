@@ -137,13 +137,26 @@ export async function runScheduledSkill(skillId: string): Promise<boolean> {
     }
 
     // 解析技能参数与步骤
-    const resolvedVars: Record<string, string | number | boolean> = {};
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const nowStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+    const resolvedVars: Record<string, string | number | boolean> = {
+      today: todayStr,
+      now: nowStr,
+    };
     const displayVars: Array<[string, string]> = [];
 
     for (const v of skill.variables) {
       if (v.default !== undefined && v.default !== null && v.default !== '') {
         resolvedVars[v.name] = v.default;
         displayVars.push([v.label || v.name, String(v.default)]);
+      } else if (v.name === 'today') {
+        resolvedVars[v.name] = todayStr;
+        displayVars.push([v.label || v.name, todayStr]);
+      } else if (v.name === 'now') {
+        resolvedVars[v.name] = nowStr;
+        displayVars.push([v.label || v.name, nowStr]);
       } else {
         displayVars.push([v.label || v.name, session.t('skill.autoInferDesc')]);
       }

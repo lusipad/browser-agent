@@ -12,7 +12,7 @@ async function renderAssets() {
   // 1. Render Store Hero (1280x800)
   const heroPage = await browser.newPage({
     viewport: { width: 1280, height: 800 },
-    deviceScaleFactor: 2 // Crisp retina rendering
+    deviceScaleFactor: 1 // Crisp retina rendering
   });
   const heroUrl = 'file:///' + path.resolve(__dirname, 'assets/store-hero.html').replace(/\\/g, '/');
   console.log('Rendering Hero from:', heroUrl);
@@ -27,7 +27,7 @@ async function renderAssets() {
   // 2. Render Promo Tile (440x280)
   const promoPage = await browser.newPage({
     viewport: { width: 440, height: 280 },
-    deviceScaleFactor: 2 // Crisp retina rendering
+    deviceScaleFactor: 1 // Crisp retina rendering
   });
   const promoUrl = 'file:///' + path.resolve(__dirname, 'assets/promo-tile.html').replace(/\\/g, '/');
   console.log('Rendering Promo Tile from:', promoUrl);
@@ -42,7 +42,7 @@ async function renderAssets() {
   // 3. Render Form Filling Scenario (1280x800)
   const formPage = await browser.newPage({
     viewport: { width: 1280, height: 800 },
-    deviceScaleFactor: 2
+    deviceScaleFactor: 1
   });
   const formUrl = 'file:///' + path.resolve(__dirname, 'assets/form-filling.html').replace(/\\/g, '/');
   console.log('Rendering Form Filling from:', formUrl);
@@ -57,7 +57,7 @@ async function renderAssets() {
   // 4. Render Region Selection Showcase (1280x800)
   const regionPage = await browser.newPage({
     viewport: { width: 1280, height: 800 },
-    deviceScaleFactor: 2
+    deviceScaleFactor: 1
   });
   const regionUrl = 'file:///' + path.resolve(__dirname, 'assets/region-showcase.html').replace(/\\/g, '/');
   console.log('Rendering Region Selection from:', regionUrl);
@@ -72,7 +72,7 @@ async function renderAssets() {
   // 5. Render Teach-Me Showcase (1280x800)
   const teachPage = await browser.newPage({
     viewport: { width: 1280, height: 800 },
-    deviceScaleFactor: 2
+    deviceScaleFactor: 1
   });
   const teachUrl = 'file:///' + path.resolve(__dirname, 'assets/teach-me-showcase.html').replace(/\\/g, '/');
   console.log('Rendering Teach-Me from:', teachUrl);
@@ -87,7 +87,7 @@ async function renderAssets() {
   // 6. Render Cron & Captcha Intervention Showcase (1280x800)
   const cronPage = await browser.newPage({
     viewport: { width: 1280, height: 800 },
-    deviceScaleFactor: 2
+    deviceScaleFactor: 1
   });
   const cronUrl = 'file:///' + path.resolve(__dirname, 'assets/cron-showcase.html').replace(/\\/g, '/');
   console.log('Rendering Cron & Intervention from:', cronUrl);
@@ -102,7 +102,7 @@ async function renderAssets() {
   // 7. Render Dual-Process Hybrid Architecture Showcase (1280x800)
   const sys1Page = await browser.newPage({
     viewport: { width: 1280, height: 800 },
-    deviceScaleFactor: 2
+    deviceScaleFactor: 1
   });
   const sys1Url = 'file:///' + path.resolve(__dirname, 'assets/system1-showcase.html').replace(/\\/g, '/');
   console.log('Rendering System 1 Showcase from:', sys1Url);

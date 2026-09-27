@@ -15,19 +15,21 @@ Browser Agent is a Chrome MV3 extension with four execution contexts communicati
 │                        Background Service Worker                         │
 │  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────────────┐   │
 │  │ Agent Loop│←→│   CDP     │←→│  Reader   │  │  Tool Registry    │   │
-│  │(Planner/  │  │(debugger) │  │(inject)   │  │(authorize→exec→   │   │
-│  │ Validator)│  └───────────┘  └───────────┘  │ auto-screenshot)  │   │
+│  │(Dual-Proc:│  │(debugger) │  │(inject)   │  │(authorize→exec→   │   │
+│  │Sys1/Sys2) │  └───────────┘  └───────────┘  │ auto-screenshot)  │   │
 │  └─────┬─────┘                                └───────────────────┘   │
-│        │              ┌───────────┐                                     │
-│        └──────────────│ Provider  │ ← SSE stream to model endpoint     │
-│                       │(OpenAI)   │                                     │
-│                       └───────────┘                                     │
+│        │              ┌───────────┐   ┌───────────────────────────┐   │
+│        ├──────────────│ System 2  │←──│ Provider (DeepSeek/Claude)│   │
+│        │              └───────────┘   └───────────────────────────┘   │
+│        │              ┌───────────┐   ┌───────────────────────────┐   │
+│        └──────────────│ System 1  │←──│ Fast-Path (Jev-2B/Laya)   │   │
+│                       └───────────┘   └───────────────────────────┘   │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  Sidebar (React)              │  Options Page (React)                    │
-│  - Timeline                   │  - Providers / Models                   │
+│  - Timeline (System 1 cards)  │  - Providers / Models                   │
 │  - Composer                   │  - Safety / Sites                       │
-│  - Approval cards             │  - Advanced / Diagnostics               │
-│  - History drawer             │                                         │
+│  - Approval cards             │  - Advanced (System 1 config)           │
+│  - History drawer             │  - Diagnostics                          │
 │  - Export menu                │                                         │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  Content Scripts (isolated world injection via chrome.scripting)         │
@@ -45,21 +47,29 @@ User types task in sidebar
 ┌─────────────────────────────────────────────────────────────────┐
 │ 1. PanelToBg {type:"send", text} → Background via chrome.runtime.Port │
 │ 2. Session pushes user message to history                              │
-│ 3. [Planner] (first turn only): model generates plan + SUCCESS criteria│
-│ 4. [Navigator loop]:                                                   │
-│    a. governContext() → budget-trim history                            │
-│    b. openaiStream() → SSE to model endpoint                          │
-│    c. Stream text deltas to sidebar (real-time)                        │
-│    d. If tool_use blocks returned:                                     │
-│       - resolveTab → ensureSiteAllowed (approval card if needed)       │
-│       - addToAgentGroup (blue tab group)                               │
-│       - execute tool → return tool_result                              │
-│       - auto-screenshot if configured                                  │
-│       → back to (a) for next iteration                                 │
-│    e. If no tool_use (model done):                                     │
-│       → [Validator] checks page state vs. success criteria             │
-│       → if failed: inject "not complete" message, continue loop        │
-│       → if passed: emit ✅, break                                     │
+│ 3. [Fast-Path System 1 (if enabled)]:                                  │
+│    - Collect candidate DOM elements via reader.ts (capped ≤ 120)       │
+│    - Call Jev/Laya lightweight reflexive model (latency ~200-800ms)    │
+│    - If confidence ≥ threshold & actionable (click/type/nav):          │
+│        * Direct CDP physical execution                                 │
+│        * Emit native green timeline card: ⚡ System 1 (Jev)            │
+│        * Auto-yield to System 2 on navigation or low confidence        │
+│ 4. [Deliberative System 2 (Slow-Path)]:                                │
+│    - [Planner] (first turn only): model generates plan + SUCCESS       │
+│    - [Navigator loop]:                                                 │
+│        a. governContext() → budget-trim history                        │
+│        b. openaiStream() → SSE to model endpoint                       │
+│        c. Stream text deltas to sidebar (real-time)                    │
+│        d. If tool_use blocks returned:                                 │
+│           - resolveTab → ensureSiteAllowed (approval card if needed)   │
+│           - addToAgentGroup (blue tab group)                           │
+│           - execute tool → return tool_result                          │
+│           - auto-screenshot if configured                              │
+│           → back to (a) for next iteration                             │
+│        e. If no tool_use (model done):                                 │
+│           → [Validator] checks page state vs. success criteria         │
+│           → if failed: inject "not complete" message, continue loop    │
+│           → if passed: emit ✅, break                                  │
 │ 5. Session persists to chrome.storage.session                          │
 │ 6. Conversation archived to chrome.storage.local when switching/reset  │
 └─────────────────────────────────────────────────────────────────┘
@@ -81,6 +91,12 @@ providers/types.ts ← StreamParams, ToolSpec, fetchWithRetry, HttpError
        │
        └── providers/openai.ts ← The single adapter (covers all OAI-compat)
               └── providers/sse.ts ← Async iterator over ReadableStream SSE
+
+system1/
+       ├── types.ts    ← Fast-path state, decision contracts & action specifications
+       ├── client.ts   ← Formats prompt & calls TypeSafe Jev / Laya reflexive endpoints
+       ├── executor.ts ← Translates Jev decisions into CDP mouse/keyboard actions
+       └── index.ts    ← Public facade for System 1 execution
 
 background/
        ├── index.ts       ← Entry: tool registration, port management, message router
@@ -214,6 +230,27 @@ The loop implements a **Planner → Navigator → Validator** pattern (inspired 
 ```
 
 **Continuation:** When the user hits the iteration cap and clicks "Continue", a new `runTurn` is called with `continuation: true` — no new user message is added, and the original task is reused as the success criterion.
+
+#### 5.1 Dual-Process Cognitive Engine (System 1 + System 2 Hybrid)
+
+Inspired by Daniel Kahneman's *Thinking, Fast and Slow*, browser automation faces an inherent dilemma:
+- **Pure System 2 (Deliberative LLMs)**: High reasoning capability, but every single micro-action (clicking a search bar, hitting submit, simple pagination) requires capturing full-page high-resolution screenshots, transmitting megabytes of image payload over network, and waiting 2–5 seconds for an LLM response.
+- **Pure System 1 (Small Action Models / Reflexive)**: Instantaneous sub-second latency, but prone to getting stuck in loops, unable to read and synthesize long paragraphs, and incapable of long-horizon planning.
+
+**Browser Agent v0.7.0's Hybrid Architecture:**
+1. **System 1 (Reflexive Fast-Path)**:
+   - Powered by specialized lightweight models such as **TypeSafe Jev** (cloud) or **Laya** (local offline).
+   - Fast state extraction: `reader.ts` gathers candidate interactive DOM elements (filtered and capped at $\le 120$ candidates to fit token budgets and choice limits).
+   - Instant decision: Predicts target element ref and action (`CLICK`, `TYPE_TEXT`, `SCROLL`, `NAVIGATE`) with sub-second latency (~200ms–800ms).
+   - Direct CDP physical dispatch: Bypasses synthetic event listeners, executing real mouse clicks and keyboard typing directly.
+   - Streaming timeline visibility: Renders native `⚡ System 1 (Jev)` status cards with confidence score and latency.
+2. **System 2 (Deliberative Slow-Path)**:
+   - Full multimodal reasoning models (DeepSeek, Claude, GPT-4o).
+   - Engaged for goal decomposition, reading multi-column tables, synthesizing complex answers, and validating outcomes.
+3. **Adaptive Yield & Safety Gates**:
+   - **Confidence Threshold**: If Jev's prediction confidence falls below the configured threshold (default 0.6–0.7), it yields to System 2 immediately.
+   - **Consecutive Step Cap & Navigation Yield**: After executing a fast step, if the page navigates (URL change) or reaches `maxConsecutiveFastSteps: 1`, execution automatically yields to System 2 to prevent reflexive click loops.
+   - **Local Secret Isolation**: System 1 API keys are strictly partitioned in `chrome.storage.local` under `local_api_keys` to ensure zero credential leakage during sync.
 
 #### 6. Provider Adapter (`providers/openai.ts`)
 
@@ -350,19 +387,21 @@ Browser Agent 是一个 Chrome MV3 扩展，四个执行上下文通过消息传
 │                        后台 Service Worker                               │
 │  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────────────┐   │
 │  │ 智能体循环│←→│   CDP     │←→│   Reader  │  │   工具注册表      │   │
-│  │(规划/     │  │(debugger) │  │(注入)     │  │(授权→执行→        │   │
-│  │ 验证)     │  └───────────┘  └───────────┘  │ 自动截图)         │   │
+│  │(双系统:   │  │(debugger) │  │(注入)     │  │(授权→执行→        │   │
+│  │快/慢协同) │  └───────────┘  └───────────┘  │ 自动截图)         │   │
 │  └─────┬─────┘                                └───────────────────┘   │
-│        │              ┌───────────┐                                     │
-│        └──────────────│  Provider │ ← SSE 流式到模型端点               │
-│                       │(OpenAI)   │                                     │
-│                       └───────────┘                                     │
+│        │              ┌───────────┐   ┌───────────────────────────┐   │
+│        ├──────────────│ System 2  │←──│ Provider (DeepSeek/Claude)│   │
+│        │              └───────────┘   └───────────────────────────┘   │
+│        │              ┌───────────┐   ┌───────────────────────────┐   │
+│        └──────────────│ System 1  │←──│ 直觉快路径 (Jev/Laya)     │   │
+│                       └───────────┘   └───────────────────────────┘   │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  侧边栏 (React)             │  设置页 (React)                           │
-│  - 时间线                    │  - 服务商 / 模型                         │
+│  - 时间线 (System 1 绿标卡)  │  - 服务商 / 模型                         │
 │  - 输入框                    │  - 安全 / 站点                           │
-│  - 审批卡片                  │  - 高级 / 诊断                           │
-│  - 历史抽屉                  │                                          │
+│  - 审批卡片                  │  - 高级设置 (System 1 独立面板)          │
+│  - 历史抽屉                  │  - 诊断                                  │
 │  - 导出菜单                  │                                          │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  内容脚本（隔离世界注入，通过 chrome.scripting）                         │
@@ -380,21 +419,29 @@ Browser Agent 是一个 Chrome MV3 扩展，四个执行上下文通过消息传
 ┌─────────────────────────────────────────────────────────────────┐
 │ 1. PanelToBg {type:"send", text} → 后台（chrome.runtime.Port）  │
 │ 2. Session 将用户消息推入历史                                    │
-│ 3. [规划器]（仅首轮）: 模型生成计划 + SUCCESS 判据              │
-│ 4. [执行器循环]:                                                │
-│    a. governContext() → 按预算裁剪历史                           │
-│    b. openaiStream() → SSE 到模型端点                           │
-│    c. 文本增量实时推送侧边栏                                     │
-│    d. 若返回 tool_use 块:                                       │
-│       - resolveTab → ensureSiteAllowed（需要时弹审批卡片）       │
-│       - addToAgentGroup（蓝色标签组）                            │
-│       - 执行工具 → 返回 tool_result                             │
-│       - 若配置了自动截图则附带新截图                              │
-│       → 回到 (a) 下一迭代                                       │
-│    e. 若无 tool_use（模型认为完成）:                             │
-│       → [验证器] 检查页面状态 vs. 成功判据                      │
-│       → 未通过: 注入"未完成"消息，继续循环                      │
-│       → 通过: 发出 ✅，跳出                                    │
+│ 3. [直觉快思考 System 1 (若启用)]:                              │
+│    - reader.ts 提取可交互候选 DOM 元素（数量上限 ≤ 120）         │
+│    - 调用 Jev / Laya 毫秒级直觉反射模型（延迟 ~200-800ms）       │
+│    - 若置信度 ≥ 设定门限 且动作可执行（点击/输入/跳转）:         │
+│        * 直接分发 CDP 物理执行                                   │
+│        * 侧边栏时间线实时流式渲染: ⚡ System 1 (Jev) 绿标执行卡   │
+│        * 遇到页面导航、低置信度或达到连续步数上限时平滑移交      │
+│ 4. [审慎慢思考 System 2 (深层推理)]:                            │
+│    - [规划器]（仅首轮）: 模型生成计划 + SUCCESS 判据            │
+│    - [执行器循环]:                                              │
+│        a. governContext() → 按预算裁剪历史                      │
+│        b. openaiStream() → SSE 到模型端点                       │
+│        c. 文本增量实时推送侧边栏                                │
+│        d. 若返回 tool_use 块:                                   │
+│           - resolveTab → ensureSiteAllowed（需要时弹审批卡片）  │
+│           - addToAgentGroup（蓝色标签组）                       │
+│           - 执行工具 → 返回 tool_result                         │
+│           - 若配置了自动截图则附带新截图                         │
+│           → 回到 (a) 下一迭代                                   │
+│        e. 若无 tool_use（模型认为完成）:                        │
+│           → [验证器] 检查页面状态 vs. 成功判据                 │
+│           → 未通过: 注入"未完成"消息，继续循环                 │
+│           → 通过: 发出 ✅，跳出                                │
 │ 5. Session 持久化到 chrome.storage.session                      │
 │ 6. 切换/重置时归档到 chrome.storage.local                       │
 └─────────────────────────────────────────────────────────────────┘
@@ -484,6 +531,27 @@ Chrome 在 CDP 附加时会显示黄色 "debugger" 横幅 — 这是用户的视
                └──────────────────── 继续循环)
                     (最多 2 次验证重试)
 ```
+
+#### 5.1 双系统认知架构（System 1 快思考 + System 2 慢思考）
+
+灵感源自丹尼尔·卡尼曼《思考，快与慢》。传统的单模型浏览器 Agent 普遍面临两难困境：
+- **纯慢思考（大语言模型 System 2）**：推理规划能力极强，但每一步简单操作（如点击搜索框、按回车、翻页）都要截取超大分辨率截图、编码上传数兆图片、等待 2~5 秒的网络推理，不仅单步极慢而且白白浪费巨额 Token。
+- **纯快思考（轻量动作模型 System 1）**：毫秒级直觉反射极快，但容易陷入死循环、缺乏全局长程规划、无法深度精读长文内容。
+
+**Browser Agent v0.7.0 的快慢双核混合架构：**
+1. **System 1 (直觉反射快路径 / Fast-Path)**：
+   - 接入 **TypeSafe Jev**（云端）或 **Laya**（本地离线小模型）。
+   - 极速状态提取：`reader.ts` 抓取页面当前可交互 DOM 候选元素（截断并过滤至 $\le 120$ 个候选，规避超出选择限制与 Token 溢出）。
+   - 毫秒级决策：直接推断目标元素 `ref` 与动作（`CLICK`、`TYPE_TEXT`、`SCROLL`、`NAVIGATE`），端到端耗时仅 **200ms – 800ms**。
+   - 原生 CDP 物理执行：绕过合成事件，真实触发原生点击或击键。
+   - 侧边栏专属绿标：时间线实时渲染带有专属雷电图标的 `⚡ System 1 (Jev)` 执行状态卡，动态展示置信度百分比与毫秒耗时。
+2. **System 2 (审慎推理慢路径 / Slow-Path)**：
+   - 采用多模态大模型（DeepSeek、Claude、GPT-4o）。
+   - 专注负责目标拆解、复杂多列报表阅读、跨标签页信息比对、长文深度总结与最终结果验收。
+3. **自适应平滑移交与安全门限**：
+   - **置信度门限**：Jev 决策置信度低于阈值（默认 0.6–0.7）时，立即主动放弃并交由 System 2 接管。
+   - **连续快步限制与页面跳转移交**：完成单次快步操作后，若页面发生 URL 跳转或达到连续快步上限（`maxConsecutiveFastSteps: 1`），主动移交 System 2 慢思考，杜绝原地反射死循环。
+   - **密钥本地物理隔离**：System 1 的独立 API Key 保存在 `chrome.storage.local` 的 `local_api_keys` 中，跨设备云同步时绝不上云，确保机密安全。
 
 #### 6. 供应商适配器（`providers/openai.ts`）
 

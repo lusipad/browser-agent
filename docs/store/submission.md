@@ -17,7 +17,7 @@
 
 | 用途 | 尺寸 | 文件 |
 |---|---|---|
-| 扩展包 | — | `browser-agent-0.6.0.zip` |
+| 扩展包 | — | `browser-agent-0.7.0.zip` |
 | 商店图标 128×128 | 128×128 | 已在 manifest（`icons/icon128.png`），无需单独传 |
 | 截图（≥1，最多 5） | 1280×800 | `docs/screenshots/store-hero.png`、`docs/screenshots/region-selection.png`、`docs/screenshots/teach-me.png`、`docs/screenshots/cron-intervention.png`、`docs/screenshots/form-filling.png` |
 | 小宣传图（列表卡片用） | 440×280 | `docs/screenshots/promo-tile-440x280.png` |
@@ -25,7 +25,7 @@
 ---
 
 ## 1. 上传
-Add new item / Upload new package → 上传 `browser-agent-0.6.0.zip`。名称/描述会自动读 manifest 的 `_locales`（中英）。
+Add new item / Upload new package → 上传 `browser-agent-0.7.0.zip`。名称/描述会自动读 manifest 的 `_locales`（中英）。
 
 ## 2. 商店发布信息（Store listing）
 
@@ -43,7 +43,7 @@ https://github.com/lusipad/browser-agent/blob/main/PRIVACY.md
 
 **单一用途（Single purpose）**
 ```
-一个在浏览器侧边栏运行的新一代自主 AI 浏览器智能体：用户只需输入高层目标，智能体自主进行长程任务规划、多模态局部框选感知与跨页探索，通过真实物理操控代表用户在已授权的网页上执行复杂多步骤任务（深度研读、多源信息比对、系统表单录入与验证）并交付闭环结果。所有大模型推理由用户自行配置的 OpenAI 兼容接口（如 DeepSeek 或本地 Ollama）完成，数据不出本地。
+一个在浏览器侧边栏运行的新一代自主 AI 浏览器智能体：搭载双系统认知混合架构（System 1 毫秒直觉快路径 + System 2 深度长程规划），用户只需输入高层目标，智能体自主进行多模态局部框选感知、跨页探索与极速物理操控，代表用户在已授权的网页上执行复杂多步骤任务（深度研读、多源信息比对、系统表单录入与结果验证）并交付闭环结果。所有大模型推理由用户自行配置的兼容接口（如 DeepSeek 或本地 Ollama）完成，数据不出本地。
 ```
 
 **各权限用途（逐条粘贴）**

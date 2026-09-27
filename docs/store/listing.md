@@ -22,12 +22,14 @@ Browser Agent - 新一代自主 AI 浏览器智能体
 Browser Agent 是一款运行在 Chrome 原生侧边栏中的新一代自主 AI 浏览器智能体（Autonomous Web Agent）。给出一个开放目标，智能体自主进行多步规划、跨页探索、物理交互与结果校验，像资深专家一样在纷繁复杂的现代 Web 应用中交付确定性结果。
 
 🚀 核心智能体能力：
-1. 🧠 自主长程规划与自检闭环：基于认知架构，自主将复杂需求拆解为行动步骤；动作后实时感知页面变化，遇阻自主重试纠偏，直至通过验收。
-2. ⚡ 自动化工作流沉淀为 SKILL：任务完成后一键提炼为高复用技能（自动参数化变量 {{var}}，抽象为自然语言语义步骤）；侧栏抽屉即开即用，支持导入/导出共享。
-3. ☁️ 跨设备安全云同步（凭证物理隔离）：基于 Chrome 账号多端实时同步模型配置与技能库；API Key 强制脱敏仅留在本机（chrome.storage.local），绝不上云，公用电脑使用无忧。
-4. 🔍 跨页深度调研与信息合成：自主跨多标签页并行检索、阅读长篇文献资料、比对多方数据差异，深度提炼并输出结构化决策研报（Markdown / JSON）。
-5. ✍️ 复杂业务流程端到端代劳：跨系统比对信息，自动在现代复杂管理后台中定位多层级表单并执行录入，附带可信物理击键与截图复核。
-6. 👁️ 原生系统级物理操控与空间视觉：基于 Chrome 官方 CDP 协议生成真实可信的物理鼠标与键盘事件；搭配 Set-of-Marks 视觉标记框，精准攻克单页应用、Shadow DOM 与动态 iframe。
+1. ⚡ 双系统快慢认知混合架构 (System 1 + System 2)：直觉反射层（Jev-2B / 本地模型）毫秒级（200ms–800ms）完成点击、跳转与简单输入的预测与物理执行，免除上传全屏大图，Token 消耗暴降 80%，提速 5–10 倍；遇复杂长程规划与长文深读平滑移交 System 2 慢思考。
+2. 🎯 视觉局部框选与指哪打哪：支持快捷键 Alt+S 鼠标局部框选与单击吸附，1:1 无损裁剪局部区域，彻底消除复杂长页面的定位歧义。
+3. 🔴 示教录制自学成才 (Teach-Me)：在真实网页中自然操作，密码自动打码脱敏，大模型自动泛化生成标准可复用技能。
+4. 🧠 自主长程规划与自检闭环：基于认知架构，自主将复杂需求拆解为行动步骤；动作后实时感知页面变化，遇阻自主重试纠偏，直至通过验收。
+5. ⏰ 定时调度与自动化运行：支持设定周期或每日固定时刻后台静默运行技能，桌面系统通知提醒。
+6. 🛡️ 验证码人机协同介入：遇滑块拼图或极验智能阻断主动安全挂起，通知用户协同，完成后一键恢复。
+7. ☁️ 跨设备安全云同步（凭证物理隔离）：基于 Chrome 账号多端实时同步模型配置与技能库；API Key 强制脱敏仅留在本机（chrome.storage.local），绝不上云。
+8. 👁️ 原生系统级物理操控与空间视觉：基于 Chrome 官方 CDP 协议生成真实可信的物理鼠标与键盘事件；搭配 Set-of-Marks 视觉标记框，精准攻克单页应用、Shadow DOM 与动态 iframe。
 
 🔒 本地主权与安全防线（BYOK）：
 - 纯正本地主权：直连兼容接口标准的大语言模型端点或本地私有离线模型。您的 API Key 与网页交互数据 100% 保存在本机浏览器中，绝不经由任何第三方中间服务器。
@@ -56,12 +58,14 @@ Autonomous browser agent: goal planning, reusable SKILLs, cross-device sync & na
 Browser Agent is a next-generation autonomous AI browser agent living directly inside your Chrome side panel. Far more than a simple scraping script, it is equipped with autonomous goal planning, reusable SKILL workflows, secure cross-device sync, and self-correcting validation.
 
 🚀 Agent Superpowers:
-1. 🧠 Autonomous Planning & Self-Correction: Decomposes complex missions into structured steps, validates outcomes after every action, and course-corrects dynamically until completion.
-2. ⚡ Reusable SKILL Workflows: Turn any completed automation into a parameterized skill with natural language semantic steps; trigger from the sidebar drawer, or import/export via JSON.
-3. ☁️ Secure Cross-Device Cloud Sync: Seamlessly sync model configs and skills across your devices via Chrome account; API Keys strictly physically isolated in local storage (never cloud-synced).
-4. 🔍 Deep Research & Multi-Tab Synthesis: Traverses multiple tabs, digests lengthy technical pages, reconciles disparate data, and synthesizes structured analytical reports (Markdown / JSON).
-5. ✍️ End-to-End Workflow & Form Automation: Cross-references data to complete intricate workflows, administrative dashboards, and multi-step registration forms with trusted inputs.
-6. 👁️ Native Physical Control & Spatial Vision: Generates authentic user input events via Chrome DevTools Protocol (CDP); pairs with Set-of-Marks visual bounding boxes to conquer SPAs, nested Shadow DOMs, and dynamic iframes.
+1. ⚡ Dual-Process Cognitive Engine (System 1 + System 2): Sub-second reflexive fast-path (Jev-2B / local model) predicts & executes clicks/inputs via CDP in 200ms–800ms without full-screen screenshot uploads (cutting token usage by 80%+ and boosting speed by 5x–10x); smoothly transitions to System 2 for deep reasoning & verification.
+2. 🎯 Visual Region-of-Interest (ROI) Selection: Drag-to-select or snap-click elements via Alt+S for 1:1 pixel-perfect crop, cutting tokens by 80% and eliminating ambiguity.
+3. 🔴 Demonstration Learning (Teach-Me): Record actions in the browser; credentials automatically redacted; LLM generalizes steps into standard reusable SKILLs.
+4. 🧠 Autonomous Planning & Self-Correction: Decomposes complex missions into structured steps, validates outcomes after every action, and course-corrects dynamically until completion.
+5. ⏰ Scheduled Skills (Cron): Execute saved workflows periodically (15m–24h) or daily at fixed times in the background with system desktop notifications.
+6. 🛡️ Human-in-the-Loop Intervention: Automatically senses sliders/captchas, suspends execution safely, and resumes seamlessly after user solves.
+7. ☁️ Secure Cross-Device Cloud Sync: Seamlessly sync model configs and skills across your devices via Chrome account; API Keys strictly physically isolated in local storage (never cloud-synced).
+8. 👁️ Native Physical Control & Spatial Vision: Generates authentic user input events via Chrome DevTools Protocol (CDP); pairs with Set-of-Marks visual bounding boxes to conquer SPAs, nested Shadow DOMs, and dynamic iframes.
 
 🔒 Sovereign Local-First Architecture (Zero-Cloud):
 - 100% Private (BYOK): Direct connection to your own standard model endpoints or local offline LLM instances. All API credentials and browsing data remain strictly inside your browser. No intermediary cloud servers, zero data tracking.

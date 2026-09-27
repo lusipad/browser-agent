@@ -16,7 +16,7 @@ npm run bench         # perception benchmark (5 fixtures, ground-truth scoring)
 npm run bench:e2e     # end-to-end agent eval (real LLM + Playwright)
 ```
 
-**Unit tests** (`test/unit/`): adapter streaming, tool chunk accumulation, history format conversion, set-of-marks geometry, `wait_for` conditions, site permission matching, config merging, context governance (token estimation, budget trimming, pair integrity, result compression, cost calculation), retry & error classification, session export, session archive — 75 tests, pure Node.
+**Unit tests** (`test/unit/`): adapter streaming, tool chunk accumulation, history format conversion, set-of-marks geometry, `wait_for` conditions, site permission matching, config merging, context governance (token estimation, budget trimming, pair integrity, result compression, cost calculation), retry & error classification, session export, session archive, SKILL store & parameter extraction, Cron background scheduler, human-in-the-loop intervention, demonstration trajectory formatting, visual ROI snippets, and **System 1 (Jev/Laya fast-path) state formatting, response parsing, decision execution, settings merging & local secret isolation** — **148 tests**, pure Node.
 
 **E2E** (`test/e2e/`): Playwright injects `pageAgent` into real Chromium pages with Shadow DOM, same-origin iframes, forms, and off-viewport elements. Tests Shadow DOM piercing, iframe coordinate conversion, `form_input` event triggering, `probe`, and `extract_data` (tables/links/selector extraction piercing shadow & iframe) — 11 tests.
 
@@ -83,6 +83,16 @@ Expected: planning output with success criteria at task start; "✅ Validation p
 
 Expected: confirmation card before typing into password field. Denial stops the action.
 
+#### 7. System 1 Fast-Path & Dual-Process Hybrid (Jev / Laya)
+
+> Setup: Open Options → Advanced Settings → Enable "System 1 (Fast-Path)" → Configure Provider (TypeSafe Jev or local Laya) + API Key.
+> Prompt: **Go to https://movie.douban.com, click "排行榜", find the top movie and tell me its title and rating**
+
+Expected:
+1. System 1 immediately identifies the "排行榜" button and executes click within <800ms.
+2. Timeline displays native green status card: `⚡ System 1 (Jev)` with confidence percentage and millisecond latency.
+3. Automatically transitions to System 2 on navigation to read the top movie list and synthesize recommendation.
+
 ---
 
 ## 中文
@@ -97,7 +107,7 @@ npm run bench         # 感知层基准评测（5 fixture，ground-truth 计分�
 npm run bench:e2e     # 端到端 agent 评测（真实 LLM + Playwright）
 ```
 
-**单元测试**（`test/unit/`）：适配器流式解析、工具分片累积、历史格式转换、set-of-marks 几何、`wait_for` 条件、站点权限匹配、配置合并、上下文治理（token 估算/预算裁剪/配对完整性/结果压缩/成本换算）、退避重试与错误分类、会话导出、会话归档存储 — 共 75 项，纯 Node。
+**单元测试**（`test/unit/`）：适配器流式解析、工具分片累积、历史格式转换、set-of-marks 几何、`wait_for` 条件、站点权限匹配、配置合并、上下文治理（token 估算/预算裁剪/配对完整性/结果压缩/成本换算）、退避重试与错误分类、会话导出、会话归档存储、SKILL 技能库存储与参数自提取、Cron 后台定时调度器、验证码人机协同介入挂起、示教录制轨迹格式化、视觉 ROI 局部图块构建，以及 **System 1 (Jev/Laya 直觉快路径) 状态构建、响应解析、动作执行、配置合并与密钥本地物理隔离** — **共 148 项**，纯 Node。
 
 **E2E**（`test/e2e/`）：用 Playwright 把 `pageAgent` 注入真实 Chromium 页面，在带 Shadow DOM、同源 iframe、表单、视口外元素的 fixture 上验证 — Shadow DOM 穿透、iframe 坐标换算、`form_input` 事件触发、`probe`，以及 `extract_data` 的表格/链接/selector 抽取 — 共 11 项。
 
@@ -161,6 +171,16 @@ npm install && npm run build
 > 提示词：**在任意登录页的密码框里输入 test123**
 
 预期：向密码框输入前弹确认卡片。拒绝后模型停手。
+
+#### 7. System 1 直觉快思考与双系统混合模式 (Jev / Laya)
+
+> 前置配置：打开设置页 →「高级设置」→ 开启「System 1 (直觉快思考)」→ 配置服务商（TypeSafe Jev 或本地 Laya 端点）与 API Key。
+> 提示词：**打开 https://movie.douban.com，点击「排行榜」，查看排名第一的电影并告诉我名字和评分**
+
+预期：
+1. 页面加载完成后，System 1 毫秒级识别「排行榜」导航按钮，并在 <800ms 内完成点击跳转。
+2. 侧边栏时间线实时弹出专属绿标卡片：`⚡ System 1 (Jev)`，展示置信度百分比与毫秒耗时。
+3. 页面发生 URL 导航后平滑交由 System 2 接管，大模型深度阅读排行榜内容并输出结构化推荐结论。
 
 ---
 

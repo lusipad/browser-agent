@@ -99,6 +99,21 @@ async function renderAssets() {
   console.log('Successfully generated cron-intervention.png at:', cronOut);
   await cronPage.close();
 
+  // 7. Render Dual-Process Hybrid Architecture Showcase (1280x800)
+  const sys1Page = await browser.newPage({
+    viewport: { width: 1280, height: 800 },
+    deviceScaleFactor: 2
+  });
+  const sys1Url = 'file:///' + path.resolve(__dirname, 'assets/system1-showcase.html').replace(/\\/g, '/');
+  console.log('Rendering System 1 Showcase from:', sys1Url);
+  await sys1Page.goto(sys1Url, { waitUntil: 'load' });
+  await sys1Page.waitForTimeout(500);
+
+  const sys1Out = path.resolve(projectRoot, 'docs/screenshots/dual-process-hybrid.png');
+  await sys1Page.screenshot({ path: sys1Out });
+  console.log('Successfully generated dual-process-hybrid.png at:', sys1Out);
+  await sys1Page.close();
+
   await browser.close();
   console.log('All store assets successfully rendered!');
 }

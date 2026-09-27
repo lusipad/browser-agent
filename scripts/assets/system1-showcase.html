@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Browser Agent - Dual-Process Hybrid Architecture</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+    body {
+      width: 1280px;
+      height: 800px;
+      background: radial-gradient(130% 130% at 50% 10%, #0f172a 0%, #030712 100%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 36px;
+      position: relative;
+    }
+
+    /* Ambient glow elements */
+    .glow-left {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, rgba(0, 0, 0, 0) 70%);
+      top: -100px;
+      left: -100px;
+      pointer-events: none;
+    }
+    .glow-right {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, rgba(0, 0, 0, 0) 70%);
+      bottom: -100px;
+      right: -100px;
+      pointer-events: none;
+    }
+
+    /* Header Bar */
+    .header-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+    }
+    .title-box h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.5px;
+    }
+    .title-box p {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-top: 3px;
+    }
+    .version-pill {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    }
+    .header-chips {
+      display: flex;
+      gap: 8px;
+    }
+    .h-chip {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .h-chip.active {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+
+    /* Main Showcase Columns */
+    .showcase-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 300px 1fr;
+      gap: 20px;
+      z-index: 10;
+      align-items: stretch;
+      margin: 14px 0;
+    }
+
+    /* System 1 Card */
+    .arch-card {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(16px);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+    }
+    .arch-card.sys1 {
+      border-color: rgba(16, 185, 129, 0.35);
+      box-shadow: 0 16px 40px rgba(16, 185, 129, 0.12);
+    }
+    .arch-card.sys2 {
+      border-color: rgba(59, 130, 246, 0.35);
+      box-shadow: 0 16px 40px rgba(59, 130, 246, 0.12);
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 12px;
+    }
+    .card-title {
+      font-size: 17px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title.green { color: #6ee7b7; }
+    .card-title.blue { color: #93c5fd; }
+    .badge-sub {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .badge-sub.green {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .badge-sub.blue {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin-bottom: 16px;
+    }
+    .feature-list li {
+      font-size: 12.5px;
+      color: #cbd5e1;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.4;
+    }
+    .feature-list li strong {
+      color: #ffffff;
+    }
+
+    /* Live Execution Box */
+    .live-box {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .live-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .exec-card-green {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .exec-action {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+    .badge-tag-jev {
+      background: #10b981;
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-weight: 800;
+    }
+    .exec-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #34d399;
+      font-weight: 700;
+    }
+    .exec-latency {
+      background: #064e3b;
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    /* Middle Flow Center */
+    .flow-center {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+    }
+    .flow-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #f1f5f9;
+      margin-bottom: 6px;
+    }
+    .flow-nodes {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+    .flow-node {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 7px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .flow-node.highlight {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+    .flow-node.blue-hl {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+    }
+    .flow-arrow {
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1;
+    }
+
+    /* Result preview card in Sys2 */
+    .rec-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+    }
+    .rec-name { font-weight: 700; color: #fff; }
+    .rec-score { color: #f59e0b; font-weight: 800; font-size: 12px; }
+
+    /* Bottom Highlight Stats Bar */
+    .bottom-bar {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(20px);
+      border-radius: 14px;
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 10;
+    }
+    .stat-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .stat-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 2px;
+      font-weight: 500;
+    }
+    .divider {
+      width: 1px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow-left"></div>
+  <div class="glow-right"></div>
+
+  <!-- Header Bar -->
+  <div class="header-bar">
+    <div class="header-left">
+      <img src="../../public/icons/icon128.png" class="logo-img" alt="Browser Agent">
+      <div class="title-box">
+        <h1>Browser Agent <span class="version-pill">v0.7.0 混合架构</span></h1>
+        <p>⚡ 双系统认知混合引擎：System 1 毫秒直觉反射 + System 2 深度长程规划</p>
+      </div>
+    </div>
+    <div class="header-chips">
+      <div class="h-chip active">⚡ 快慢双核协同</div>
+      <div class="h-chip">🎯 视觉局部框选</div>
+      <div class="h-chip">🔴 示教自学 (Teach-Me)</div>
+      <div class="h-chip">🔒 密钥本地物理隔离</div>
+    </div>
+  </div>
+
+  <!-- Main Showcase Grid -->
+  <div class="showcase-grid">
+
+    <!-- Column 1: System 1 (Fast-Path) -->
+    <div class="arch-card sys1">
+      <div>
+        <div class="card-head">
+          <div class="card-title green">
+            <span>⚡ System 1 快思考</span>
+          </div>
+          <span class="badge-sub green">200ms – 800ms 毫秒直发</span>
+        </div>
+
+        <ul class="feature-list">
+          <li>
+            <span>⚡</span>
+            <div><strong>轻量级直觉模型</strong>：TypeSafe Jev-2B / 本地离线 Laya，专注于页面可交互元素的直觉反射决策。</div>
+          </li>
+          <li>
+            <span>🚀</span>
+            <div><strong>CDP 物理直发执行</strong>：无需每次抓取并上传全屏大截图，直发系统级物理点击/输入，响应提速 <strong>5~10 倍</strong>。</div>
+          </li>
+          <li>
+            <span>💰</span>
+            <div><strong>Token 消耗暴降 80%</strong>：常规翻页、导航与单选完全免除高额图片 Token 开销。</div>
+          </li>
+          <li>
+            <span>🛡️</span>
+            <div><strong>置信度门限控制</strong>：低于阈值（0.7）自动优雅回退，杜绝无脑乱点。</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Live Execution Card -->
+      <div class="live-box">
+        <div class="live-tag">
+          <span>实操执行轨迹 (豆瓣电影真实用例)</span>
+          <span style="color: #34d399;">● 毫秒级反馈</span>
+        </div>
+        <div class="exec-card-green">
+          <div class="exec-action">
+            <span class="badge-tag-jev">⚡ System 1 (Jev)</span>
+            <span>点击「排行榜」标签 (ref: 18)</span>
+          </div>
+          <div class="exec-meta">
+            <span>置信度 94%</span>
+            <span class="exec-latency">238ms</span>
+          </div>
+        </div>
+        <div style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 4px;">
+          <span>✔</span> 页面瞬时触发物理点击，平滑进入榜单页并移交 System 2
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 2: Hybrid Flow Center -->
+    <div class="flow-center">
+      <div class="flow-title">🔄 双核自适应协同中枢</div>
+
+      <div class="flow-nodes">
+        <div class="flow-node">
+          <span>🎯</span> 用户开放式复杂目标
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-node highlight">
+          <span>⚡</span> System 1 毫秒级直觉推断
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-node highlight">
+          <span>✔</span> 置信度 ≥ 0.7？直发物理点击
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-node" style="border-style: dashed; color: #fbbf24;">
+          <span>🔄</span> 页面跳转 / 遇长文 / 决策不确定
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-node blue-hl">
+          <span>🧠</span> System 2 深度规划与精读接管
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="flow-node blue-hl">
+          <span>🔍</span> 视觉自检验收 ➔ 交付确定性闭环
+        </div>
+      </div>
+
+      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 6px 8px; font-size: 10.5px; color: #6ee7b7; margin-top: 10px;">
+        ⚡ 既有直觉模型的极致敏捷<br>又有大语言模型的深层严谨
+      </div>
+    </div>
+
+    <!-- Column 3: System 2 (Slow-Path) -->
+    <div class="arch-card sys2">
+      <div>
+        <div class="card-head">
+          <div class="card-title blue">
+            <span>🧠 System 2 慢思考</span>
+          </div>
+          <span class="badge-sub blue">深度多模态长程推理</span>
+        </div>
+
+        <ul class="feature-list">
+          <li>
+            <span>🧭</span>
+            <div><strong>长程目标自主分解</strong>：DeepSeek-V3 / Claude 3.7 / GPT-4o 负责全局拆解、路径规划与跨标签调度。</div>
+          </li>
+          <li>
+            <span>📖</span>
+            <div><strong>多模态长文深度精读</strong>：深入阅读复杂多列页面、文献资料、表格与海量用户评价，提炼深层洞见。</div>
+          </li>
+          <li>
+            <span>✍️</span>
+            <div><strong>高质量结构化报告</strong>：产出严谨的推荐研报、决策表格与数据分析结论。</div>
+          </li>
+          <li>
+            <span>🔍</span>
+            <div><strong>结果自检验证闭环</strong>：对照成功判据（Success Criteria）进行自检校验。</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Live Recommendation Output -->
+      <div class="live-box">
+        <div class="live-tag">
+          <span>智能研读与推荐输出 (System 2 交付)</span>
+          <span style="color: #60a5fa;">● 确定性成果</span>
+        </div>
+        <div class="rec-item">
+          <div>
+            <div class="rec-name">1. 《机器人之梦》</div>
+            <div style="font-size: 10px; color: #94a3b8;">治愈系高分动画 · 无台词纯叙事</div>
+          </div>
+          <div class="rec-score">9.1 分</div>
+        </div>
+        <div class="rec-item">
+          <div>
+            <div class="rec-name">2. 《奥本海默》</div>
+            <div style="font-size: 10px; color: #94a3b8;">传记史诗 · 深度人性与政治博弈</div>
+          </div>
+          <div class="rec-score">8.8 分</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Highlight Stats Bar -->
+  <div class="bottom-bar">
+    <div class="stat-box">
+      <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">⚡</div>
+      <div>
+        <div class="stat-val">200ms – 800ms</div>
+        <div class="stat-label">System 1 单步物理执行（提速 5~10 倍）</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="stat-box">
+      <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">📉</div>
+      <div>
+        <div class="stat-val">Token -80%</div>
+        <div class="stat-label">常规页面操作免传全屏大截图</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="stat-box">
+      <div class="stat-icon" style="background: rgba(168, 85, 247, 0.2); color: #c084fc;">✔</div>
+      <div>
+        <div class="stat-val">148 / 148</div>
+        <div class="stat-label">自动化单元测试 100% 通过</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="stat-box">
+      <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">🔒</div>
+      <div>
+        <div class="stat-val">100% BYOK</div>
+        <div class="stat-label">密钥本地物理隔离 · 数据绝不上云</div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

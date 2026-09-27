@@ -9,10 +9,11 @@
   <br>
   目标驱动 · 自主长程规划 · 视觉框选指哪打哪 · 示教学习 · 物理操控 · 结果自检闭环
   <br>
-  <a href="README.md">English</a> · <a href="https://github.com/lusipad/browser-agent/releases">Releases</a> · <a href="PRIVACY.md">隐私政策</a>
+  <a href="https://lusipad.com/browser-agent/"><strong>🌐 官方演示站点</strong></a> · <a href="README.md">English</a> · <a href="https://github.com/lusipad/browser-agent/releases">Releases</a> · <a href="PRIVACY.md">隐私政策</a>
 </p>
 
 <p align="center">
+  <a href="https://lusipad.com/browser-agent/"><img src="https://img.shields.io/badge/Website-Online-brightgreen?logo=googlechrome&logoColor=white" alt="官网站点"></a>
   <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-v0.7.0-blue?logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
   <a href="https://github.com/lusipad/browser-agent/releases"><img src="https://img.shields.io/github/v/release/lusipad/browser-agent?color=success" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>

@@ -9,10 +9,11 @@
   <br>
   Goal-Driven · Visual ROI Selection · Teach-Me Learning · Native CDP Control · Self-Verification
   <br>
-  <a href="README.zh-CN.md">中文文档</a> · <a href="https://github.com/lusipad/browser-agent/releases">Releases</a> · <a href="PRIVACY.md">Privacy Policy</a>
+  <a href="https://lusipad.com/browser-agent/"><strong>🌐 Official Website</strong></a> · <a href="README.zh-CN.md">中文文档</a> · <a href="https://github.com/lusipad/browser-agent/releases">Releases</a> · <a href="PRIVACY.md">Privacy Policy</a>
 </p>
 
 <p align="center">
+  <a href="https://lusipad.com/browser-agent/"><img src="https://img.shields.io/badge/Website-Online-brightgreen?logo=googlechrome&logoColor=white" alt="Website"></a>
   <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-v0.7.0-blue?logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
   <a href="https://github.com/lusipad/browser-agent/releases"><img src="https://img.shields.io/github/v/release/lusipad/browser-agent?color=success" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>

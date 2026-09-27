@@ -19,7 +19,7 @@
 |---|---|---|
 | 扩展包 | — | `browser-agent-0.7.0.zip` |
 | 商店图标 128×128 | 128×128 | 已在 manifest（`icons/icon128.png`），无需单独传 |
-| 截图（≥1，最多 5） | 1280×800 | `docs/screenshots/store-hero.png`、`docs/screenshots/region-selection.png`、`docs/screenshots/teach-me.png`、`docs/screenshots/cron-intervention.png`、`docs/screenshots/form-filling.png` |
+| 截图（≥1，最多 5） | 1280×800 | `docs/screenshots/store-hero.png`（主视觉）、`docs/screenshots/dual-process-hybrid.png`（双核全景）、`docs/screenshots/region-selection.png`（视觉框选）、`docs/screenshots/teach-me.png`（示教自学）、`docs/screenshots/cron-intervention.png`（定时与协同） |
 | 小宣传图（列表卡片用） | 440×280 | `docs/screenshots/promo-tile-440x280.png` |
 
 ---

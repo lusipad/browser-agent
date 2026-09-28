@@ -55,6 +55,15 @@ export function SafetyPanel({ cfg, onChange }: PanelProps) {
         />
       </div>
 
+      <div className="card">
+        <Toggle
+          checked={cfg.sites.allowAllHttps ?? false}
+          onChange={(v) => onChange({ ...cfg, sites: { ...cfg.sites, allowAllHttps: v } })}
+          label={t('opt.sites.allowAllHttps')}
+          hint={t('opt.sites.allowAllHttpsHint')}
+        />
+      </div>
+
       <div className={'card danger-zone' + (s.allowAllSites ? ' active' : '')}>
         <Toggle
           checked={s.allowAllSites}

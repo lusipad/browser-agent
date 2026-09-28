@@ -32,3 +32,22 @@ test('isAllowedHost: allowAllSites 全放行', () => {
   const open = { safety: { allowAllSites: true }, sites: { allowed: [], blocked: [] } } as unknown as AppConfig;
   assert.ok(isAllowedHost(open, 'anything.com', new Set()));
 });
+
+test('isAllowedHost: allowAllHttps 仅放行 https，不放行不加密 http', () => {
+  const httpsOnly = {
+    safety: { allowAllSites: false },
+    sites: { allowed: [], blocked: ['bank.com'], allowAllHttps: true },
+  } as unknown as AppConfig;
+
+  // https 任意站点自动放行
+  assert.ok(isAllowedHost(httpsOnly, 'github.com', new Set(), 'https:'));
+  assert.ok(isAllowedHost(httpsOnly, 'wikipedia.org', new Set(), 'https:'));
+
+  // http 不加密站点不自动放行
+  assert.ok(!isAllowedHost(httpsOnly, 'insecure.org', new Set(), 'http:'));
+  assert.ok(!isAllowedHost(httpsOnly, 'insecure.org', new Set()));
+
+  // 命中黑名单依然被阻止
+  assert.ok(isBlockedHost(httpsOnly, 'bank.com'));
+});
+

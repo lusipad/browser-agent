@@ -188,6 +188,11 @@ export const optionsDict = {
     en: 'Sites on the allowlist can be operated without confirming each time; sites on the blocklist are fully blocked (banks, payments, exchanges are preloaded). Use an exact domain or the ',
   },
   'opt.sites.leadB': { zh: ' 形式，匹配其所有子域名。', en: ' form to match all of its subdomains.' },
+  'opt.sites.allowAllHttps': { zh: '允许任何 HTTPS 站点（推荐）', en: 'Allow any HTTPS site (Recommended)' },
+  'opt.sites.allowAllHttpsHint': {
+    zh: '智能体可直接访问并操作任何安全 HTTPS 网站，无需逐站确认。黑名单站点依然会被严格阻止；普通不加密 HTTP 站点仍需确认。',
+    en: 'Allows the agent to operate on any secure HTTPS site without per-site approval prompts. Sites on the blocklist are still blocked; unencrypted HTTP sites still require confirmation.',
+  },
   'opt.sites.allowTitle': { zh: '始终允许（白名单）', en: 'Always allow (allowlist)' },
   'opt.sites.allowEmpty': {
     zh: '还没有始终允许的网站。你在侧边栏点「始终允许此站点」时会自动加入这里。',

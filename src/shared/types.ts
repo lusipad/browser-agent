@@ -144,6 +144,8 @@ export interface System1Config {
 export interface SitePermissions {
   allowed: string[];
   blocked: string[];
+  /** 允许任何 HTTPS 站点（无需逐站授权安全 HTTPS 页面，黑名单除外） */
+  allowAllHttps?: boolean;
 }
 
 export interface SyncSettings {

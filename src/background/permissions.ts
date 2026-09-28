@@ -21,9 +21,11 @@ export function isBlockedHost(cfg: AppConfig, host: string): boolean {
   return cfg.sites.blocked.some((p) => hostMatches(host, p));
 }
 
-export function isAllowedHost(cfg: AppConfig, host: string, temp: Set<string>): boolean {
+export function isAllowedHost(cfg: AppConfig, host: string, temp: Set<string>, protocol?: string): boolean {
+  if (cfg.safety.allowAllSites) return true;
+  if (cfg.sites.allowAllHttps && protocol === 'https:') return true;
   return (
-    cfg.safety.allowAllSites || temp.has(host) || cfg.sites.allowed.some((p) => hostMatches(host, p))
+    temp.has(host) || cfg.sites.allowed.some((p) => hostMatches(host, p))
   );
 }
 
@@ -48,7 +50,7 @@ export async function ensureSiteAllowed(host: ApprovalHost, url: string | undefi
   if (isBlockedHost(host.cfg, h)) {
     throw new Error(`Site "${h}" is on the user's blocklist. You must not operate on it — inform the user.`);
   }
-  if (isAllowedHost(host.cfg, h, host.tempAllowedHosts)) return;
+  if (isAllowedHost(host.cfg, h, host.tempAllowedHosts, parsed.protocol)) return;
   if (!host.cfg.safety.confirmNewSite) {
     host.tempAllowedHosts.add(h);
     return;

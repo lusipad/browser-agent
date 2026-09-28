@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useT } from '../../shared/i18nReact';
-import type { PanelProps } from './common';
+import { Toggle, type PanelProps } from './common';
 
 export function SitesPanel({ cfg, onChange }: PanelProps) {
   const t = useT();
@@ -12,6 +12,14 @@ export function SitesPanel({ cfg, onChange }: PanelProps) {
         <code>*.example.com</code>
         {t('opt.sites.leadB')}
       </p>
+      <div className="card">
+        <Toggle
+          checked={cfg.sites.allowAllHttps ?? false}
+          onChange={(v) => onChange({ ...cfg, sites: { ...cfg.sites, allowAllHttps: v } })}
+          label={t('opt.sites.allowAllHttps')}
+          hint={t('opt.sites.allowAllHttpsHint')}
+        />
+      </div>
       <ListEditor
         title={t('opt.sites.allowTitle')}
         emptyHint={t('opt.sites.allowEmpty')}

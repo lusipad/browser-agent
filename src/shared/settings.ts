@@ -73,6 +73,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   uiLang: 'auto',
   sites: {
     allowed: [],
+    allowAllHttps: false,
     blocked: [
       'icbc.com.cn',
       'ccb.com',
@@ -172,6 +173,7 @@ export function mergeConfig(raw: unknown): AppConfig {
     sites: {
       allowed: r.sites?.allowed ?? DEFAULT_CONFIG.sites.allowed,
       blocked: r.sites?.blocked ?? DEFAULT_CONFIG.sites.blocked,
+      allowAllHttps: r.sites?.allowAllHttps ?? DEFAULT_CONFIG.sites.allowAllHttps ?? false,
     },
     sync: {
       enabled: r.sync?.enabled !== false,

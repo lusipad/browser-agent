@@ -13,7 +13,7 @@ export const DEFAULT_SYSTEM1_CONFIG: System1Config = {
   provider: 'typesafe',
   baseUrl: 'https://api.typesafe.ai/v1',
   apiKey: '',
-  model: 'jev',
+  model: 'jev-latest',
   minConfidence: 0.6,
   maxConsecutiveFastSteps: 8,
 };

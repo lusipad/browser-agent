@@ -6,6 +6,28 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## 0.7.1 — 2026-09-28
+
+### Fixed / 修复
+
+- **⚡ TypeSafe Jev 模型标识符自动规整与 API 兼容 (TypeSafe Jev Model Normalization)** —
+  - 修复 TypeSafe AI 接口拒绝简写模型名 `"jev"` 导致返回 `HTTP 400 (Unknown model: jev)` 并跳过决策的问题。
+  - 默认模型名称与设置面板模板更新为 `jev-latest`，底层客户端新增自动纠偏：当用户配置为 `jev` 或留空时自动规范映射为 `jev-latest`，确保既有配置无缝兼容。
+- **🛡️ System 1 请求超时熔断与安全中断保护 (Fast-Path Timeout Guard)** —
+  - 为 System 1 决策接口调用增加 8000ms 超时熔断控制器与 `AbortSignal` 中断监听，杜绝因慢网络或远端挂起导致的 Agent 进程假死与卡顿。
+- **🌐 设置面板指引与 i18n 优化 (Settings & i18n Guidance)** —
+  - 高级设置中完善 TypeSafe 密钥格式（`ts-***`）与模型填写的提示文案，降低配置门槛。
+- **💾 侧边栏会话与表格导出下载修复 (Sidepanel File Download Fix)** —
+  - 修复 Chrome 扩展侧边栏（Sidepanel）沙箱因安全限制静默拦截 DOM `<a>` 模拟点击，导致点击「导出 Markdown / JSON」或「导出表格」完全无反应的缺陷。
+  - 重构下载机制，统一接入扩展原生 `chrome.downloads` API，确保在侧边栏直接点击即可瞬间拉起文件保存。
+
+### Testing & Verification / 测试与验证
+
+- **150 项单元测试全部通过**：新增模型标识符纠偏与取消信号及时中断两项回归测试。
+- **Playwright 真实浏览器端到端实机验证**：在 Chromium 真实扩展环境中完成选项页设置、侧边栏发送、System 1 毫秒级决策拦截与网页目标按钮物理点击的闭环测试。
+
+---
+
 ## 0.7.0 — 2026-09-27
 
 ### Added / 新增

@@ -244,7 +244,7 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
                     patchSys1({
                       provider: p,
                       baseUrl: 'https://api.typesafe.ai/v1',
-                      model: 'jev',
+                      model: 'jev-latest',
                     });
                   } else if (p === 'laya-local') {
                     patchSys1({
@@ -287,7 +287,7 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
                 <input
                   type="text"
                   value={sys1.model}
-                  placeholder={sys1.provider === 'laya-local' ? 'laya-modernbert-large' : 'jev'}
+                  placeholder={sys1.provider === 'laya-local' ? 'laya-modernbert-large' : 'jev-latest'}
                   onChange={(e) => patchSys1({ model: e.target.value })}
                 />
               </Field>

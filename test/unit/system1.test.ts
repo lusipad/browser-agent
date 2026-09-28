@@ -134,7 +134,7 @@ test('executeSystem1Decision: 请求 TypeSafe 端点并携带 API Key', async ()
 
     assert.equal(capturedUrl, 'https://api.typesafe.ai/v1/systemone');
     assert.equal(capturedHeaders['Authorization'], 'Bearer test-ts-key');
-    assert.equal(capturedBody.model, 'jev');
+    assert.equal(capturedBody.model, 'jev-latest');
     assert.equal(res.action, 'CLICK');
     assert.equal(res.targetRef, '1');
     assert.equal(res.confidence, 0.9);
@@ -226,3 +226,105 @@ test('syncStorage: extractLocalSecrets 隔离 system1 API Key 并成功合并还
   const restored = mergeLocalSecrets(sanitized, secrets);
   assert.equal(restored.system1?.apiKey, 'secret-typesafe-key-123');
 });
+
+test('executeSystem1Decision: 用户指定空或裸写 "jev" 时自动映射为 "jev-latest"', async () => {
+  let capturedBody: any;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+    capturedBody = JSON.parse(init?.body as string);
+    return new Response(
+      JSON.stringify({
+        action: 'CLICK',
+        target: '1',
+        confidence: 0.9,
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    );
+  }) as any;
+
+  try {
+    // 1. 测试裸写 "jev"
+    await executeSystem1Decision(
+      {
+        enabled: true,
+        provider: 'typesafe',
+        baseUrl: 'https://api.typesafe.ai/v1',
+        apiKey: 'ts-key',
+        model: 'jev',
+        minConfidence: 0.6,
+        maxConsecutiveFastSteps: 8,
+      },
+      { goal: 'Submit', elements: mockElements },
+    );
+    assert.equal(capturedBody.model, 'jev-latest');
+
+    // 2. 测试留空 ""
+    await executeSystem1Decision(
+      {
+        enabled: true,
+        provider: 'typesafe',
+        baseUrl: 'https://api.typesafe.ai/v1',
+        apiKey: 'ts-key',
+        model: '',
+        minConfidence: 0.6,
+        maxConsecutiveFastSteps: 8,
+      },
+      { goal: 'Submit', elements: mockElements },
+    );
+    assert.equal(capturedBody.model, 'jev-latest');
+
+    // 3. 测试明确版本 "jev-1.13.0"
+    await executeSystem1Decision(
+      {
+        enabled: true,
+        provider: 'typesafe',
+        baseUrl: 'https://api.typesafe.ai/v1',
+        apiKey: 'ts-key',
+        model: 'jev-1.13.0',
+        minConfidence: 0.6,
+        maxConsecutiveFastSteps: 8,
+      },
+      { goal: 'Submit', elements: mockElements },
+    );
+    assert.equal(capturedBody.model, 'jev-1.13.0');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('executeSystem1Decision: 外部 signal 中断时及时中止请求', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+    return new Promise((_, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        reject(new DOMException('Aborted', 'AbortError'));
+      });
+    });
+  }) as any;
+
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(new Error('User Cancel')), 50);
+
+    await assert.rejects(
+      () =>
+        executeSystem1Decision(
+          {
+            enabled: true,
+            provider: 'typesafe',
+            baseUrl: 'https://api.typesafe.ai/v1',
+            apiKey: 'ts-key',
+            model: 'jev-latest',
+            minConfidence: 0.6,
+            maxConsecutiveFastSteps: 8,
+          },
+          { goal: 'Abort test', elements: mockElements },
+          controller.signal,
+        ),
+      /Abort/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+

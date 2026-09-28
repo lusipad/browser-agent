@@ -3,6 +3,7 @@ import type { ApprovalDecision, TimelineItem } from '../../shared/types';
 import { useT } from '../../shared/i18nReact';
 import { renderMarkdown } from '../markdown';
 import { toolIcon, toolLabel } from './toolMeta';
+import { download } from '../export';
 
 interface Props {
   items: TimelineItem[];
@@ -375,13 +376,7 @@ function AssistantRow({
     }
 
     const csvContent = '\uFEFF' + csvRows.join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `table-data-${Date.now()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    download(`table-data-${Date.now()}.csv`, csvContent, 'text/csv;charset=utf-8;');
   }
 
   function handleContentClick(e: React.MouseEvent<HTMLDivElement>) {

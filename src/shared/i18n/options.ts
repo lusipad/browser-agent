@@ -274,8 +274,8 @@ export const optionsDict = {
   'opt.system1.provider.laya': { zh: 'Laya (Convai ModernBERT - 本地极速与隐私)', en: 'Laya (Convai ModernBERT - Local ultra-fast & private)' },
   'opt.system1.provider.custom': { zh: '自定义 (Custom REST / System 1 端点)', en: 'Custom (REST / System 1 endpoint)' },
   'opt.system1.baseUrl': { zh: 'API Base URL', en: 'API Base URL' },
-  'opt.system1.apiKey': { zh: 'API Key (本地服务可留空)', en: 'API Key (optional for local)' },
-  'opt.system1.model': { zh: '模型名称', en: 'Model Name' },
+  'opt.system1.apiKey': { zh: 'API Key (TypeSafe 需填 ts-***，本地服务可留空)', en: 'API Key (Required for TypeSafe ts-***, optional for local)' },
+  'opt.system1.model': { zh: '模型名称 (TypeSafe 为 jev-latest)', en: 'Model Name (e.g. jev-latest)' },
   'opt.system1.minConfidence': { zh: '最低置信度阈值 (低于此值回退主模型)', en: 'Min Confidence Threshold (falls back to LLM below this)' },
   'opt.system1.maxFastSteps': { zh: '单次连续快决策上限', en: 'Max Consecutive Fast Steps' },
 

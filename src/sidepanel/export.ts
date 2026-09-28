@@ -92,6 +92,23 @@ export function toJson(items: TimelineItem[], meta: ExportMeta): string {
 export function download(filename: string, text: string, mime: string): void {
   const blob = new Blob([text], { type: mime });
   const url = URL.createObjectURL(blob);
+
+  // Chrome 扩展环境：使用 chrome.downloads API（在 Sidepanel 侧边栏内，普通的 a.click() 会被 Chrome 安全机制静默拦截）
+  if (typeof chrome !== 'undefined' && chrome.downloads?.download) {
+    chrome.downloads.download(
+      {
+        url,
+        filename,
+        saveAs: false,
+      },
+      () => {
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      },
+    );
+    return;
+  }
+
+  // 浏览器普通环境 / 单测兜底
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;

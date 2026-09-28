@@ -133,7 +133,7 @@ export interface System1Config {
   baseUrl: string;
   /** 访问凭证 (本地服务可留空) */
   apiKey: string;
-  /** 模型名称标识 (如 jev 或 laya-modernbert-large) */
+  /** 模型名称标识 (如 jev-latest 或 laya-modernbert-large) */
   model: string;
   /** 决策置信度阈值 (0.0~1.0)，低于此值自动回退 System 2 生成式模型 */
   minConfidence: number;

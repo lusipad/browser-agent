@@ -139,8 +139,12 @@ export async function executeSystem1Decision(
 
   let payload: Record<string, any>;
   if (cfg.provider === 'typesafe') {
+    let modelName = (cfg.model || '').trim();
+    if (!modelName || modelName.toLowerCase() === 'jev') {
+      modelName = 'jev-latest';
+    }
     payload = {
-      model: cfg.model || 'jev-latest',
+      model: modelName,
       state: stateText,
       questions: {
         action: {
@@ -186,12 +190,29 @@ export async function executeSystem1Decision(
     headers['Authorization'] = `Bearer ${cfg.apiKey.trim()}`;
   }
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(payload),
-    signal,
-  });
+  let timeoutId: any;
+  const controller = new AbortController();
+  const onAbort = () => controller.abort(signal?.reason);
+  if (signal) {
+    if (signal.aborted) controller.abort(signal.reason);
+    else signal.addEventListener('abort', onAbort, { once: true });
+  }
+  timeoutId = setTimeout(() => {
+    controller.abort(new Error('System 1 request timed out (8000ms)'));
+  }, 8000);
+
+  let res: Response;
+  try {
+    res = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+    if (signal) signal.removeEventListener('abort', onAbort);
+  }
 
   if (!res.ok) {
     const errText = await res.text().catch(() => '');

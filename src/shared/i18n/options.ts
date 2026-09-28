@@ -259,6 +259,14 @@ export const optionsDict = {
   },
 
   // System 1 极速决策引擎 (Jev / Laya)
+  'opt.decision.title': { zh: '⚡ 决策引擎', en: '⚡ Decision Engine' },
+  'opt.decision.archTitle': { zh: '🧠 认知科学双核架构原理 (System 1 + System 2)', en: '🧠 Dual-System Cognitive Architecture (System 1 + System 2)' },
+  'opt.decision.archS1': { zh: '⚡ System 1 快决策 (Jev / Laya)：负责机械式点击、选框、翻页，毫秒级直觉反射，零 Token 消耗。', en: '⚡ System 1 Fast Decision (Jev / Laya): Handles mechanical clicks, checkboxes, pagination with millisecond reflexes and zero token cost.' },
+  'opt.decision.archS2': { zh: '🧠 System 2 慢思考 (主大模型)：负责复杂意图理解、长程规划、网页深度研读并输出最终汇报。', en: '🧠 System 2 Slow Reasoning (Primary LLM): Handles complex intent, long-range planning, deep reading and final reports.' },
+  'opt.decision.testBtn': { zh: '⚡ 测试决策引擎连通性与时延', en: '⚡ Test Decision Engine & Latency' },
+  'opt.decision.testing': { zh: '正在测试决策端点…', en: 'Testing decision endpoint…' },
+  'opt.decision.testSuccess': { zh: '✓ 连接成功！模型：{0}，决策动作：{1}，时延：{2}ms', en: '✓ Connection succeeded! Model: {0}, Action: {1}, Latency: {2}ms' },
+  'opt.decision.testFail': { zh: '✗ 连接失败：{0}', en: '✗ Connection failed: {0}' },
   'opt.system1.title': { zh: '⚡ System 1 极速决策引擎 (Jev / Laya)', en: '⚡ System 1 Fast Decision Engine (Jev / Laya)' },
   'opt.system1.lead': {
     zh: '支持 TypeSafe Jev 与 Convai Laya（ModernBERT-large 421M）等 System 1 快决策模型。在点击、选择、翻页等机械操作中跳过传统 LLM 的慢速逐 Token 生成，实现 30ms~200ms 的极速决策与近乎零 Token 消耗；遇到复杂推理或意图不明确时自动交还主模型。',

@@ -142,7 +142,8 @@ body {
   gap: 6px;
   min-width: 0;
 }
-.vision-btn {
+.vision-btn,
+.system1-btn {
   font-size: 10px;
   line-height: 1;
   padding: 4px 7px;
@@ -159,7 +160,14 @@ body {
   border-color: var(--accent);
   background: var(--accent-soft);
 }
-.vision-btn:disabled {
+.system1-btn.on {
+  color: #d97706;
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  font-weight: 500;
+}
+.vision-btn:disabled,
+.system1-btn:disabled {
   opacity: 0.5;
   cursor: default;
 }

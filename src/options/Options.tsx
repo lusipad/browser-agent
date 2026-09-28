@@ -5,17 +5,19 @@ import { DEFAULT_CONFIG, loadConfig, onConfigChange, saveConfig } from '../share
 import type { AppConfig } from '../shared/types';
 import { ProvidersPanel } from './panels/ProvidersPanel';
 import { ModelsPanel } from './panels/ModelsPanel';
+import { DecisionPanel } from './panels/DecisionPanel';
 import { SafetyPanel } from './panels/SafetyPanel';
 import { AdvancedPanel } from './panels/AdvancedPanel';
 import { SitesPanel } from './panels/SitesPanel';
 import { DiagnosticsPanel } from './panels/DiagnosticsPanel';
 import { SkillsPanel } from './panels/SkillsPanel';
 
-type Tab = 'providers' | 'models' | 'skills' | 'safety' | 'sites' | 'advanced' | 'diagnostics';
+type Tab = 'providers' | 'models' | 'decision' | 'skills' | 'safety' | 'sites' | 'advanced' | 'diagnostics';
 
 const TABS: Array<{ id: Tab; labelKey: MsgKey }> = [
   { id: 'providers', labelKey: 'opt.providers.title' },
   { id: 'models', labelKey: 'opt.models.title' },
+  { id: 'decision', labelKey: 'opt.decision.title' },
   { id: 'skills', labelKey: 'opt.skills.title' },
   { id: 'safety', labelKey: 'opt.safety.title' },
   { id: 'sites', labelKey: 'opt.sites.title' },
@@ -120,6 +122,7 @@ export function Options() {
         <main className="content">
           {tab === 'providers' && <ProvidersPanel cfg={cfg} onChange={update} />}
           {tab === 'models' && <ModelsPanel cfg={cfg} onChange={update} />}
+          {tab === 'decision' && <DecisionPanel cfg={cfg} onChange={update} />}
           {tab === 'skills' && <SkillsPanel initialSkillId={targetSkillId} />}
           {tab === 'safety' && <SafetyPanel cfg={cfg} onChange={update} />}
           {tab === 'sites' && <SitesPanel cfg={cfg} onChange={update} />}

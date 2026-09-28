@@ -15,6 +15,16 @@ export const sidepanelDict = {
     zh: '该模型未标记支持视觉；强制开启可能被部分接口拒绝',
     en: 'This model is not declared vision-capable; forcing vision on may be rejected by some APIs',
   },
+  'header.system1On': { zh: '⚡ 极速: 开', en: '⚡ Fast: On' },
+  'header.system1Off': { zh: '⚡ 极速: 关', en: '⚡ Fast: Off' },
+  'header.system1TitleOn': {
+    zh: '⚡ 极速决策引擎：已开启（Jev 毫秒级直觉加速）\n点击快速关闭，或前往设置页面配置',
+    en: '⚡ Fast Decision Engine: On (Jev millisecond reflex)\nClick to disable or go to Settings to configure',
+  },
+  'header.system1TitleOff': {
+    zh: '⚡ 极速决策引擎：已关闭\n点击一键开启（机械操作跳过大模型，30ms 极速响应）',
+    en: '⚡ Fast Decision Engine: Off\nClick to enable (30ms fast reflex for clicks and scrolls)',
+  },
   'header.history': { zh: '会话历史', en: 'History' },
   'header.detach': { zh: '释放浏览器控制', en: 'Release browser control' },
   'header.newChat': { zh: '新对话', en: 'New chat' },

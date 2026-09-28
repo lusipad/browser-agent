@@ -19,8 +19,12 @@ interface Props {
   items: TimelineItem[];
   /** 会话级视觉覆盖（null=跟随模型，false=关闭，true=强制开启） */
   visionOverride: boolean | null;
+  /** System 1 极速决策引擎开启状态 */
+  system1Enabled?: boolean;
+  system1Model?: string;
   onBinding: (id: string) => void;
   onVision: (enabled: boolean) => void;
+  onToggleSystem1?: () => void;
   onNewChat: () => void;
   onHistory: () => void;
   onSkills: () => void;
@@ -86,6 +90,16 @@ export function Header(props: Props) {
                 onClick={() => props.onVision(!visionOn)}
               >
                 {visionOn ? t('header.visionOn') : t('header.visionOff')}
+              </button>
+            )}
+            {props.onToggleSystem1 && (
+              <button
+                className={`system1-btn${props.system1Enabled ? ' on' : ''}`}
+                disabled={props.running}
+                title={props.system1Enabled ? t('header.system1TitleOn') : t('header.system1TitleOff')}
+                onClick={props.onToggleSystem1}
+              >
+                {props.system1Enabled ? t('header.system1On') : t('header.system1Off')}
               </button>
             )}
           </div>

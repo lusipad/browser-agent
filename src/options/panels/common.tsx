@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { AppConfig } from '../../shared/types';
 
 export interface PanelProps {
@@ -43,5 +44,65 @@ export function Field({
       {children}
       {hint && <span className="field-hint">{hint}</span>}
     </label>
+  );
+}
+
+export function NumberInput({
+  value,
+  min,
+  max,
+  step,
+  fallback,
+  placeholder,
+  onChange,
+}: {
+  value: number | null | undefined;
+  min: number;
+  max: number;
+  step?: number;
+  fallback: number | null;
+  placeholder?: string;
+  onChange: (val: number | null) => void;
+}) {
+  const [localVal, setLocalVal] = useState<string>(value == null ? '' : String(value));
+
+  useEffect(() => {
+    setLocalVal(value == null ? '' : String(value));
+  }, [value]);
+
+  function commit() {
+    const trimmed = localVal.trim();
+    if (trimmed === '') {
+      onChange(fallback);
+      setLocalVal(fallback == null ? '' : String(fallback));
+      return;
+    }
+    const n = Number(trimmed);
+    if (!Number.isFinite(n)) {
+      onChange(fallback);
+      setLocalVal(fallback == null ? '' : String(fallback));
+      return;
+    }
+    const clamped = Math.min(max, Math.max(min, n));
+    onChange(clamped);
+    setLocalVal(String(clamped));
+  }
+
+  return (
+    <input
+      type="number"
+      value={localVal}
+      min={min}
+      max={max}
+      step={step}
+      placeholder={placeholder}
+      onChange={(e) => setLocalVal(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.currentTarget.blur();
+        }
+      }}
+    />
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { detectLang, makeT, resolveLang, type Lang } from '../shared/i18n';
 import { I18nProvider } from '../shared/i18nReact';
-import { loadConfig, onConfigChange } from '../shared/settings';
+import { DEFAULT_SYSTEM1_CONFIG, loadConfig, onConfigChange, saveConfig } from '../shared/settings';
 import type { BgToPanel, ConvMeta, BindingPick, RegionSnippet, TimelineItem } from '../shared/types';
 import { BgPort } from './port';
 import { Timeline } from './components/Timeline';
@@ -21,6 +21,8 @@ export function App() {
   const [bindings, setBindings] = useState<BindingPick[]>([]);
   const [bindingId, setBindingId] = useState('');
   const [visionOverride, setVisionOverride] = useState<boolean | null>(null);
+  const [system1Enabled, setSystem1Enabled] = useState(false);
+  const [system1Model, setSystem1Model] = useState('jev-latest');
   const [usage, setUsage] = useState<{
     input: number;
     output: number;
@@ -42,11 +44,31 @@ export function App() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedBottom = useRef(true);
 
-  // 界面语言：加载配置 + 监听变更
+  // 界面语言与 System 1 决策引擎配置：加载配置 + 监听变更
   useEffect(() => {
-    void loadConfig().then((c) => setLang(resolveLang(c.uiLang)));
-    onConfigChange((c) => setLang(resolveLang(c.uiLang)));
+    void loadConfig().then((c) => {
+      setLang(resolveLang(c.uiLang));
+      setSystem1Enabled(!!c.system1?.enabled);
+      setSystem1Model(c.system1?.model || (c.system1?.provider === 'laya-local' ? 'laya-modernbert-large' : 'jev-latest'));
+    });
+    onConfigChange((c) => {
+      setLang(resolveLang(c.uiLang));
+      setSystem1Enabled(!!c.system1?.enabled);
+      setSystem1Model(c.system1?.model || (c.system1?.provider === 'laya-local' ? 'laya-modernbert-large' : 'jev-latest'));
+    });
   }, []);
+
+  async function onToggleSystem1() {
+    const c = await loadConfig();
+    const next = !c.system1?.enabled;
+    const nextSys1 = {
+      ...DEFAULT_SYSTEM1_CONFIG,
+      ...c.system1,
+      enabled: next,
+    };
+    await saveConfig({ ...c, system1: nextSys1 });
+    setSystem1Enabled(next);
+  }
 
   useEffect(() => {
     const off = port.onMessage((msg: BgToPanel) => {
@@ -155,6 +177,8 @@ export function App() {
         usage={usage}
         items={items}
         visionOverride={visionOverride}
+        system1Enabled={system1Enabled}
+        system1Model={system1Model}
         onBinding={(id) => {
           setBindingId(id);
           port.post({ type: 'set_binding', bindingId: id });
@@ -163,6 +187,7 @@ export function App() {
           setVisionOverride(enabled);
           port.post({ type: 'set_vision', enabled });
         }}
+        onToggleSystem1={onToggleSystem1}
         onNewChat={() => port.post({ type: 'new_chat' })}
         onHistory={() => setHistoryOpen((o) => !o)}
         onSkills={() => {

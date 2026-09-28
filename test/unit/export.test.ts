@@ -50,3 +50,45 @@ test('toJson: 去掉 base64 截图，保留数量标注', () => {
   assert.equal(shot.screenshots, 1, '保留有效截图数量');
   assert.equal(parsed.items.length, ITEMS.length);
 });
+
+test('toMarkdown: 空会话导出友好提示', () => {
+  const md = toMarkdown([], META);
+  assert.match(md, /# Browser Agent 对话记录/);
+  assert.match(md, /暂无对话记录/);
+});
+
+test('download: Chrome 扩展环境下调用 chrome.downloads.download 且处理 lastError', () => {
+  const originalChrome = (globalThis as any).chrome;
+  let downloadedWith: any = null;
+  let retryWith: any = null;
+
+  (globalThis as any).chrome = {
+    runtime: { lastError: { message: 'Network failed' } },
+    downloads: {
+      download: (opts: any, cb: (id?: number) => void) => {
+        if (!downloadedWith) {
+          downloadedWith = opts;
+          // 模拟首次调用失败，触发 lastError
+          cb(undefined);
+        } else {
+          // 模拟兜底 data URL 重试成功
+          retryWith = opts;
+          (globalThis as any).chrome.runtime.lastError = null;
+          cb(123);
+        }
+      },
+    },
+  };
+
+  try {
+    const { download } = require('../../src/sidepanel/export');
+    download('test.md', '# Content', 'text/markdown');
+    assert.ok(downloadedWith, '首次应使用 blob url 调用');
+    assert.equal(downloadedWith.filename, 'test.md');
+    assert.ok(retryWith, '失败后应自动使用 data URL 重试兜底');
+    assert.match(retryWith.url, /^data:text\/markdown/);
+  } finally {
+    (globalThis as any).chrome = originalChrome;
+  }
+});
+

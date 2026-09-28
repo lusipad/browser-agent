@@ -38,6 +38,10 @@ export function toMarkdown(items: TimelineItem[], meta: ExportMeta, t: TFn = mak
     '---',
     '',
   ];
+  if (items.length === 0) {
+    lines.push(`*（${t('export.empty')}）*`, '');
+    return lines.join('\n');
+  }
   for (const it of items) {
     switch (it.kind) {
       case 'user':
@@ -89,11 +93,20 @@ export function toJson(items: TimelineItem[], meta: ExportMeta): string {
   );
 }
 
+function fallbackDownload(url: string, filename: string): void {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
 export function download(filename: string, text: string, mime: string): void {
   const blob = new Blob([text], { type: mime });
   const url = URL.createObjectURL(blob);
 
-  // Chrome 扩展环境：使用 chrome.downloads API（在 Sidepanel 侧边栏内，普通的 a.click() 会被 Chrome 安全机制静默拦截）
+  // Chrome 扩展环境：使用 chrome.downloads API
   if (typeof chrome !== 'undefined' && chrome.downloads?.download) {
     chrome.downloads.download(
       {
@@ -101,20 +114,31 @@ export function download(filename: string, text: string, mime: string): void {
         filename,
         saveAs: false,
       },
-      () => {
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      (downloadId) => {
+        if (chrome.runtime.lastError || !downloadId) {
+          console.warn('[export] chrome.downloads.download failed:', chrome.runtime.lastError?.message);
+          // 兜底 1: 尝试用 Data URL 并引导另存为
+          const dataUrl = `data:${mime};charset=utf-8,` + encodeURIComponent(text);
+          chrome.downloads.download(
+            { url: dataUrl, filename, saveAs: true },
+            (retryId) => {
+              if (chrome.runtime.lastError || !retryId) {
+                // 兜底 2: DOM 模拟点击
+                fallbackDownload(url, filename);
+              }
+              setTimeout(() => URL.revokeObjectURL(url), 10_000);
+            },
+          );
+          return;
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 10_000);
       },
     );
     return;
   }
 
   // 浏览器普通环境 / 单测兜底
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  fallbackDownload(url, filename);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 

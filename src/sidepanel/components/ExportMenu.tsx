@@ -12,8 +12,8 @@ interface Props {
 export function ExportMenu({ items, meta }: Props) {
   const t = useT();
   const [open, setOpen] = useState(false);
+  const [exported, setExported] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
-  const disabled = items.length === 0;
 
   useEffect(() => {
     if (!open) return;
@@ -27,19 +27,20 @@ export function ExportMenu({ items, meta }: Props) {
   function pick(format: 'md' | 'json') {
     setOpen(false);
     exportSession(format, items, meta, t);
+    setExported(true);
+    setTimeout(() => setExported(false), 1500);
   }
 
   return (
     <div className="export-wrap" ref={wrap}>
       <button
-        className="icon-btn"
-        title={t('header.export')}
-        disabled={disabled}
+        className={`icon-btn${exported ? ' exported' : ''}`}
+        title={exported ? t('export.exported') : t('header.export')}
         onClick={() => setOpen((o) => !o)}
       >
-        ⬇
+        {exported ? '✓' : '⬇'}
       </button>
-      {open && !disabled && (
+      {open && (
         <div className="export-menu">
           <button onClick={() => pick('md')}>{t('export.md')}</button>
           <button onClick={() => pick('json')}>{t('export.json')}</button>

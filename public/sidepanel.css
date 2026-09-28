@@ -62,7 +62,8 @@ body {
   flex: 0 0 auto;
   position: relative;
   flex-wrap: nowrap;
-  overflow: hidden;
+  overflow: visible;
+  z-index: 30;
 }
 /* 上下文占用条：贴在 header 底部，宽度=占用比例，接近上限时变红 */
 .ctx-meter {
@@ -206,7 +207,7 @@ body {
   position: absolute;
   top: 34px;
   right: 0;
-  z-index: 20;
+  z-index: 50;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -229,6 +230,9 @@ body {
 }
 .export-menu button:hover {
   background: var(--bg-soft);
+}
+.icon-btn.exported {
+  color: #3fb950;
 }
 
 /* ---------- 会话历史抽屉 ---------- */

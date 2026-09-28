@@ -48,6 +48,8 @@ export const sidepanelDict = {
   // ExportMenu
   'export.md': { zh: '导出 Markdown', en: 'Export Markdown' },
   'export.json': { zh: '导出 JSON', en: 'Export JSON' },
+  'export.exported': { zh: '已导出', en: 'Exported' },
+  'export.empty': { zh: '暂无对话记录', en: 'No conversation history' },
   // 导出文件内容
   'export.docTitle': { zh: 'Browser Agent 对话记录', en: 'Browser Agent Conversation' },
   'export.model': { zh: '模型', en: 'Model' },

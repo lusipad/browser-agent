@@ -1,6 +1,6 @@
 {
-  "version": 21,
-  "updatedAt": "2026-09-27",
+  "version": 22,
+  "updatedAt": "2026-09-28",
   "providers": [
     {
       "id": "openai",
@@ -1215,8 +1215,8 @@
       "providerId": "openrouter",
       "apiModelName": "deepseek/deepseek-chat",
       "pricing": {
-        "input": 0.32,
-        "output": 0.89
+        "input": 0.26,
+        "output": 1.03
       }
     },
     {

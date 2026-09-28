@@ -4,6 +4,30 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 0.7.2 — 2026-09-29
+
+### Added / 新增
+
+- **⚡ 决策引擎专属独立设置面板与快捷总控 (Dedicated Decision Engine Panel & Quick Toggle)** —
+  - 将快决策 System 1 (TypeSafe Jev / Laya) 从「高级设置」底层提升为选项页一级独立菜单「⚡ 决策引擎 (Decision Engine)」，提供专属配置界面与深度说明。
+  - 在选项页顶部导航栏新增「⚡ 决策引擎」状态快捷切换开关，支持随时一键启停快决策引擎，大幅提升日常管理与配置效率。
+  - 完善中英文双语对照与引导说明，保留高级设置联动的向后兼容性。
+- **🌐 站点访问权限新增「允许任何 HTTPS 站点」(Allow Any HTTPS Sites Permission)** —
+  - 在「站点访问权限」与「安全策略」面板中新增独立开关「允许任何 HTTPS 站点」（`sites.allowAllHttps`）。
+  - 开启后，所有基于安全加密协议的正常网络站点（如 Bing、Google、GitHub 等）无需再频繁弹窗卡片进行站点授权确认，大幅降低操作打扰。
+  - 严格保持安全防护底线：未加密的明文 `http://` 站点依然保持安全警告与人工确认，用户自定义的黑名单（Blocklist）依然受到最高优先级的强制拦截。
+
+### Fixed & Improved / 修复与优化
+
+- **💾 侧边栏对话导出下拉菜单与即时下载反馈 (Sidepanel Export Menu & Instant Feedback)** —
+  - 修复侧边栏顶部在小尺寸窗口或特定滚动容器下，点击「⬇ 导出」时下拉菜单被容器外框截断的视觉问题（容器解封 `overflow: visible` 并优化绝对定位）。
+  - 对话导出（Markdown / JSON）与表格导出（CSV）下载完成后，按钮实时反馈高亮与「已导出」状态提示，消除操作不确定性。
+
+### Testing & Verification / 测试与验证
+
+- **153 项单元测试 100% 通过**：全面覆盖 `allowAllHttps` 站点放行逻辑、`http://` 与黑名单隔离测试、决策引擎配置合并与导出状态流转。
+- **Playwright 端到端全链路实机验证**：通过 11 项端到端全链路测试，验证独立设置页渲染、顶栏开关状态同步、侧边栏导出与物理操作链路。
+
 ---
 
 ## 0.7.1 — 2026-09-28

@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://lusipad.com/browser-agent/"><img src="https://img.shields.io/badge/Website-Online-brightgreen?logo=googlechrome&logoColor=white" alt="官网站点"></a>
-  <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-v0.7.0-blue?logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
+  <a href="https://chromewebstore.google.com/detail/browser-agent/ojkmgbmibnijmgiceoffgkioneohajak"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-v0.7.2-blue?logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
   <a href="https://github.com/lusipad/browser-agent/releases"><img src="https://img.shields.io/github/v/release/lusipad/browser-agent?color=success" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
   <img src="https://img.shields.io/badge/Manifest-V3-orange" alt="Manifest V3">

@@ -1,6 +1,6 @@
 {
-  "version": 33,
-  "updatedAt": "2026-10-09",
+  "version": 34,
+  "updatedAt": "2026-10-10",
   "providers": [
     {
       "id": "openai",
@@ -31,11 +31,6 @@
       "id": "google",
       "name": "Google AI Studio",
       "baseUrl": "https://generativelanguage.googleapis.com/v1beta/openai"
-    },
-    {
-      "id": "openrouter",
-      "name": "OpenRouter",
-      "baseUrl": "https://openrouter.ai/api/v1"
     },
     {
       "id": "dashscope",
@@ -251,7 +246,7 @@
       "model": "claude-sonnet-4-5",
       "label": "Claude Sonnet 4.5",
       "vision": true,
-      "contextWindow": 1000000
+      "contextWindow": 200000
     },
     {
       "id": "claude-haiku-4-5",
@@ -372,62 +367,6 @@
       "label": "Gemini 2.5 Flash Lite（超轻量）",
       "vision": true,
       "contextWindow": 1048576
-    },
-    {
-      "id": "anthropic/claude-sonnet-4.6",
-      "providerId": "openrouter",
-      "model": "anthropic/claude-sonnet-4.6",
-      "label": "Claude Sonnet 4.6 (OR)",
-      "vision": true,
-      "contextWindow": 1000000
-    },
-    {
-      "id": "anthropic/claude-haiku-4.5",
-      "providerId": "openrouter",
-      "model": "anthropic/claude-haiku-4.5",
-      "label": "Claude Haiku 4.5 (OR)",
-      "vision": true,
-      "contextWindow": 200000
-    },
-    {
-      "id": "google/gemini-2.5-pro",
-      "providerId": "openrouter",
-      "model": "google/gemini-2.5-pro",
-      "label": "Gemini 2.5 Pro (OR)",
-      "vision": true,
-      "contextWindow": 1048576
-    },
-    {
-      "id": "google/gemini-2.5-flash",
-      "providerId": "openrouter",
-      "model": "google/gemini-2.5-flash",
-      "label": "Gemini 2.5 Flash (OR)",
-      "vision": true,
-      "contextWindow": 1048576
-    },
-    {
-      "id": "deepseek/deepseek-chat",
-      "providerId": "openrouter",
-      "model": "deepseek/deepseek-chat",
-      "label": "DeepSeek V3 (OR)",
-      "vision": false,
-      "contextWindow": 163840
-    },
-    {
-      "id": "qwen/qwen3-235b-a22b-2507",
-      "providerId": "openrouter",
-      "model": "qwen/qwen3-235b-a22b-2507",
-      "label": "Qwen3 235B (OR)",
-      "vision": false,
-      "contextWindow": 262144
-    },
-    {
-      "id": "mistralai/mistral-large",
-      "providerId": "openrouter",
-      "model": "mistralai/mistral-large",
-      "label": "Mistral Large (OR)",
-      "vision": false,
-      "contextWindow": 128000
     },
     {
       "id": "qwen-max",
@@ -1167,76 +1106,6 @@
       "pricing": {
         "input": 0.1,
         "output": 0.4
-      }
-    },
-    {
-      "id": "openrouter/anthropic/claude-sonnet-4.6",
-      "modelId": "anthropic/claude-sonnet-4.6",
-      "providerId": "openrouter",
-      "apiModelName": "anthropic/claude-sonnet-4.6",
-      "pricing": {
-        "input": 3,
-        "output": 15
-      }
-    },
-    {
-      "id": "openrouter/anthropic/claude-haiku-4.5",
-      "modelId": "anthropic/claude-haiku-4.5",
-      "providerId": "openrouter",
-      "apiModelName": "anthropic/claude-haiku-4.5",
-      "pricing": {
-        "input": 1,
-        "output": 5
-      }
-    },
-    {
-      "id": "openrouter/google/gemini-2.5-pro",
-      "modelId": "google/gemini-2.5-pro",
-      "providerId": "openrouter",
-      "apiModelName": "google/gemini-2.5-pro",
-      "pricing": {
-        "input": 1.25,
-        "output": 10
-      }
-    },
-    {
-      "id": "openrouter/google/gemini-2.5-flash",
-      "modelId": "google/gemini-2.5-flash",
-      "providerId": "openrouter",
-      "apiModelName": "google/gemini-2.5-flash",
-      "pricing": {
-        "input": 0.3,
-        "output": 2.5
-      }
-    },
-    {
-      "id": "openrouter/deepseek/deepseek-chat",
-      "modelId": "deepseek/deepseek-chat",
-      "providerId": "openrouter",
-      "apiModelName": "deepseek/deepseek-chat",
-      "pricing": {
-        "input": 0.26,
-        "output": 1.03
-      }
-    },
-    {
-      "id": "openrouter/qwen/qwen3-235b-a22b-2507",
-      "modelId": "qwen/qwen3-235b-a22b-2507",
-      "providerId": "openrouter",
-      "apiModelName": "qwen/qwen3-235b-a22b-2507",
-      "pricing": {
-        "input": 0.09,
-        "output": 0.55
-      }
-    },
-    {
-      "id": "openrouter/mistralai/mistral-large",
-      "modelId": "mistralai/mistral-large",
-      "providerId": "openrouter",
-      "apiModelName": "mistralai/mistral-large",
-      "pricing": {
-        "input": 2,
-        "output": 6
       }
     },
     {

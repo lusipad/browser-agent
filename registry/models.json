@@ -1,6 +1,6 @@
 {
-  "version": 37,
-  "updatedAt": "2026-10-13",
+  "version": 38,
+  "updatedAt": "2026-10-14",
   "providers": [
     {
       "id": "openai",
@@ -526,7 +526,7 @@
       "model": "accounts/fireworks/models/deepseek-r1",
       "label": "DeepSeek R1 (Fireworks)",
       "vision": false,
-      "contextWindow": 128000
+      "contextWindow": 163840
     },
     {
       "id": "accounts/fireworks/models/llama4-maverick-instruct-basic",

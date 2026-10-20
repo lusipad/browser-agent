@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light dark;
   --bg: #f4f5f7;
   --panel: #ffffff;
   --border: #e4e7ec;
@@ -13,6 +14,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
+    color-scheme: dark;
     --bg: #131519;
     --panel: #1c1f25;
     --border: #2d323b;
@@ -21,6 +23,39 @@
     --accent: #7c74ff;
     --accent-soft: #26243a;
   }
+}
+
+select {
+  color-scheme: light dark;
+}
+select option {
+  background-color: var(--panel);
+  color: var(--text);
+}
+@media (prefers-color-scheme: dark) {
+  select {
+    color-scheme: dark;
+  }
+  select option {
+    background-color: var(--panel);
+    color: var(--text);
+  }
+}
+
+/* 自适应滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
 }
 * {
   box-sizing: border-box;

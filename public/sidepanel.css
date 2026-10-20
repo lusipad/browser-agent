@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light dark;
   --bg: #ffffff;
   --bg-soft: #f6f7f9;
   --bg-tool: #f2f4f7;
@@ -16,6 +17,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
+    color-scheme: dark;
     --bg: #16181c;
     --bg-soft: #1e2127;
     --bg-tool: #22262e;
@@ -26,6 +28,39 @@
     --accent-soft: #26243a;
     --user-bubble: #4f46e5;
   }
+}
+
+select {
+  color-scheme: light dark;
+}
+select option {
+  background-color: var(--bg);
+  color: var(--text);
+}
+@media (prefers-color-scheme: dark) {
+  select {
+    color-scheme: dark;
+  }
+  select option {
+    background-color: var(--bg-soft);
+    color: var(--text);
+  }
+}
+
+/* 自适应滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
 }
 
 * {
@@ -107,8 +142,9 @@ body {
 .model-select {
   appearance: none;
   border: none;
-  background: transparent;
+  background-color: transparent;
   color: var(--text);
+  color-scheme: light dark;
   font-size: 13px;
   font-weight: 600;
   padding: 2px 18px 2px 4px;
@@ -126,6 +162,19 @@ body {
 }
 .model-select:hover {
   background-color: var(--bg-soft);
+}
+.model-select option {
+  background-color: var(--bg);
+  color: var(--text);
+}
+@media (prefers-color-scheme: dark) {
+  .model-select {
+    color-scheme: dark;
+  }
+  .model-select option {
+    background-color: var(--bg-soft);
+    color: var(--text);
+  }
 }
 .model-meta {
   font-size: 11px;

@@ -215,6 +215,7 @@ export const computerTool: ToolDef = {
         const button: MouseButton = action === 'right_click' ? 'right' : 'left';
         const clicks = action === 'double_click' ? 2 : action === 'triple_click' ? 3 : 1;
         await clickAt(ctx.tabId, p.x, p.y, button, clicks);
+        void runInPage(ctx.tabId, 'pointer_ripple', { x: p.x, y: p.y }).catch(() => {});
         await settle(ctx);
         return withAutoShot(ctx.session, ctx.tabId, `Performed ${action} at css(${p.x},${p.y})${p.note}.`);
       }

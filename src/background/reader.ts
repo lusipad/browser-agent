@@ -256,6 +256,157 @@ export async function pageAgent(cmd: string, payload: any): Promise<any> {
       } catch {}
     }
 
+    function pointerRipple(x: number, y: number, color = '#38bdf8'): void {
+      try {
+        const HOST_ID = '__ba_visuals_host';
+        let host = topDoc.getElementById(HOST_ID);
+        if (!host) {
+          host = topDoc.createElement('div');
+          host.id = HOST_ID;
+          host.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483646;overflow:hidden;';
+          (topDoc.body || topDoc.documentElement).appendChild(host);
+        }
+        const dot = topDoc.createElement('div');
+        dot.style.cssText = `
+          position: fixed;
+          left: ${Math.round(x) - 4}px;
+          top: ${Math.round(y) - 4}px;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: ${color};
+          pointer-events: none;
+          z-index: 2147483647;
+          box-shadow: 0 0 10px ${color}, 0 0 20px ${color};
+        `;
+        const ring = topDoc.createElement('div');
+        ring.style.cssText = `
+          position: fixed;
+          left: ${Math.round(x) - 18}px;
+          top: ${Math.round(y) - 18}px;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          border: 2px solid ${color};
+          pointer-events: none;
+          z-index: 2147483647;
+          transform: scale(0.3);
+          opacity: 1;
+          transition: transform 0.45s cubic-bezier(0.1, 0.8, 0.3, 1), opacity 0.45s ease-out;
+          box-sizing: border-box;
+        `;
+        host.appendChild(dot);
+        host.appendChild(ring);
+        requestAnimationFrame(() => {
+          ring.style.transform = 'scale(1.6)';
+          ring.style.opacity = '0';
+        });
+        setTimeout(() => {
+          dot.remove();
+          ring.remove();
+        }, 500);
+      } catch {}
+    }
+
+    function updateLiveHud(text?: string, status: 'running' | 'ok' | 'error' | 'hidden' = 'running'): void {
+      try {
+        const HUD_ID = '__ba_live_hud';
+        let hud = topDoc.getElementById(HUD_ID);
+        if (status === 'hidden') {
+          if (hud) {
+            hud.style.opacity = '0';
+            hud.style.transform = 'translate(-50%, -10px)';
+            setTimeout(() => hud?.remove(), 250);
+          }
+          return;
+        }
+
+        if (!hud) {
+          hud = topDoc.createElement('div');
+          hud.id = HUD_ID;
+          hud.style.cssText = `
+            position: fixed;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2147483647;
+            background: rgba(15, 23, 42, 0.90);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #ffffff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            pointer-events: auto;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            opacity: 0;
+            transform: translate(-50%, -8px);
+          `;
+
+          const dot = topDoc.createElement('span');
+          dot.id = '__ba_hud_dot';
+          dot.style.cssText = `
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #38bdf8;
+            box-shadow: 0 0 8px #38bdf8;
+            display: inline-block;
+          `;
+
+          const label = topDoc.createElement('span');
+          label.id = '__ba_hud_label';
+          label.style.cssText = 'max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+
+          const stopBtn = topDoc.createElement('button');
+          stopBtn.textContent = '⏹ 停止';
+          stopBtn.style.cssText = `
+            background: rgba(239, 68, 68, 0.25);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            margin-left: 4px;
+            transition: background 0.15s ease;
+          `;
+          stopBtn.onmouseover = () => { stopBtn.style.background = 'rgba(239, 68, 68, 0.45)'; };
+          stopBtn.onmouseout = () => { stopBtn.style.background = 'rgba(239, 68, 68, 0.25)'; };
+          stopBtn.onclick = (e) => {
+            e.stopPropagation();
+            try {
+              chrome.runtime.sendMessage({ type: 'abort' }).catch(() => {});
+            } catch {}
+            updateLiveHud('', 'hidden');
+          };
+
+          hud.appendChild(dot);
+          hud.appendChild(label);
+          hud.appendChild(stopBtn);
+          (topDoc.body || topDoc.documentElement).appendChild(hud);
+
+          requestAnimationFrame(() => {
+            if (hud) {
+              hud.style.opacity = '1';
+              hud.style.transform = 'translateX(-50%)';
+            }
+          });
+        }
+
+        const label = hud.querySelector('#__ba_hud_label');
+        if (label && text) label.textContent = text;
+      } catch {}
+    }
+
     // ---------------- 语义信息 ----------------
     function accName(el: Element): string {
       const aria = el.getAttribute('aria-label');
@@ -1048,6 +1199,12 @@ export async function pageAgent(cmd: string, payload: any): Promise<any> {
         return highlightCmd(payload?.ref, payload?.label, payload?.duration);
       case 'smart_scroll_read':
         return await smartScrollRead(payload?.max_screens, payload?.step_timeout_ms);
+      case 'hud_update':
+        updateLiveHud(payload?.text, payload?.status);
+        return { ok: true };
+      case 'pointer_ripple':
+        pointerRipple(payload?.x, payload?.y, payload?.color);
+        return { ok: true };
       default:
         throw new Error('pageAgent: unknown cmd ' + cmd);
     }

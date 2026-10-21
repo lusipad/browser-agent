@@ -33,6 +33,53 @@ export async function runTurn(
   const continuation = !!opts?.continuation;
   session.cfg = await loadConfig();
 
+  const trimmed = userText.trim();
+  if (trimmed === '/compact' || trimmed.startsWith('/compact ')) {
+    if (session.messages.length > 2) {
+      const recent = session.messages.slice(-2);
+      session.messages = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: '[System: Prior conversation history was compressed and compacted by user command to save context budget.]' }],
+        },
+        ...recent,
+      ];
+    }
+    session.upsert({
+      kind: 'info',
+      id: uid('i'),
+      text: '✓ 已深度压缩会话上下文，释放了 Token 预算。',
+    });
+    session.running = false;
+    session.emit({ type: 'run_state', running: false });
+    return;
+  }
+
+  if (trimmed === '/webSkillCreator' || trimmed.startsWith('/webSkillCreator ')) {
+    const customPrompt = trimmed.replace(/^\/webSkillCreator\s*/, '').trim();
+    const tab = (await pickTargetTab(session.windowId)) || (await activeTabIn(session.windowId));
+    const tabInfo = tab ? `Current Active Tab: "${tab.title}" (${tab.url})\n` : '';
+    userText =
+      `[MODE: Web Skill Creator (技能构建向导)]\n${tabInfo}` +
+      (customPrompt
+        ? `User Goal: ${customPrompt}\n`
+        : `User wants to create a reusable browser skill for this website.\n`) +
+      `Please act as an Expert Browser Automation Engineer:\n` +
+      `1. Synthesize the ordered workflow steps (navigation, typing, clicking, assertions).\n` +
+      `2. Identify dynamic parameters/variables (e.g. {{keyword}}, {{category}}) with reasonable defaults.\n` +
+      `3. Generate a complete JSON specification of the Skill following this schema:\n` +
+      '```json\n' +
+      `{\n` +
+      `  "name": "...",\n` +
+      `  "description": "...",\n` +
+      `  "icon": "⚡",\n` +
+      `  "variables": [{ "name": "...", "label": "...", "type": "string", "default": "...", "placeholder": "..." }],\n` +
+      `  "steps": [{ "intent": "...", "url": "..." }]\n` +
+      `}\n` +
+      '```\n' +
+      `Provide a brief explanation, then the complete JSON block.`;
+  }
+
   if (!continuation) {
     const region = opts?.region;
     const userBlocks: ContentBlock[] = [];
@@ -268,6 +315,9 @@ export async function runTurn(
         const toolItemId = uid('t');
         const summary = summarizeArgs(tu.name, tu.input as Record<string, any>);
         session.upsert({ kind: 'tool', id: toolItemId, name: tu.name, summary, status: 'running' });
+        if (session.currentTabId != null) {
+          void runInPage(session.currentTabId, 'hud_update', { text: `${tu.name}: ${summary}`, status: 'running' }).catch(() => {});
+        }
 
         const out = await executeToolUse(session, tu);
 
@@ -304,6 +354,9 @@ export async function runTurn(
     clearInterval(keepalive);
     session.running = false;
     session.controller = null;
+    if (session.currentTabId != null) {
+      void runInPage(session.currentTabId, 'hud_update', { status: 'hidden' }).catch(() => {});
+    }
     await session.persist();
     session.emit({ type: 'run_state', running: false });
   }
@@ -673,6 +726,10 @@ async function tryLevel0Step(
       if (res && res.ok) {
         const toolItemId = uid('t');
         const desc = recipe.action === 'click' ? `Clicked [${recipe.selector}]` : `Typed "${valueToType}" into [${recipe.selector}]`;
+        if (recipe.action === 'click' && recipe.point) {
+          void runInPage(tabId, 'pointer_ripple', { x: recipe.point[0], y: recipe.point[1] }).catch(() => {});
+        }
+        void runInPage(tabId, 'hud_update', { text: `Level 0: ${desc}`, status: 'running' }).catch(() => {});
         session.upsert({
           kind: 'tool',
           id: toolItemId,

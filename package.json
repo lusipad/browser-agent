@@ -14,7 +14,8 @@
     "test:e2e": "node --test test/e2e/collector.e2e.mjs test/e2e/extract.e2e.mjs",
     "sync-registry": "node scripts/sync-registry.mjs",
     "bench": "node eval/perception.bench.mjs",
-    "bench:e2e": "node eval/agent-e2e.bench.mjs"
+    "bench:e2e": "node eval/agent-e2e.bench.mjs",
+    "webbridge": "node scripts/webbridge-daemon.mjs"
   },
   "dependencies": {
     "dompurify": "^3.2.3",

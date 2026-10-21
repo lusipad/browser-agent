@@ -407,6 +407,52 @@ export async function pageAgent(cmd: string, payload: any): Promise<any> {
       } catch {}
     }
 
+    async function pageSettle(timeoutMs = 1500, quietMs = 150): Promise<{ settled: boolean; durationMs: number }> {
+      const start = Date.now();
+      return new Promise((resolve) => {
+        let lastMutation = Date.now();
+        let timer: any = null;
+        let observer: MutationObserver | null = null;
+
+        function checkDone() {
+          const now = Date.now();
+          if (now - lastMutation >= quietMs || now - start >= timeoutMs) {
+            cleanup();
+            resolve({ settled: true, durationMs: now - start });
+          } else {
+            timer = setTimeout(checkDone, Math.max(25, quietMs - (now - lastMutation)));
+          }
+        }
+
+        function cleanup() {
+          if (observer) {
+            try { observer.disconnect(); } catch {}
+            observer = null;
+          }
+          if (timer) {
+            clearTimeout(timer);
+            timer = null;
+          }
+        }
+
+        try {
+          if (typeof MutationObserver !== 'undefined' && (topDoc.body || topDoc.documentElement)) {
+            observer = new MutationObserver(() => {
+              lastMutation = Date.now();
+            });
+            observer.observe(topDoc.body || topDoc.documentElement, {
+              childList: true,
+              subtree: true,
+              attributes: true,
+              characterData: true,
+            });
+          }
+        } catch {}
+
+        timer = setTimeout(checkDone, quietMs);
+      });
+    }
+
     // ---------------- 语义信息 ----------------
     function accName(el: Element): string {
       const aria = el.getAttribute('aria-label');
@@ -1260,6 +1306,8 @@ export async function pageAgent(cmd: string, payload: any): Promise<any> {
       case 'hud_update':
         updateLiveHud(payload?.text, payload?.status);
         return { ok: true };
+      case 'page_settle':
+        return await pageSettle(Number(payload?.timeoutMs ?? 1500), Number(payload?.quietMs ?? 150));
       case 'pointer_ripple':
         pointerRipple(payload?.x, payload?.y, payload?.color);
         return { ok: true };

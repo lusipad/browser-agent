@@ -190,7 +190,7 @@ export type ApprovalDecision = 'allow_once' | 'allow_site' | 'deny';
 
 export type TimelineItem =
   | { kind: 'user'; id: string; text: string; image?: string; regionInfo?: { w: number; h: number } }
-  | { kind: 'assistant'; id: string; text: string; done: boolean }
+  | { kind: 'assistant'; id: string; text: string; done: boolean; reasoning?: string }
   | {
       kind: 'tool';
       id: string;
@@ -335,7 +335,7 @@ export type BgToPanel =
       recording?: boolean;
     }
   | { type: 'item_upsert'; item: TimelineItem }
-  | { type: 'text_delta'; id: string; delta: string }
+  | { type: 'text_delta'; id: string; delta: string; reasoningDelta?: string }
   | { type: 'run_state'; running: boolean }
   | { type: 'conversations'; list: ConvMeta[]; activeId: string }
   | { type: 'bindings'; bindings: BindingPick[]; bindingId: string }

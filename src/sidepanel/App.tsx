@@ -104,7 +104,14 @@ export function App() {
             const it = prev[i];
             if (it.kind !== 'assistant') return prev;
             const next = prev.slice();
-            next[i] = { ...it, text: it.text + msg.delta };
+            const reasoning = msg.reasoningDelta
+              ? (it.reasoning || '') + msg.reasoningDelta
+              : it.reasoning;
+            next[i] = {
+              ...it,
+              text: it.text + (msg.delta || ''),
+              reasoning,
+            };
             return next;
           });
           break;

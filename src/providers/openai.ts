@@ -109,8 +109,10 @@ export const openaiStream: ProviderImpl = async (p) => {
     const d = choice.delta ?? {};
     if (typeof d.reasoning_content === 'string') {
       reasoningText += d.reasoning_content;
+      p.onReasoning?.(d.reasoning_content);
     } else if (typeof d.reasoning === 'string') {
       reasoningText += d.reasoning;
+      p.onReasoning?.(d.reasoning);
     }
     const chunk = extractDeltaText(d);
     if (chunk) {

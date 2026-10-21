@@ -245,15 +245,33 @@ export async function runTurn(
         maxInputTokens: budget,
       });
 
-      const result = await streamOnce(session, provider, model, binding, sysBase, governed.messages, activeToolSpecs(session), (delta) => {
-        streamed += delta;
-        session.emit({ type: 'text_delta', id: asstId, delta });
-      });
+      const result = await streamOnce(
+        session,
+        provider,
+        model,
+        binding,
+        sysBase,
+        governed.messages,
+        activeToolSpecs(session),
+        (delta) => {
+          streamed += delta;
+          session.emit({ type: 'text_delta', id: asstId, delta });
+        },
+        (reasoningDelta) => {
+          session.emit({ type: 'text_delta', id: asstId, delta: '', reasoningDelta });
+        },
+      );
 
       accrueUsage(session, result.usage, binding.pricing);
       emitUsage(session, { tokens: governed.estInputTokens, budget });
       const finalText = textOfBlocks(result.blocks) || streamed;
-      session.upsert({ kind: 'assistant', id: asstId, text: finalText, done: true });
+      session.upsert({
+        kind: 'assistant',
+        id: asstId,
+        text: finalText,
+        done: true,
+        reasoning: result.reasoningText || undefined,
+      });
       session.messages.push({
         role: 'assistant',
         content: result.blocks.length ? result.blocks : [{ type: 'text', text: finalText || '(empty)' }],
@@ -371,6 +389,7 @@ function streamOnce(
   messages: ChatMessage[],
   tools: ReturnType<typeof toolSpecs>,
   onText: (d: string) => void,
+  onReasoning?: (d: string) => void,
 ) {
   const adv = session.cfg.advanced;
   return openaiStream({
@@ -386,6 +405,7 @@ function streamOnce(
     timeoutMs: adv.requestTimeoutMs,
     retries: adv.maxRetries,
     onText,
+    onReasoning,
   });
 }
 

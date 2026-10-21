@@ -157,12 +157,15 @@ async function resolvePoint(
 
 /** 动作后的稳定等待：短暂 settle + 若触发了导航则等待加载完成 */
 async function settle(ctx: ToolCtx): Promise<void> {
-  await sleep(300);
   try {
     const t = await chrome.tabs.get(ctx.tabId);
-    if (t.status === 'loading') await waitForLoad(ctx.tabId, 10000);
+    if (t.status === 'loading') {
+      await waitForLoad(ctx.tabId, 10000);
+    } else {
+      await runInPage(ctx.tabId, 'page_settle', { timeoutMs: 1500, quietMs: 150 }).catch(() => sleep(200));
+    }
   } catch {
-    /* tab 可能已关闭 */
+    await sleep(200);
   }
 }
 

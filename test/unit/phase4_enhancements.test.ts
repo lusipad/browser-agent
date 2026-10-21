@@ -155,3 +155,24 @@ test('humanInterventionTool: 触发人工介入并在 resolve 后返回恢复结
 
   assert.ok(res.content[0].text?.includes('Human intervention completed'));
 });
+
+test('pageAgent: page_settle 动态稳定检测在无变动时迅速结算', async () => {
+  const origWindow = (globalThis as any).window;
+  const origDoc = (globalThis as any).document;
+
+  (globalThis as any).window = { location: { href: 'https://spa.example.com' } };
+  (globalThis as any).document = {
+    title: 'SPA',
+    body: {},
+    documentElement: {},
+  };
+
+  try {
+    const res = await pageAgent('page_settle', { timeoutMs: 200, quietMs: 50 });
+    assert.equal(res?.settled, true);
+    assert.ok(typeof res?.durationMs === 'number');
+  } finally {
+    (globalThis as any).window = origWindow;
+    (globalThis as any).document = origDoc;
+  }
+});

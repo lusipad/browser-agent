@@ -396,6 +396,15 @@ function AssistantRow({
 
   return (
     <div className="row assistant">
+      {item.reasoning && (
+        <details className="assistant-reasoning" open={!item.done}>
+          <summary className="reasoning-summary">
+            <span className="reasoning-icon">🧠</span>
+            <span className="reasoning-title">{item.done ? '已完成思考' : '正在深度思考...'}</span>
+          </summary>
+          <div className="reasoning-content">{item.reasoning}</div>
+        </details>
+      )}
       <div
         ref={contentRef}
         onClick={handleContentClick}

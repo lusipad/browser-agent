@@ -1,5 +1,6 @@
 // 人机协同工具：遇到验证码、滑块、短信验证或阻断时请求人工介入
 import type { ToolDef } from './registry';
+import { runInPage } from '../inject';
 
 export const humanInterventionTool: ToolDef = {
   name: 'request_human_intervention',
@@ -22,15 +23,29 @@ export const humanInterventionTool: ToolDef = {
     },
     required: ['instruction'],
   },
-  needsTab: false,
+  needsTab: true,
   async run(ctx, input) {
     const reason = (input.reason as any) || 'captcha';
     const instruction = String(input.instruction || '请在页面上完成验证后点击继续');
+
+    try {
+      await chrome.tabs.update(ctx.tabId, { active: true });
+      if (ctx.session.windowId != null) {
+        await chrome.windows.update(ctx.session.windowId, { focused: true });
+      }
+      void runInPage(ctx.tabId, 'hud_update', { text: `⚠️ 人工协同: ${instruction}`, status: 'running' }).catch(() => {});
+    } catch {}
+
     await ctx.session.requestHumanIntervention({
       title: ctx.session.t('human.title'),
       hint: instruction,
       reason,
     });
+
+    try {
+      void runInPage(ctx.tabId, 'hud_update', { text: '✓ 验证已完成，智能体继续执行中...', status: 'running' }).catch(() => {});
+    } catch {}
+
     return {
       content: [
         {

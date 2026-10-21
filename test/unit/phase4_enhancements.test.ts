@@ -4,6 +4,7 @@ import { pageAgent } from '../../src/background/reader';
 import { Session } from '../../src/background/session';
 import { runTurn } from '../../src/background/agent';
 import { WebBridgeDaemon } from '../../scripts/webbridge-daemon.mjs';
+import { humanInterventionTool } from '../../src/background/tools/human';
 import type { AppConfig } from '../../src/shared/types';
 
 function mockConfig(): AppConfig {
@@ -73,6 +74,33 @@ test('pageAgent: 活体 HUD 与点击波纹命令正常响应', async () => {
   }
 });
 
+test('pageAgent: extract 支持 auto_cards 自动提取模式', async () => {
+  const origWindow = (globalThis as any).window;
+  const origDoc = (globalThis as any).document;
+
+  const mockWalker = {
+    nextNode: () => null,
+  };
+  (globalThis as any).window = { location: { href: 'https://store.example.com' } };
+  (globalThis as any).document = {
+    title: 'Store',
+    body: {},
+    documentElement: {},
+    createTreeWalker: () => mockWalker,
+    querySelectorAll: () => [],
+    querySelector: () => null,
+  };
+
+  try {
+    const res = await pageAgent('extract', { mode: 'auto_cards' });
+    assert.equal(res?.mode, 'auto_cards');
+    assert.ok(Array.isArray(res?.cards));
+  } finally {
+    (globalThis as any).window = origWindow;
+    (globalThis as any).document = origDoc;
+  }
+});
+
 test('runTurn: /compact 命令就地精简上下文历史并安全返回', async () => {
   const cfg = mockConfig();
   const session = new Session(1, cfg);
@@ -95,7 +123,7 @@ test('runTurn: /compact 命令就地精简上下文历史并安全返回', async
 });
 
 test('WebBridgeDaemon: HTTP 健康检查与优雅启停', async () => {
-  const testPort = 10088;
+  const testPort = 10089;
   const daemon = new WebBridgeDaemon(testPort);
   await daemon.start();
 
@@ -108,4 +136,22 @@ test('WebBridgeDaemon: HTTP 健康检查与优雅启停', async () => {
   } finally {
     daemon.stop();
   }
+});
+
+test('humanInterventionTool: 触发人工介入并在 resolve 后返回恢复结果', async () => {
+  const cfg = mockConfig();
+  const session = new Session(1, cfg);
+
+  // 异步在 20ms 后自动 resolve
+  setTimeout(() => {
+    const item = session.timeline.find((t) => t.kind === 'human_intervention');
+    if (item) session.resolveHumanIntervention(item.id);
+  }, 20);
+
+  const res = await humanInterventionTool.run(
+    { session, tabId: 101, isAborted: () => false },
+    { reason: 'captcha', instruction: '请滑动完成拼图' },
+  );
+
+  assert.ok(res.content[0].text?.includes('Human intervention completed'));
 });

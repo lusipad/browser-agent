@@ -1155,8 +1155,62 @@ export async function pageAgent(cmd: string, payload: any): Promise<any> {
         return obj;
       });
     }
+    function extractAutoCards(): any[] {
+      const candidates: Array<{ container: Element; children: Element[]; score: number }> = [];
+      const walker = topDoc.createTreeWalker(topDoc.body || topDoc.documentElement, 1 /* NodeFilter.SHOW_ELEMENT */);
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        const el = node as Element;
+        const tag = el.tagName.toLowerCase();
+        if (['script', 'style', 'svg', 'path', 'nav', 'footer', 'header'].includes(tag)) continue;
+        const children = Array.from(el.children).filter((c) => {
+          const t = c.tagName.toLowerCase();
+          return !['script', 'style'].includes(t) && isVisible(c);
+        });
+        if (children.length >= 3 && children.length <= 150) {
+          const firstTag = children[0].tagName;
+          const sameTagCount = children.filter((c) => c.tagName === firstTag).length;
+          if (sameTagCount >= children.length * 0.7) {
+            const avgTextLen = children.reduce((acc, c) => acc + (c.textContent || '').trim().length, 0) / children.length;
+            if (avgTextLen >= 10 && avgTextLen <= 2500) {
+              candidates.push({
+                container: el,
+                children,
+                score: children.length * Math.min(avgTextLen, 250),
+              });
+            }
+          }
+        }
+      }
+      candidates.sort((a, b) => b.score - a.score);
+      const best = candidates[0];
+      if (!best) return [];
+
+      return best.children.slice(0, 80).map((card, idx) => {
+        const titleEl = card.querySelector('h1, h2, h3, h4, h5, h6, [class*="title" i], [class*="name" i], strong, a');
+        const rawFirstLine = (card.textContent || '').trim().split('\n')[0]?.trim();
+        const title = cleanText(titleEl?.textContent || rawFirstLine, 150);
+        const linkEl = (card.tagName.toLowerCase() === 'a' ? card : card.querySelector('a[href]')) as HTMLAnchorElement | null;
+        const link = linkEl?.href && !linkEl.href.startsWith('javascript:') ? linkEl.href : undefined;
+        const imgEl = card.querySelector('img[src]') as HTMLImageElement | null;
+        const image = imgEl?.src && !imgEl.src.startsWith('data:') ? imgEl.src : undefined;
+        const fullText = cleanText(card.textContent, 500);
+        const priceMatch = fullText.match(/(?:[$¥￥€£]\s*[\d,]+(?:\.\d+)?|[\d,]+(?:\.\d+)?\s*(?:元|USD|EUR|CNY))/i);
+        const price = priceMatch ? priceMatch[0].trim() : undefined;
+
+        return {
+          index: idx + 1,
+          title: title || undefined,
+          price,
+          link,
+          image,
+          text: fullText,
+        };
+      });
+    }
+
     function extractData(p: any): any {
-      const mode = String(p?.mode || (p?.selector ? 'selector' : 'tables'));
+      const mode = String(p?.mode || (p?.selector ? 'selector' : topDoc.querySelector('table') ? 'tables' : 'auto_cards'));
       if (mode === 'tables') {
         const tables = extractTables();
         return { mode, count: tables.length, tables };
@@ -1164,6 +1218,10 @@ export async function pageAgent(cmd: string, payload: any): Promise<any> {
       if (mode === 'links') {
         const links = extractLinks();
         return { mode, count: links.length, links };
+      }
+      if (mode === 'auto_cards') {
+        const cards = extractAutoCards();
+        return { mode, count: cards.length, cards };
       }
       const selector = String(p?.selector ?? '');
       if (!selector) throw new Error('extract_data: "selector" is required for selector mode');

@@ -65,7 +65,7 @@ export function Composer(props: Props) {
       description: '主动提炼并压缩当前长对话上下文',
       icon: '🧹',
       run: () => {
-        props.onSend('请帮我提炼并总结当前任务的核心进展与发现，主动精简长对话历史上下文。');
+        props.onSend('/compact');
       },
     },
     {
@@ -75,7 +75,17 @@ export function Composer(props: Props) {
       description: '探查当前页面并自动生成专属技能定义',
       icon: '🪄',
       run: () => {
-        props.onSend('请深入探查当前页面的关键导航、核心表单与主要业务操作流，为我自动设计并生成一套专属 Skill。');
+        props.onSend('/webSkillCreator');
+      },
+    },
+    {
+      id: 'cmd_extract',
+      kind: 'command' as const,
+      name: '/extract',
+      description: '智能提取当前页面的结构化表格、卡片或核心列表',
+      icon: '📊',
+      run: () => {
+        props.onSend('请智能提取当前页面的核心数据（结构化卡片、商品或表格列表），整理为规范表格。');
       },
     },
     {

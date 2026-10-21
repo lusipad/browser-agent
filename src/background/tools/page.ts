@@ -49,13 +49,14 @@ export const pageTools: ToolDef[] = [
     name: 'extract_data',
     description:
       'Extract STRUCTURED data from the page (across shadow DOM and same-origin iframes) as JSON — cheaper and more precise than reading the whole page text, and easier to summarise. ' +
-      'Modes: "tables" = every <table> as {caption, headers, rows}; "links" = all links as {text, href}; ' +
+      'Modes: "auto_cards" = auto-detects repeating card/list items (e-commerce products, search results, news feeds) and extracts title/price/link/image/text; ' +
+      '"tables" = every <table> as {caption, headers, rows}; "links" = all links as {text, href}; ' +
       '"selector" = provide a CSS "selector" and each matching element becomes one record — its trimmed text by default, or if "fields" is given, an object whose values are sub-selectors relative to the match. ' +
       'A field value may be "subSelector@attr" or just "@attr" to read an attribute (e.g. "@href", "img@src", "a.title@href").',
     schema: {
       type: 'object',
       properties: {
-        mode: { type: 'string', enum: ['tables', 'links', 'selector'], description: 'Extraction mode, default "tables" (or "selector" if a selector is given)' },
+        mode: { type: 'string', enum: ['auto_cards', 'tables', 'links', 'selector'], description: 'Extraction mode, default "auto_cards" (or "tables" if tables exist, or "selector" if a selector is given)' },
         selector: { type: 'string', description: 'CSS selector for the repeating record container (selector mode), e.g. "li.product", ".search-result"' },
         fields: {
           type: 'object',

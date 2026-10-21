@@ -71,6 +71,10 @@ export const DEFAULT_CONFIG: AppConfig = {
     enableJavascriptTool: false,
   },
   system1: DEFAULT_SYSTEM1_CONFIG,
+  webbridge: {
+    enabled: false,
+    url: 'ws://127.0.0.1:10086/ws',
+  },
   uiLang: 'auto',
   sites: {
     allowed: [],
@@ -170,6 +174,11 @@ export function mergeConfig(raw: unknown): AppConfig {
     safety: { ...DEFAULT_CONFIG.safety, ...(r.safety ?? {}) },
     advanced: { ...DEFAULT_CONFIG.advanced, ...(r.advanced ?? {}) },
     system1: { ...DEFAULT_SYSTEM1_CONFIG, ...(r.system1 ?? {}) },
+    webbridge: {
+      enabled: r.webbridge?.enabled ?? false,
+      url: r.webbridge?.url ?? 'ws://127.0.0.1:10086/ws',
+      authToken: r.webbridge?.authToken,
+    },
     uiLang: r.uiLang === 'zh' || r.uiLang === 'en' ? r.uiLang : 'auto',
     sites: {
       allowed: r.sites?.allowed ?? DEFAULT_CONFIG.sites.allowed,

@@ -54,8 +54,19 @@ export function extractLocalSecrets(cfg: AppConfig): {
     };
   }
 
+  let webbridge = cfg.webbridge;
+  if (webbridge) {
+    if (webbridge.authToken) {
+      secrets['__webbridge__'] = webbridge.authToken;
+    }
+    webbridge = {
+      ...webbridge,
+      authToken: allowSyncKey ? webbridge.authToken : undefined,
+    };
+  }
+
   return {
-    sanitized: { ...cfg, providers, ...(system1 ? { system1 } : {}) },
+    sanitized: { ...cfg, providers, ...(system1 ? { system1 } : {}), ...(webbridge ? { webbridge } : {}) },
     secrets,
   };
 }
@@ -82,7 +93,16 @@ export function mergeLocalSecrets(
     };
   }
 
-  return { ...config, providers, ...(system1 ? { system1 } : {}) };
+  let webbridge = config.webbridge;
+  if (webbridge) {
+    const localWbKey = secrets['__webbridge__'];
+    webbridge = {
+      ...webbridge,
+      authToken: webbridge.authToken || localWbKey || undefined,
+    };
+  }
+
+  return { ...config, providers, ...(system1 ? { system1 } : {}), ...(webbridge ? { webbridge } : {}) };
 }
 
 /** 从本地存储读取独立密钥库 */

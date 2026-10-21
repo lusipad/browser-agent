@@ -48,9 +48,13 @@ export class Session implements ApprovalHost {
   port: chrome.runtime.Port | null = null;
   /** 当前正在执行的技能（含已替换变量的步骤） */
   activeSkill: ActiveSkill | null = null;
+  /** 当前技能已完成的步骤游标（用于 Level 0 确定性重放） */
+  activeSkillStepIndex: number = 0;
   /** 示教录制状态 */
   recording = false;
   recordedActions: DemonstratedAction[] = [];
+  /** 示教录制期间关联的 Chrome Tab Group ID */
+  recordingGroupId: number | null = null;
   private pendingApprovals = new Map<string, (d: ApprovalDecision) => void>();
   private pendingInterventions = new Map<string, () => void>();
 

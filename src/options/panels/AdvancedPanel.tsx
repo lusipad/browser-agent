@@ -154,6 +154,49 @@ export function AdvancedPanel({ cfg, onChange }: PanelProps) {
           hint={t('opt.advanced.enableJsHint')}
         />
       </div>
+
+      <div className="card">
+        <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '6px' }}>WebBridge 桌面反向网桥</h3>
+        <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 12px 0' }}>
+          允许本地 CLI 工具、IDE 插件或 MCP 伴侣通过 WebSocket 双向反向连接控制浏览器智能体。
+        </p>
+        <Toggle
+          checked={cfg.webbridge?.enabled ?? false}
+          onChange={(v) =>
+            onChange({
+              ...cfg,
+              webbridge: {
+                ...cfg.webbridge,
+                enabled: v,
+                url: cfg.webbridge?.url || 'ws://127.0.0.1:10086/ws',
+              },
+            })
+          }
+          label="启用 WebBridge 本地反向连接"
+          hint="开启后将自动反向连接本地桌面守护进程 (支持 4409 实例冲突保护)"
+        />
+        {cfg.webbridge?.enabled && (
+          <div style={{ marginTop: '12px' }}>
+            <Field label="WebSocket 守护端点" hint="本地 WebSocket 服务地址，如 ws://127.0.0.1:10086/ws">
+              <input
+                type="text"
+                value={cfg.webbridge?.url || 'ws://127.0.0.1:10086/ws'}
+                onChange={(e) =>
+                  onChange({
+                    ...cfg,
+                    webbridge: {
+                      ...cfg.webbridge,
+                      enabled: true,
+                      url: e.target.value,
+                    },
+                  })
+                }
+                placeholder="ws://127.0.0.1:10086/ws"
+              />
+            </Field>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

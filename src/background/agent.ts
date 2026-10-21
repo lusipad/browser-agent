@@ -134,6 +134,18 @@ export async function runTurn(
     for (let iter = 0; iter < adv.maxIterations; iter++) {
       if (session.aborted) break;
 
+      // ⚡ Level 0 确定性技能重放（0ms / 0 tokens 直通执行）
+      if (session.activeSkill) {
+        const l0Result = await tryLevel0Step(session);
+        if (l0Result && l0Result.executed) {
+          if (l0Result.isDone) {
+            session.upsert({ kind: 'info', id: uid('i'), text: '✓ ⚡ Level 0 确定性重放已达成全部步骤' });
+            break;
+          }
+          continue;
+        }
+      }
+
       // ⚡ System 1 极速动作拦截（双核加速）
       if (session.cfg.system1?.enabled && consecutiveFastSteps < maxFastSteps) {
         const fastResult = await trySystem1FastStep(session, userText);
@@ -546,6 +558,141 @@ function summarizeArgs(name: string, input: Record<string, any>): string {
       return s === '{}' ? (inp.tab_id != null ? `tab ${inp.tab_id}` : '') : truncate(s, 60, '…');
     }
   }
+}
+
+async function tryLevel0Step(
+  session: Session,
+): Promise<{ executed: boolean; isDone: boolean } | null> {
+  if (!session.activeSkill) return null;
+  const idx = session.activeSkillStepIndex ?? 0;
+  if (idx >= session.activeSkill.steps.length) return null;
+
+  const step = session.activeSkill.steps[idx];
+  const recipe = step.recipe;
+  if (!recipe || !recipe.action) return null;
+
+  let tabId = session.currentTabId;
+  if (tabId == null) {
+    const act = (await pickTargetTab(session.windowId)) || (await activeTabIn(session.windowId));
+    if (act?.id != null) {
+      tabId = act.id;
+      session.currentTabId = act.id;
+    }
+  }
+  if (tabId == null) return null;
+
+  let tab: chrome.tabs.Tab | undefined;
+  try {
+    tab = await chrome.tabs.get(tabId);
+  } catch {
+    return null;
+  }
+
+  // 1. Navigation
+  if (recipe.action === 'navigate') {
+    const targetUrl = recipe.urlTemplate || step.url;
+    if (targetUrl) {
+      if (tab.url && tab.url.replace(/\/$/, '') === targetUrl.replace(/\/$/, '')) {
+        session.activeSkillStepIndex = idx + 1;
+        return { executed: true, isDone: session.activeSkillStepIndex >= session.activeSkill.steps.length };
+      }
+      try {
+        await chrome.tabs.update(tabId, { url: targetUrl });
+        await new Promise((r) => setTimeout(r, 800));
+        const toolItemId = uid('t');
+        session.upsert({
+          kind: 'tool',
+          id: toolItemId,
+          name: '⚡ Level 0 (确定性导航)',
+          summary: `Direct navigate to ${targetUrl} (0ms / 0 tokens)`,
+          status: 'ok',
+        });
+        session.activeSkillStepIndex = idx + 1;
+        return { executed: true, isDone: session.activeSkillStepIndex >= session.activeSkill.steps.length };
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  // 2. Click or Input
+  if ((recipe.action === 'click' || recipe.action === 'input') && recipe.selector) {
+    let valueToType = recipe.valueTemplate ?? '';
+    if (recipe.action === 'input' && !valueToType) {
+      if (session.activeSkill.resolvedVars?.length) {
+        valueToType = session.activeSkill.resolvedVars[0][1] ?? '';
+      }
+    }
+
+    try {
+      const execResult = await chrome.scripting.executeScript({
+        target: { tabId },
+        func: (selector: string, action: string, val: string) => {
+          let el: HTMLElement | null = null;
+          try {
+            el = document.querySelector(selector) as HTMLElement | null;
+          } catch {
+            return { ok: false, reason: 'invalid_selector' };
+          }
+          if (!el) return { ok: false, reason: 'not_found' };
+
+          const rect = el.getBoundingClientRect();
+          if (rect.width === 0 && rect.height === 0) {
+            return { ok: false, reason: 'invisible' };
+          }
+
+          // Visual highlight
+          try {
+            el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+            el.style.outline = '3px solid #22c55e';
+            el.style.outlineOffset = '2px';
+            setTimeout(() => {
+              el.style.outline = '';
+              el.style.outlineOffset = '';
+            }, 600);
+          } catch {}
+
+          if (action === 'click') {
+            el.focus?.();
+            el.click();
+            return { ok: true, action: 'click' };
+          } else if (action === 'input') {
+            const input = el as HTMLInputElement;
+            input.focus?.();
+            input.value = val;
+            input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+            return { ok: true, action: 'input' };
+          }
+          return { ok: false, reason: 'unknown_action' };
+        },
+        args: [recipe.selector, recipe.action, valueToType],
+      });
+
+      const res = execResult?.[0]?.result as any;
+      if (res && res.ok) {
+        const toolItemId = uid('t');
+        const desc = recipe.action === 'click' ? `Clicked [${recipe.selector}]` : `Typed "${valueToType}" into [${recipe.selector}]`;
+        session.upsert({
+          kind: 'tool',
+          id: toolItemId,
+          name: '⚡ Level 0 (确定性重放)',
+          summary: `${desc} (0ms / 0 tokens)`,
+          status: 'ok',
+        });
+        session.activeSkillStepIndex = idx + 1;
+        const isDone = session.activeSkillStepIndex >= session.activeSkill.steps.length;
+        return { executed: true, isDone };
+      } else {
+        // Level 0 selector not found or drifted! Gracefully fall through to Level 1
+        return null;
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
 }
 
 async function trySystem1FastStep(

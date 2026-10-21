@@ -3,6 +3,7 @@ import { makeT, resolveLang } from '../shared/i18n';
 import { loadConfig, onConfigChange, saveConfig } from '../shared/settings';
 import type { AppConfig, BindingPick, PanelToBg } from '../shared/types';
 import { runTurn } from './agent';
+import { WebBridgeClient } from './webbridge';
 import { detachAll } from './cdp';
 import { pickDiagnoseTab, runDiagnostics } from './diagnose';
 import { deleteConversation, listConversations, loadConversation, saveConversation } from './history';
@@ -52,6 +53,20 @@ async function sessionFor(windowId: number): Promise<Session> {
   }
   return s;
 }
+
+const webBridgeClient = new WebBridgeClient(async (winId) => {
+  let targetWinId = winId;
+  if (targetWinId == null) {
+    try {
+      const lastWin = await chrome.windows.getLastFocused();
+      targetWinId = lastWin?.id ?? chrome.windows.WINDOW_ID_CURRENT;
+    } catch {
+      targetWinId = chrome.windows.WINDOW_ID_CURRENT;
+    }
+  }
+  return sessionFor(targetWinId);
+});
+void loadConfig().then((cfg) => webBridgeClient.updateConfig(cfg)).catch(() => {});
 
 async function injectRecorder(tabId: number): Promise<void> {
   try {
@@ -287,10 +302,12 @@ chrome.runtime.onConnect.addListener((port) => {
                   steps: resolvedSteps,
                   resolvedVars: displayVars,
                 };
+                bound.activeSkillStepIndex = 0;
                 const userTask = bound.t('skill.executing', [skill.name]);
                 const s = bound;
                 void runTurn(s, userTask).then(() => {
                   s.activeSkill = null;
+                  s.activeSkillStepIndex = 0;
                   pushConversations(s);
                 });
               }
@@ -325,6 +342,20 @@ chrome.runtime.onConnect.addListener((port) => {
               bound.startRecording();
               const activeTab = await activeTabIn(bound.windowId);
               if (activeTab?.id) {
+                try {
+                  if (typeof chrome.tabs.group === 'function') {
+                    const gId = await chrome.tabs.group({ tabIds: [activeTab.id] });
+                    bound.recordingGroupId = gId;
+                    if (typeof chrome.tabGroups?.update === 'function') {
+                      await chrome.tabGroups.update(gId, {
+                        title: '🔴 正在录制技能',
+                        color: 'red',
+                      });
+                    }
+                  }
+                } catch {
+                  /* 忽略 tab 分组异常（如某些浏览器未开启或受限） */
+                }
                 await injectRecorder(activeTab.id);
               }
             }
@@ -334,6 +365,20 @@ chrome.runtime.onConnect.addListener((port) => {
             if (bound) {
               const shouldLearn = msg.learn;
               bound.stopRecording();
+              if (bound.recordingGroupId != null) {
+                try {
+                  if (typeof chrome.tabs.ungroup === 'function') {
+                    const tabs = await chrome.tabs.query({ groupId: bound.recordingGroupId });
+                    const ids = tabs.map((t) => t.id!).filter(Boolean);
+                    if (ids.length > 0) {
+                      await chrome.tabs.ungroup(ids);
+                    }
+                  }
+                } catch {
+                  /* 忽略已解散或关闭的标签 */
+                }
+                bound.recordingGroupId = null;
+              }
               if (shouldLearn && bound.recordedActions.length > 0) {
                 bound.info(bound.t('skill.learningFromDemo'));
                 try {
@@ -514,6 +559,7 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
 // 设置变化时向所有已连接面板广播模型列表
 onConfigChange((cfg) => {
+  webBridgeClient.updateConfig(cfg);
   for (const s of sessions.values()) {
     s.cfg = cfg;
     if (!cfg.bindings.find((b) => b.id === s.bindingId && isBindingEnabled(b))) s.bindingId = defaultEnabledBindingId(cfg);

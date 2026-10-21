@@ -1,7 +1,7 @@
 // 技能生成：从对话轨迹中提取 tool_use 序列，调用 LLM 生成语义化 SKILL 定义
 import { openaiStream } from '../providers';
 import type { Skill, SkillStep, SkillVariable } from '../shared/skill';
-import type { ChatMessage, TextBlock, ToolUseBlock, ToolResultBlock } from '../shared/types';
+import type { ChatMessage, DemonstratedAction, TextBlock, ToolUseBlock, ToolResultBlock } from '../shared/types';
 import { textOfBlocks, truncate, uid } from '../shared/util';
 import type { Session } from './session';
 import { resolveModelBinding } from '../shared/models';
@@ -150,7 +150,47 @@ export async function generateSkillFromDemonstration(session: Session): Promise<
   });
 
   const text = textOfBlocks(result.blocks).trim();
-  return parseSkillJson(text, session.conversationId);
+  const skill = parseSkillJson(text, session.conversationId);
+  return attachRecipesToSkill(skill, session.recordedActions);
+}
+
+/** 将录制的原始操作动作提炼出的稳定定位配方关联到生成的技能步骤中（启用 Level 0 确定性重放） */
+export function attachRecipesToSkill(skill: Skill, actions: DemonstratedAction[]): Skill {
+  if (!actions.length || !skill.steps.length) return skill;
+
+  // 过滤多余的中间连续输入
+  const cleaned: DemonstratedAction[] = [];
+  for (let i = 0; i < actions.length; i++) {
+    const cur = actions[i];
+    const next = actions[i + 1];
+    if (
+      cur.type === 'input' &&
+      next &&
+      next.type === 'input' &&
+      cur.target?.selector &&
+      cur.target.selector === next.target?.selector
+    ) {
+      continue;
+    }
+    cleaned.push(cur);
+  }
+
+  for (let i = 0; i < skill.steps.length; i++) {
+    const step = skill.steps[i];
+    const act = cleaned[i];
+    if (act) {
+      step.recipe = {
+        action: act.type,
+        selector: act.target?.selector,
+        point: act.target?.point,
+        rect: act.target?.rect,
+        valueTemplate: act.value,
+        urlTemplate: act.url,
+      };
+    }
+  }
+
+  return skill;
 }
 
 /** 解析 LLM 返回的 JSON，构造完整 Skill 对象 */

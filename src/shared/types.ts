@@ -157,6 +157,15 @@ export interface SyncSettings {
   syncApiKeys: boolean;
 }
 
+export interface WebBridgeConfig {
+  /** 是否启用本地 WebSocket 双向网桥 */
+  enabled: boolean;
+  /** 本地 WebSocket 服务地址，如 ws://127.0.0.1:10086/ws */
+  url: string;
+  /** 可选的认证 Token */
+  authToken?: string;
+}
+
 export interface AppConfig {
   version: 2;
   providers: ProviderConfig[];
@@ -166,6 +175,7 @@ export interface AppConfig {
   safety: SafetySettings;
   advanced: AdvancedSettings;
   system1?: System1Config;
+  webbridge?: WebBridgeConfig;
   sites: SitePermissions;
   sync?: SyncSettings;
   /** 界面语言：'auto' 跟随浏览器，或强制 'zh' / 'en' */
@@ -263,6 +273,9 @@ export interface DemonstratedAction {
     label?: string;
     role?: string;
     isPassword?: boolean;
+    selector?: string;
+    rect?: { x: number; y: number; w: number; h: number };
+    point?: [number, number];
   };
   value?: string;
   fileInfo?: {

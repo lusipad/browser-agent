@@ -17,7 +17,17 @@ export interface SkillVariable {
   options?: string[];
 }
 
-/** 技能步骤（语义化意图，而非 DOM 选择器） */
+/** Level 0 确定性执行配方（录制捕获的稳定定位器与坐标，用于 0ms / 0 token 极速重放） */
+export interface StepRecipe {
+  action: "click" | "input" | "upload" | "navigate";
+  selector?: string;
+  point?: [number, number];
+  rect?: { x: number; y: number; w: number; h: number };
+  valueTemplate?: string;
+  urlTemplate?: string;
+}
+
+/** 技能步骤（语义化意图 + 可选 Level 0 确定性执行配方） */
 export interface SkillStep {
   /** 自然语言描述，如 "在搜索框中输入{{keyword}}" */
   intent: string;
@@ -25,6 +35,8 @@ export interface SkillStep {
   url?: string;
   /** 备注或条件说明 */
   note?: string;
+  /** 可选：确定性执行配方，存在且生效时触发 Level 0 极速直放 */
+  recipe?: StepRecipe;
 }
 
 /** 技能定时调度配置 */
@@ -138,6 +150,17 @@ export function resolveSkillSteps(
     intent: resolveSkillTemplate(step.intent, variables, skill.variables),
     url: step.url ? resolveSkillTemplate(step.url, variables, skill.variables) : undefined,
     note: step.note ? resolveSkillTemplate(step.note, variables, skill.variables) : undefined,
+    recipe: step.recipe
+      ? {
+          ...step.recipe,
+          valueTemplate: step.recipe.valueTemplate
+            ? resolveSkillTemplate(step.recipe.valueTemplate, variables, skill.variables)
+            : undefined,
+          urlTemplate: step.recipe.urlTemplate
+            ? resolveSkillTemplate(step.recipe.urlTemplate, variables, skill.variables)
+            : undefined,
+        }
+      : undefined,
   }));
 }
 

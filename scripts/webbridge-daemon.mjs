@@ -462,7 +462,9 @@ function setupInteractiveCli(daemon) {
 const isMain = process.argv[1] && (process.argv[1].endsWith('webbridge-daemon.mjs') || process.argv[1].includes('webbridge'));
 
 if (isMain) {
-  const daemon = new WebBridgeDaemon();
+  const portArgIdx = process.argv.indexOf('--port');
+  const port = portArgIdx !== -1 && process.argv[portArgIdx + 1] ? Number(process.argv[portArgIdx + 1]) : PORT;
+  const daemon = new WebBridgeDaemon(port);
   await daemon.start();
 
   if (process.argv.includes('--stdio')) {

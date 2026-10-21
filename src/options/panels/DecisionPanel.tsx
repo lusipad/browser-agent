@@ -34,7 +34,7 @@ export function DecisionPanel({ cfg, onChange }: PanelProps) {
     setTestResult(null);
     const start = performance.now();
     try {
-      const dummyState = {
+      const dummyState: any = {
         goal: 'Click the confirm button to continue',
         elements: [
           { ref: '1', role: 'button', name: 'Confirm', inView: true, x: 100, y: 200 },
@@ -43,6 +43,10 @@ export function DecisionPanel({ cfg, onChange }: PanelProps) {
         pageUrl: 'https://example.com/test',
         pageTitle: 'Test Checkout Page',
       };
+      if (sys1.visionEnabled) {
+        dummyState.screenshot =
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+      }
 
       const decision = await executeSystem1Decision(sys1, dummyState);
       const elapsed = Math.round(performance.now() - start);
@@ -158,6 +162,15 @@ export function DecisionPanel({ cfg, onChange }: PanelProps) {
                   onChange={(e) => patchSys1({ model: e.target.value })}
                 />
               </Field>
+            </div>
+
+            <div style={{ marginTop: 14 }}>
+              <Toggle
+                checked={!!sys1.visionEnabled}
+                onChange={(v) => patchSys1({ visionEnabled: v })}
+                label={t('opt.system1.vision')}
+                hint={t('opt.system1.visionHint')}
+              />
             </div>
           </div>
 

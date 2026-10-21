@@ -17,6 +17,7 @@ export function formatStateForSystem1(req: System1DecisionRequest): string {
   const candidateEls = (inViewEls.length >= 5 ? inViewEls : req.elements).slice(0, 120);
   const lines: string[] = [
     `Goal: ${req.goal}`,
+    req.screenshot ? 'Screenshot: page_screenshot' : '',
     req.pageTitle ? `Title: ${req.pageTitle}` : '',
     req.pageUrl ? `URL: ${req.pageUrl}` : '',
     req.stepContext ? `Context: ${req.stepContext}` : '',
@@ -24,6 +25,51 @@ export function formatStateForSystem1(req: System1DecisionRequest): string {
     ...candidateEls.map((e) => `[${e.ref}] <${e.role}> "${e.name || '(unlabeled)'}"${e.value ? ` value="${e.value}"` : ''}${e.inView ? '' : ' (offscreen)'}`),
   ];
   return lines.filter(Boolean).join('\n');
+}
+
+function parseBoxCoordinates(rawBox: any): { coordinate?: [number, number]; box?: { x: number; y: number; w: number; h: number } } {
+  if (!rawBox) return {};
+  let x: number | undefined;
+  let y: number | undefined;
+  let w: number | undefined;
+  let h: number | undefined;
+
+  if (Array.isArray(rawBox)) {
+    if (rawBox.length === 2) {
+      const [px, py] = rawBox.map(Number);
+      if (!isNaN(px) && !isNaN(py)) {
+        return { coordinate: [Math.round(px), Math.round(py)] };
+      }
+    }
+    if (rawBox.length >= 4) {
+      const [y1, x1, y2, x2] = rawBox.map(Number);
+      if (!isNaN(y1) && !isNaN(x1) && !isNaN(y2) && !isNaN(x2)) {
+        x = Math.round((x1 + x2) / 2);
+        y = Math.round((y1 + y2) / 2);
+        w = Math.round(Math.abs(x2 - x1));
+        h = Math.round(Math.abs(y2 - y1));
+      }
+    }
+  } else if (typeof rawBox === 'object') {
+    const x1 = Number(rawBox.xmin ?? rawBox.left ?? rawBox.x);
+    const y1 = Number(rawBox.ymin ?? rawBox.top ?? rawBox.y);
+    const x2 = Number(rawBox.xmax ?? rawBox.right ?? (x1 + (rawBox.width ?? rawBox.w ?? 0)));
+    const y2 = Number(rawBox.ymax ?? rawBox.bottom ?? (y1 + (rawBox.height ?? rawBox.h ?? 0)));
+    if (!isNaN(x1) && !isNaN(y1) && !isNaN(x2) && !isNaN(y2)) {
+      x = Math.round((x1 + x2) / 2);
+      y = Math.round((y1 + y2) / 2);
+      w = Math.round(Math.abs(x2 - x1));
+      h = Math.round(Math.abs(y2 - y1));
+    }
+  }
+
+  if (x != null && y != null) {
+    return {
+      coordinate: [x, y],
+      box: w != null && h != null ? { x, y, w, h } : undefined,
+    };
+  }
+  return {};
 }
 
 export function parseSystem1Response(raw: any, elements: System1Element[]): System1DecisionResponse {
@@ -34,6 +80,8 @@ export function parseSystem1Response(raw: any, elements: System1Element[]): Syst
   let actionStr: string = '';
   let targetRef: string | undefined;
   let text: string | undefined;
+  let coordinate: [number, number] | undefined;
+  let box: { x: number; y: number; w: number; h: number } | undefined;
   let confidence: number = 0.5;
 
   // 格式 1: TypeSafe Jev 标准 questions/decisions 或 answers 结构
@@ -50,6 +98,12 @@ export function parseSystem1Response(raw: any, elements: System1Element[]): Syst
     if (tgt) {
       targetRef = String(tgt.choice ?? tgt.value ?? tgt.ref ?? '');
     }
+    const boxRaw = answers.box ?? answers.target_box ?? answers.location ?? answers.coordinate;
+    if (boxRaw) {
+      const pb = parseBoxCoordinates(boxRaw.value ?? boxRaw.box ?? boxRaw.choice ?? boxRaw);
+      coordinate = pb.coordinate;
+      box = pb.box;
+    }
   }
 
   // 格式 2: 扁平 / jev-ultrafast / Laya REST 结构 (action / choice / ref / target)
@@ -65,6 +119,12 @@ export function parseSystem1Response(raw: any, elements: System1Element[]): Syst
     confidence = raw.score;
   }
 
+  if (!coordinate && (raw.coordinate || raw.box || raw.target_box || raw.location)) {
+    const pb = parseBoxCoordinates(raw.coordinate ?? raw.box ?? raw.target_box ?? raw.location);
+    coordinate = pb.coordinate;
+    box = pb.box;
+  }
+
   if (raw.text != null) {
     text = String(raw.text);
   }
@@ -76,17 +136,23 @@ export function parseSystem1Response(raw: any, elements: System1Element[]): Syst
   if (targetRef) {
     const exists = elements.some((e) => e.ref === targetRef);
     if (!exists) {
-      // 元素在当前视图中不存在，降低置信度
-      confidence = Math.min(confidence, 0.4);
+      // 若元素在 DOM 列表中不存在，但模型返回了有效视觉坐标，则保留较高置信度
+      confidence = coordinate ? Math.min(confidence, 0.8) : Math.min(confidence, 0.4);
     }
   } else if (action === 'CLICK' || action === 'SELECT') {
-    // 点击或选择操作缺失目标元素
-    confidence = Math.min(confidence, 0.3);
+    // 点击或选择操作若拥有视觉定位坐标，置信度维持在可用范围
+    if (coordinate) {
+      confidence = Math.max(confidence, 0.75);
+    } else {
+      confidence = Math.min(confidence, 0.3);
+    }
   }
 
   return {
     action,
     targetRef: targetRef || undefined,
+    coordinate,
+    box,
     text,
     confidence: Math.max(0, Math.min(1, confidence)),
     rationale: raw.rationale ? String(raw.rationale) : undefined,
@@ -157,6 +223,11 @@ export async function executeSystem1Decision(
         },
       },
     };
+    if (req.screenshot) {
+      payload.assets = {
+        page_screenshot: req.screenshot,
+      };
+    }
   } else {
     payload = {
       model: cfg.model || 'laya-modernbert-large',
@@ -181,6 +252,12 @@ export async function executeSystem1Decision(
         },
       },
     };
+    if (req.screenshot) {
+      payload.assets = {
+        page_screenshot: req.screenshot,
+      };
+      payload.screenshot = req.screenshot;
+    }
   }
 
   const headers: Record<string, string> = {
@@ -188,6 +265,9 @@ export async function executeSystem1Decision(
   };
   if (cfg.apiKey && cfg.apiKey.trim()) {
     headers['Authorization'] = `Bearer ${cfg.apiKey.trim()}`;
+  }
+  if (req.screenshot || cfg.visionEnabled) {
+    headers['TypeSafe-Danger-Zone-Images'] = 'true';
   }
 
   let timeoutId: any;

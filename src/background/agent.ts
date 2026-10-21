@@ -601,6 +601,15 @@ async function trySystem1FastStep(
     stepContext = `Workflow steps:\n` + skill.steps.map((s, idx) => `${idx + 1}. ${s.intent}`).join('\n');
   }
 
+  let screenshot: string | undefined;
+  if (sys1Cfg.visionEnabled && session.windowId != null) {
+    try {
+      screenshot = await chrome.tabs.captureVisibleTab(session.windowId, { format: 'jpeg', quality: 75 });
+    } catch {
+      // 截图捕获失败时优雅降级为纯文本 DOM
+    }
+  }
+
   try {
     const decision = await executeSystem1Decision(
       sys1Cfg,
@@ -610,6 +619,7 @@ async function trySystem1FastStep(
         pageUrl: tab.url,
         pageTitle: tab.title,
         stepContext,
+        screenshot,
       },
       session.controller?.signal,
     );

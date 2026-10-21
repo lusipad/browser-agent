@@ -291,6 +291,11 @@ export const optionsDict = {
   'opt.system1.model': { zh: '模型名称 (TypeSafe 为 jev-latest)', en: 'Model Name (e.g. jev-latest)' },
   'opt.system1.minConfidence': { zh: '最低置信度阈值 (低于此值回退主模型)', en: 'Min Confidence Threshold (falls back to LLM below this)' },
   'opt.system1.maxFastSteps': { zh: '单次连续快决策上限', en: 'Max Consecutive Fast Steps' },
+  'opt.system1.vision': { zh: '视觉多模态感知 (Vision / Image Support)', en: 'Multimodal Vision Perception (Image Support)' },
+  'opt.system1.visionHint': {
+    zh: '适配 Jev 1.14+ 实验性多模态能力。快决策时自动抓取当前屏幕视口并以 assets 附带至请求中（启用 TypeSafe-Danger-Zone-Images 头），让决策引擎结合真实渲染画面识别图标按钮、画布以及纯文本 DOM 难以定位的区域。',
+    en: 'Adapts to Jev 1.14+ experimental multimodal vision. Automatically attaches the current viewport screenshot in the assets payload (with TypeSafe-Danger-Zone-Images header) to help the decision model recognize visual icons, canvases, and complex spatial layouts.',
+  },
 
   // 诊断
   'opt.diagnostics.title': { zh: '诊断', en: 'Diagnostics' },

@@ -73,39 +73,56 @@ export async function executeFastAction(
   }
 
   if (action === 'CLICK' || action === 'SELECT') {
-    if (!targetRef) {
+    const el = targetRef ? elements.find((e) => e.ref === targetRef) : undefined;
+    const coordinate = decision.coordinate ?? (el && typeof el.x === 'number' && typeof el.y === 'number' ? [el.x, el.y] : undefined);
+
+    if (!targetRef && !coordinate) {
       return {
         executed: false,
         action,
-        summary: 'Target ref missing for click',
+        summary: 'Target ref and coordinates missing for click',
         needsSystem2: true,
       };
     }
-    const el = elements.find((e) => e.ref === targetRef);
+
     const tuId = uid('t');
+    const input: Record<string, any> = { action: 'left_click' };
+    if (targetRef && el) {
+      input.ref = targetRef;
+    } else if (coordinate) {
+      input.coordinate = coordinate;
+    } else {
+      input.ref = targetRef;
+    }
+
     const out = await executeToolUse(session, {
       type: 'tool_use',
       id: tuId,
       name: 'computer',
-      input: { action: 'left_click', ref: targetRef },
+      input,
     });
 
     if (out.isError) {
+      const targetDesc = targetRef ? `[${targetRef}]` : `coordinate (${coordinate?.join(', ')})`;
       return {
         executed: false,
         action,
         targetRef,
-        summary: `Click failed on [${targetRef}], delegating to System 2`,
+        summary: `Click failed on ${targetDesc}, delegating to System 2`,
         needsSystem2: true,
       };
     }
+
+    const desc = targetRef
+      ? `Clicked [${targetRef}] <${el?.role || 'element'}> "${el?.name || ''}"`
+      : `Clicked visual coordinate (${coordinate?.join(', ')})`;
 
     return {
       executed: true,
       action,
       targetRef,
-      targetName: el?.name || el?.role,
-      summary: `Clicked [${targetRef}] <${el?.role || 'element'}> "${el?.name || ''}"`,
+      targetName: el?.name || el?.role || 'visual-target',
+      summary: desc,
       needsSystem2: false,
     };
   }

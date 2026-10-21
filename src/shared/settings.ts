@@ -16,6 +16,7 @@ export const DEFAULT_SYSTEM1_CONFIG: System1Config = {
   model: 'jev-latest',
   minConfidence: 0.6,
   maxConsecutiveFastSteps: 8,
+  visionEnabled: false,
 };
 
 export const DEFAULT_CONFIG: AppConfig = {

@@ -139,6 +139,8 @@ export interface System1Config {
   minConfidence: number;
   /** 单次连续快决策最大步数，防止死循环 */
   maxConsecutiveFastSteps: number;
+  /** 是否向 System 1 提供当前视口截图辅助决策 (Jev 1.14+ 实验性多模态支持) */
+  visionEnabled?: boolean;
 }
 
 export interface SitePermissions {

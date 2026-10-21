@@ -4,6 +4,7 @@ import {
   formatStateForSystem1,
   parseSystem1Response,
   executeSystem1Decision,
+  executeFastAction,
   type System1Element,
 } from '../../src/system1';
 import { DEFAULT_CONFIG, mergeConfig } from '../../src/shared/settings';
@@ -328,3 +329,85 @@ test('executeSystem1Decision: 外部 signal 中断时及时中止请求', async 
   }
 });
 
+
+
+test('formatStateForSystem1: 支持附加 screenshot 标识', () => {
+  const formatted = formatStateForSystem1({
+    goal: 'Click Submit button',
+    elements: mockElements,
+    screenshot: 'data:image/jpeg;base64,dummy...',
+  });
+  assert.ok(formatted.includes('Goal: Click Submit button'));
+  assert.ok(formatted.includes('Screenshot: page_screenshot'));
+});
+
+test('executeSystem1Decision: 当存在 screenshot 或启用 visionEnabled 时，携带 TypeSafe-Danger-Zone-Images 头与 assets 结构', async () => {
+  let capturedHeaders: Record<string, string> = {};
+  let capturedBody: any;
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+    capturedHeaders = (init?.headers as Record<string, string>) || {};
+    capturedBody = JSON.parse(String(init?.body || '{}'));
+    return new Response(
+      JSON.stringify({
+        decisions: {
+          action: { choice: 'CLICK', score: 0.95 },
+          target: { choice: '1', score: 0.91 },
+        },
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    );
+  }) as any;
+
+  try {
+    const res = await executeSystem1Decision(
+      {
+        enabled: true,
+        provider: 'typesafe',
+        baseUrl: 'https://api.typesafe.ai/v1',
+        apiKey: 'test-ts-key',
+        model: 'jev-latest',
+        visionEnabled: true,
+        minConfidence: 0.6,
+        maxConsecutiveFastSteps: 8,
+      },
+      {
+        goal: 'Submit the form',
+        elements: mockElements,
+        screenshot: 'data:image/jpeg;base64,fake-screenshot-data',
+      },
+    );
+
+    assert.equal(capturedHeaders['TypeSafe-Danger-Zone-Images'], 'true');
+    assert.equal(capturedBody.assets?.page_screenshot, 'data:image/jpeg;base64,fake-screenshot-data');
+    assert.ok(capturedBody.state.includes('Screenshot: page_screenshot'));
+    assert.equal(res.action, 'CLICK');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('parseSystem1Response: 支持 Jev 多模态 Box / coordinate 视觉坐标解析与中心点计算', () => {
+  // 测试数组 [ymin, xmin, ymax, xmax] 格式
+  const raw1 = {
+    decisions: {
+      action: { choice: 'CLICK', score: 0.92 },
+      box: { choice: [100, 200, 200, 400] },
+    },
+  };
+  const parsed1 = parseSystem1Response(raw1, mockElements);
+  assert.equal(parsed1.action, 'CLICK');
+  assert.deepEqual(parsed1.coordinate, [300, 150]); // x = (200+400)/2, y = (100+200)/2
+  assert.deepEqual(parsed1.box, { x: 300, y: 150, w: 200, h: 100 });
+  assert.ok(parsed1.confidence >= 0.7);
+
+  // 测试对象 { left, top, right, bottom } 格式
+  const raw2 = {
+    action: 'CLICK',
+    box: { left: 50, top: 100, right: 150, bottom: 300 },
+    confidence: 0.9,
+  };
+  const parsed2 = parseSystem1Response(raw2, mockElements);
+  assert.deepEqual(parsed2.coordinate, [100, 200]);
+});

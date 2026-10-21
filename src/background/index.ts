@@ -10,6 +10,7 @@ import { deleteSkill, installPresetSkills, listSkills, loadSkill, onSkillsChange
 import { generateSkill, generateSkillFromDemonstration } from './skillGen';
 import { inPageRecorder } from './recorder';
 import { inPageRegionSelector } from './regionSelector';
+import { inPageSelectionCapsule } from './selectionCapsule';
 import { captureRegionScreenshot } from './screenshot';
 import { resolveSkillSteps } from '../shared/skill';
 import { Session } from './session';
@@ -453,12 +454,39 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
     return undefined;
   }
+  if (msg?.type === 'inpage_selection_action' && msg.text) {
+    void (async () => {
+      const winId = sender.tab?.windowId;
+      if (winId != null) {
+        try {
+          await chrome.sidePanel.open({ windowId: winId });
+        } catch {}
+        const s = sessions.get(winId);
+        if (s) {
+          s.emit({
+            type: 'selection_action_triggered',
+            action: msg.action,
+            text: msg.text,
+            url: msg.url,
+            title: msg.title,
+          });
+        }
+      }
+    })();
+    return undefined;
+  }
   return undefined;
 });
 
-// 示教录制中标签页导航/跳转监听：自动重新注入录制器并记录导航动作
+// 标签页更新：自动注入划词快捷胶囊，并在示教录制中重新注入录制器
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.windowId != null) {
+    if (tab.url && /^https?:/.test(tab.url)) {
+      void chrome.scripting.executeScript({
+        target: { tabId },
+        func: inPageSelectionCapsule,
+      }).catch(() => {});
+    }
     const s = sessions.get(tab.windowId);
     if (s && s.recording) {
       void injectRecorder(tabId);

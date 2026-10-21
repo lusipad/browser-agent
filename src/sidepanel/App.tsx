@@ -41,6 +41,7 @@ export function App() {
   const [recordingCount, setRecordingCount] = useState(0);
   const [recordingLastAction, setRecordingLastAction] = useState<string | undefined>();
   const [selectedRegion, setSelectedRegion] = useState<RegionSnippet | null>(null);
+  const [draftText, setDraftText] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedBottom = useRef(true);
 
@@ -150,6 +151,18 @@ export function App() {
           break;
         case 'region_select_canceled':
           break;
+        case 'selection_action_triggered': {
+          const action = (msg as any).action;
+          const text = (msg as any).text || '';
+          if (action === 'translate') {
+            port.post({ type: 'send', text: `请将以下选中的网页内容翻译为中文，并给出关键术语说明：\n\n> ${text}` });
+          } else if (action === 'extract') {
+            setDraftText(`请提取以下内容中的关键数据与结构化信息（如表格、条目清单）：\n\n> ${text}`);
+          } else {
+            setDraftText(`请帮我分析以下选中的网页内容：\n\n> ${text}\n\n`);
+          }
+          break;
+        }
       }
     });
     void port.connect();
@@ -258,6 +271,8 @@ export function App() {
         running={running}
         region={selectedRegion}
         skills={skills}
+        draftText={draftText}
+        onClearDraft={() => setDraftText('')}
         onClearRegion={() => setSelectedRegion(null)}
         onSelectRegion={() => port.post({ type: 'start_region_select' })}
         onSelectSkill={(skillId) => {
@@ -265,6 +280,8 @@ export function App() {
           setDrawerMode('run');
           setSkillDrawerOpen(true);
         }}
+        onToggleSkills={() => setSkillDrawerOpen((v) => !v)}
+        onToggleHistory={() => setHistoryOpen((v) => !v)}
         onSend={(text, region) => port.post({ type: 'send', text, region })}
         onAbort={() => port.post({ type: 'abort' })}
         hasModel={!!bindingId}

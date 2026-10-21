@@ -341,4 +341,11 @@ export type BgToPanel =
   | { type: 'skill_saved'; skillId: string }
   | { type: 'recording_state'; recording: boolean; count: number; lastAction?: string }
   | { type: 'region_selected'; region: RegionSnippet }
-  | { type: 'region_select_canceled' };
+  | { type: 'region_select_canceled' }
+  | {
+      type: 'selection_action_triggered';
+      action: 'ask' | 'translate' | 'extract';
+      text: string;
+      url?: string;
+      title?: string;
+    };

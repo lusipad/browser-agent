@@ -8,18 +8,40 @@ interface Props {
   hasModel: boolean;
   region?: RegionSnippet | null;
   skills?: SkillMeta[];
+  draftText?: string;
+  onClearDraft?: () => void;
   onClearRegion?: () => void;
   onSelectRegion?: () => void;
   onSelectSkill?: (skillId: string) => void;
+  onToggleSkills?: () => void;
+  onToggleHistory?: () => void;
   onSend: (text: string, region?: RegionSnippet) => void;
   onAbort: () => void;
 }
+
+export type SlashItem =
+  | { kind: 'command'; id: string; name: string; description: string; icon: string; run: () => void }
+  | { kind: 'skill'; id: string; name: string; description?: string; icon?: string; pinned?: boolean };
 
 export function Composer(props: Props) {
   const t = useT();
   const [text, setText] = useState('');
   const [slashIndex, setSlashIndex] = useState(0);
   const taRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (props.draftText) {
+      setText(props.draftText);
+      props.onClearDraft?.();
+      setTimeout(() => {
+        if (taRef.current) {
+          taRef.current.focus();
+          taRef.current.style.height = 'auto';
+          taRef.current.style.height = Math.min(160, taRef.current.scrollHeight) + 'px';
+        }
+      }, 50);
+    }
+  }, [props.draftText]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -35,6 +57,66 @@ export function Composer(props: Props) {
   const slashMatch = text.startsWith('/') ? text.slice(1).trim().toLowerCase() : null;
   const isSlashMode = slashMatch !== null && !props.running;
 
+  const builtinCommands = [
+    {
+      id: 'cmd_compact',
+      kind: 'command' as const,
+      name: '/compact',
+      description: '主动提炼并压缩当前长对话上下文',
+      icon: '🧹',
+      run: () => {
+        props.onSend('请帮我提炼并总结当前任务的核心进展与发现，主动精简长对话历史上下文。');
+      },
+    },
+    {
+      id: 'cmd_webskill',
+      kind: 'command' as const,
+      name: '/webSkillCreator',
+      description: '探查当前页面并自动生成专属技能定义',
+      icon: '🪄',
+      run: () => {
+        props.onSend('请深入探查当前页面的关键导航、核心表单与主要业务操作流，为我自动设计并生成一套专属 Skill。');
+      },
+    },
+    {
+      id: 'cmd_region',
+      kind: 'command' as const,
+      name: '/region',
+      description: '框选网页特定区域并提问 (Alt+S)',
+      icon: '🎯',
+      run: () => {
+        props.onSelectRegion?.();
+      },
+    },
+    {
+      id: 'cmd_skills',
+      kind: 'command' as const,
+      name: '/skills',
+      description: '打开技能库抽屉面板',
+      icon: '⚡',
+      run: () => {
+        props.onToggleSkills?.();
+      },
+    },
+    {
+      id: 'cmd_history',
+      kind: 'command' as const,
+      name: '/history',
+      description: '查看以往任务历史记录',
+      icon: '📜',
+      run: () => {
+        props.onToggleHistory?.();
+      },
+    },
+  ];
+
+  const matchingCommands = isSlashMode
+    ? builtinCommands.filter((c) => {
+        if (!slashMatch) return true;
+        return c.name.toLowerCase().includes(slashMatch) || c.description.toLowerCase().includes(slashMatch);
+      })
+    : [];
+
   const matchingSkills = isSlashMode
     ? (props.skills ?? []).filter((s) => {
         if (!slashMatch) return true;
@@ -44,6 +126,11 @@ export function Composer(props: Props) {
         );
       })
     : [];
+
+  const combinedItems: SlashItem[] = [
+    ...matchingCommands,
+    ...matchingSkills.map((s) => ({ ...s, kind: 'skill' as const })),
+  ];
 
   useEffect(() => {
     setSlashIndex(0);
@@ -56,12 +143,16 @@ export function Composer(props: Props) {
     ta.style.height = Math.min(160, ta.scrollHeight) + 'px';
   }
 
-  function selectSkill(skillId: string) {
+  function handleSelectItem(item: SlashItem) {
     setText('');
     requestAnimationFrame(() => {
       if (taRef.current) taRef.current.style.height = 'auto';
     });
-    props.onSelectSkill?.(skillId);
+    if (item.kind === 'command') {
+      item.run();
+    } else {
+      props.onSelectSkill?.(item.id);
+    }
   }
 
   function submit() {
@@ -76,22 +167,22 @@ export function Composer(props: Props) {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (isSlashMode && matchingSkills.length > 0) {
+    if (isSlashMode && combinedItems.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setSlashIndex((prev) => (prev + 1) % matchingSkills.length);
+        setSlashIndex((prev) => (prev + 1) % combinedItems.length);
         return;
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setSlashIndex((prev) => (prev - 1 + matchingSkills.length) % matchingSkills.length);
+        setSlashIndex((prev) => (prev - 1 + combinedItems.length) % combinedItems.length);
         return;
       }
       if ((e.key === 'Enter' || e.key === 'Tab') && !e.shiftKey) {
         e.preventDefault();
-        const chosen = matchingSkills[slashIndex];
+        const chosen = combinedItems[slashIndex];
         if (chosen) {
-          selectSkill(chosen.id);
+          handleSelectItem(chosen);
         }
         return;
       }
@@ -133,28 +224,29 @@ export function Composer(props: Props) {
         </div>
       )}
 
-      {isSlashMode && matchingSkills.length > 0 && (
+      {isSlashMode && combinedItems.length > 0 && (
         <div className="slash-menu">
           <div className="slash-menu-header">
             <span className="slash-menu-title">⚡ {t('slash.title')}</span>
             <span className="slash-menu-tip">{t('slash.tip')}</span>
           </div>
           <div className="slash-menu-list">
-            {matchingSkills.map((s, idx) => (
+            {combinedItems.map((item, idx) => (
               <div
-                key={s.id}
+                key={item.id}
                 className={`slash-menu-item ${idx === slashIndex ? 'active' : ''}`}
-                onClick={() => selectSkill(s.id)}
+                onClick={() => handleSelectItem(item)}
                 onMouseEnter={() => setSlashIndex(idx)}
               >
-                <span className="slash-item-icon">{s.icon || '⚡'}</span>
+                <span className="slash-item-icon">{item.icon || (item.kind === 'command' ? '⚡' : '🛠️')}</span>
                 <div className="slash-item-body">
                   <div className="slash-item-name">
-                    {s.name}
-                    {s.pinned && <span className="skill-pinned-tag">★</span>}
+                    {item.name}
+                    {item.kind === 'command' && <span className="slash-cmd-tag">指令</span>}
+                    {item.kind === 'skill' && (item as any).pinned && <span className="skill-pinned-tag">★</span>}
                   </div>
-                  {s.description && (
-                    <div className="slash-item-desc">{s.description}</div>
+                  {item.description && (
+                    <div className="slash-item-desc">{item.description}</div>
                   )}
                 </div>
                 <span className="slash-item-shortcut">↵</span>
@@ -164,7 +256,7 @@ export function Composer(props: Props) {
         </div>
       )}
 
-      {isSlashMode && matchingSkills.length === 0 && (
+      {isSlashMode && combinedItems.length === 0 && (
         <div className="slash-menu empty">
           <div className="slash-menu-empty-text">
             <span>🔍 {t('slash.noMatch')}</span>

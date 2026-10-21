@@ -2092,6 +2092,15 @@ select.skill-var-select {
   gap: 4px;
 }
 
+.slash-cmd-tag {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
 .slash-item-desc {
   font-size: 10.5px;
   color: var(--text-dim);

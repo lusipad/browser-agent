@@ -1,6 +1,6 @@
 // 调试类工具：javascript_tool / read_console_messages / read_network_requests
 import { truncate } from '../../shared/util';
-import { clearBuffers, ensureAttached, evalInPage, getConsole, getNetwork, getResponseBody } from '../cdp';
+import { clearBuffers, ensureAttached, evalInPage, getConsole, getNetwork, getNetworkEntry, getResponseBody } from '../cdp';
 import { confirmSensitive } from '../permissions';
 import type { ToolDef } from './registry';
 
@@ -75,13 +75,17 @@ export const devtoolsTools: ToolDef[] = [
   {
     name: 'read_network_requests',
     description:
-      'List network requests from a tab (method, status, type, size, url). Collected only while the agent is attached — reload first to capture page-load requests. Pass body_request_id to fetch a specific response body.',
+      'Inspect HTTP/network requests in the tab. ' +
+      'Listing mode: list requests with url, method, status, duration and mimeType. Filter by url substring, "method" (GET/POST), or "errors_only" (status >= 400 or failed). ' +
+      'Detail mode: pass "body_request_id" to fetch full details: request headers, post body payload, response headers, and response body.',
     schema: {
       type: 'object',
       properties: {
         filter: { type: 'string', description: 'Substring of url, or a resource type like "xhr"/"fetch"/"document"' },
+        method: { type: 'string', description: 'HTTP method filter like "GET" or "POST"' },
+        errors_only: { type: 'boolean', description: 'Only show failed requests or HTTP errors (status >= 400)' },
         limit: { type: 'integer', description: 'Max requests returned, default 60' },
-        body_request_id: { type: 'string', description: 'Request id (from a previous listing) whose response body to return' },
+        body_request_id: { type: 'string', description: 'Request id (from a previous listing) to inspect full headers, post body, and response body' },
         tab_id: { type: 'integer' },
       },
     },
@@ -89,24 +93,52 @@ export const devtoolsTools: ToolDef[] = [
     async run(ctx, input) {
       await ensureAttached(ctx.tabId);
       if (input.body_request_id) {
-        const body = await getResponseBody(ctx.tabId, String(input.body_request_id));
-        return { content: [{ type: 'text', text: body || '(empty body)' }] };
+        const id = String(input.body_request_id);
+        const entry = getNetworkEntry(ctx.tabId, id);
+        const rawBody = await getResponseBody(ctx.tabId, id);
+        let formattedBody = rawBody;
+        if (rawBody && !rawBody.startsWith('(') && rawBody.length < 8000) {
+          try {
+            formattedBody = JSON.stringify(JSON.parse(rawBody), null, 2);
+          } catch {}
+        }
+        let report = `== Request [${id}] ==\n`;
+        if (entry) {
+          report += `URL: ${entry.url}\n`;
+          report += `Method: ${entry.method} | Status: ${entry.status ?? (entry.error ? `FAILED(${entry.error})` : (entry.finished ? 'done' : 'pending'))} | Duration: ${entry.durationMs != null ? `${entry.durationMs}ms` : 'in flight'}\n`;
+          report += `Type: ${entry.resourceType} | MIME: ${entry.mimeType ?? 'unknown'} | Size: ${entry.encodedBytes != null ? `${entry.encodedBytes} bytes` : 'unknown'}\n`;
+          if (entry.requestHeaders && Object.keys(entry.requestHeaders).length) {
+            report += `\n-- Request Headers --\n` + Object.entries(entry.requestHeaders).map(([k, v]) => `${k}: ${v}`).join('\n') + `\n`;
+          }
+          if (entry.postData) {
+            report += `\n-- Post Data (Payload) --\n${entry.postData}\n`;
+          }
+          if (entry.responseHeaders && Object.keys(entry.responseHeaders).length) {
+            report += `\n-- Response Headers --\n` + Object.entries(entry.responseHeaders).map(([k, v]) => `${k}: ${v}`).join('\n') + `\n`;
+          }
+        }
+        report += `\n-- Response Body --\n${formattedBody || '(empty response body)'}`;
+        return { content: [{ type: 'text', text: truncate(report, 24000) }] };
       }
-      const entries = getNetwork(ctx.tabId, input.filter ? String(input.filter) : undefined, Number(input.limit ?? 60));
+      const entries = getNetwork(ctx.tabId, input.filter ? String(input.filter) : undefined, Number(input.limit ?? 60), {
+        method: input.method ? String(input.method) : undefined,
+        errorsOnly: !!input.errors_only,
+      });
       if (!entries.length) {
         return {
           content: [
             {
               type: 'text',
-              text: 'No network requests captured yet. The buffer fills only while the agent is attached — reload the page to capture its requests.',
+              text: 'No matching network requests found in buffer. (Requests are captured only while the debugger is attached; reload the page to capture initial load requests).',
             },
           ],
         };
       }
       const lines = entries.map((e) => {
         const size = e.encodedBytes != null ? ` ${Math.round(e.encodedBytes / 102.4) / 10}KB` : '';
+        const dur = e.durationMs != null ? ` ${e.durationMs}ms` : '';
         const st = e.error ? `FAILED(${e.error})` : (e.status ?? (e.finished ? 'done' : 'pending'));
-        return `[${e.requestId}] ${e.method} ${st} ${e.resourceType}${size} ${e.url.slice(0, 150)}`;
+        return `[${e.requestId}] ${e.method} ${st} ${e.resourceType}${size}${dur} ${e.url.slice(0, 150)}`;
       });
       return { content: [{ type: 'text', text: truncate(lines.join('\n'), 20000) }] };
     },

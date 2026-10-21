@@ -17,6 +17,11 @@ export interface NetworkEntry {
   encodedBytes?: number;
   error?: string;
   finished: boolean;
+  startTime: number;
+  durationMs?: number;
+  requestHeaders?: Record<string, string>;
+  responseHeaders?: Record<string, string>;
+  postData?: string;
 }
 
 export interface DialogInfo {
@@ -171,7 +176,12 @@ export function getConsole(tabId: number, pattern?: string, limit = 80): Console
   return entries.slice(-limit);
 }
 
-export function getNetwork(tabId: number, filter?: string, limit = 60): NetworkEntry[] {
+export function getNetwork(
+  tabId: number,
+  filter?: string,
+  limit = 60,
+  opts?: { method?: string; statusCode?: number; errorsOnly?: boolean },
+): NetworkEntry[] {
   const s = states.get(tabId);
   if (!s) return [];
   let list = s.netOrder.map((id) => s.network.get(id)!).filter(Boolean);
@@ -179,7 +189,21 @@ export function getNetwork(tabId: number, filter?: string, limit = 60): NetworkE
     const f = filter.toLowerCase();
     list = list.filter((e) => e.url.toLowerCase().includes(f) || e.resourceType.toLowerCase() === f);
   }
+  if (opts?.method) {
+    const m = opts.method.toUpperCase();
+    list = list.filter((e) => e.method.toUpperCase() === m);
+  }
+  if (opts?.errorsOnly) {
+    list = list.filter((e) => !!e.error || (e.status != null && e.status >= 400));
+  } else if (opts?.statusCode != null) {
+    list = list.filter((e) => e.status === opts.statusCode);
+  }
   return list.slice(-limit);
+}
+
+export function getNetworkEntry(tabId: number, requestId: string): NetworkEntry | null {
+  const s = states.get(tabId);
+  return s?.network.get(requestId) ?? null;
 }
 
 export function networkActivity(tabId: number): { inFlight: number; sinceLastMs: number } {
@@ -284,6 +308,9 @@ chrome.debugger.onEvent.addListener((source, method, params: any) => {
         method: String(params.request?.method ?? 'GET'),
         resourceType: String(params.type ?? 'Other'),
         finished: false,
+        startTime: Date.now(),
+        requestHeaders: params.request?.headers,
+        postData: params.request?.postData ? truncate(String(params.request.postData), 4000) : undefined,
       });
       // 仅当这是全新的在途请求，且不是 30x 重定向更新时才累加 inFlight
       if (!isRedirect && (!prev || prev.finished)) {
@@ -297,6 +324,7 @@ chrome.debugger.onEvent.addListener((source, method, params: any) => {
       if (e) {
         e.status = params.response?.status;
         e.mimeType = params.response?.mimeType;
+        e.responseHeaders = params.response?.headers;
       }
       break;
     }
@@ -305,6 +333,7 @@ chrome.debugger.onEvent.addListener((source, method, params: any) => {
       if (e) {
         e.finished = true;
         e.encodedBytes = Math.round(params.encodedDataLength ?? 0);
+        e.durationMs = Date.now() - e.startTime;
       }
       s.inFlight = Math.max(0, s.inFlight - 1);
       s.lastActivity = Date.now();
@@ -315,6 +344,7 @@ chrome.debugger.onEvent.addListener((source, method, params: any) => {
       if (e) {
         e.finished = true;
         e.error = String(params.errorText ?? 'failed');
+        e.durationMs = Date.now() - e.startTime;
       }
       s.inFlight = Math.max(0, s.inFlight - 1);
       s.lastActivity = Date.now();

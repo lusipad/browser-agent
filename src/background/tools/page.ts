@@ -13,6 +13,8 @@ export function conditionMet(condition: string, r: { matchCount: number; textFou
       return r.matchCount === 0;
     case 'text':
       return r.textFound;
+    case 'text_gone':
+      return !r.textFound;
     default:
       return false;
   }
@@ -115,6 +117,11 @@ export const pageTools: ToolDef[] = [
       if (info.isPassword) {
         await confirmSensitive(ctx.session, 'password', ctx.session.t('bg.confirmPasswordDesc', [String(input.value ?? '').length]));
       }
+      void runInPage(ctx.tabId, 'highlight', {
+        ref: input.ref,
+        label: `input #${input.ref}`,
+        duration: 1500,
+      }).catch(() => {});
       const r = await runInPage(ctx.tabId, 'form_input', { ref: input.ref, value: input.value });
       return { content: [{ type: 'text', text: String(r?.text ?? 'ok') }] };
     },
@@ -139,10 +146,14 @@ export const pageTools: ToolDef[] = [
   {
     name: 'get_page_text',
     description:
-      'Extract the readable text of the page (all frames, article-style). Use for reading content; use read_page for interacting. Supports offset for paging through long documents.',
+      'Extract readable text of the page. ' +
+      'mode "smart_scroll" (default) detects the true scroll container (even inside Notion, Twitter, Jira modals), steps through dynamically rendered content with deduplication, and restores scroll position. ' +
+      'mode "fast" reads the current viewport and all frames without scrolling. Supports offset for paging.',
     schema: {
       type: 'object',
       properties: {
+        mode: { type: 'string', enum: ['smart_scroll', 'fast'], description: 'Reading mode, default "smart_scroll"' },
+        max_screens: { type: 'integer', description: 'Max screens to scroll in smart_scroll mode (default 12, max 25)' },
         max_chars: { type: 'integer', description: 'Max characters returned, default 20000' },
         offset: { type: 'integer', description: 'Character offset to continue from, default 0' },
         tab_id: { type: 'integer' },
@@ -150,12 +161,37 @@ export const pageTools: ToolDef[] = [
     },
     needsTab: true,
     async run(ctx, input) {
-      const frames = await getAllFramesText(ctx.tabId);
-      if (!frames.length) return { content: [{ type: 'text', text: '(page has no readable text)' }] };
-      let full = `Title: ${frames[0].title}\nURL: ${frames[0].url}\n\n${frames[0].text}`;
-      for (const f of frames.slice(1)) {
-        if (f.text.trim()) full += `\n\n----- iframe: ${f.url.slice(0, 120)} -----\n${f.text}`;
+      const mode = String(input.mode ?? 'smart_scroll');
+      let full = '';
+      let notes = '';
+
+      if (mode === 'smart_scroll') {
+        try {
+          const r = await runInPage(ctx.tabId, 'smart_scroll_read', {
+            max_screens: input.max_screens ?? 12,
+          });
+          full = String(r?.text ?? '');
+          const flags: string[] = [];
+          if (r?.screens) flags.push(`${r.screens} screens`);
+          if (r?.backgroundTab) flags.push('background tab');
+          if (r?.endlessFeed) flags.push('endless feed stopped');
+          if (r?.renderFrozen) flags.push('content frozen');
+          if (r?.stalled) flags.push('stalled at end');
+          if (flags.length) notes = ` [${flags.join(', ')}]`;
+        } catch {
+          // Fall back to frames text if smart scroll fails
+        }
       }
+
+      if (!full) {
+        const frames = await getAllFramesText(ctx.tabId);
+        if (!frames.length) return { content: [{ type: 'text', text: '(page has no readable text)' }] };
+        full = `Title: ${frames[0].title}\nURL: ${frames[0].url}\n\n${frames[0].text}`;
+        for (const f of frames.slice(1)) {
+          if (f.text.trim()) full += `\n\n----- iframe: ${f.url.slice(0, 120)} -----\n${f.text}`;
+        }
+      }
+
       const offset = Math.max(0, Number(input.offset ?? 0));
       const max = Math.min(80000, Math.max(1000, Number(input.max_chars ?? 20000)));
       const slice = full.slice(offset, offset + max);
@@ -163,7 +199,31 @@ export const pageTools: ToolDef[] = [
         offset + max < full.length
           ? `\n…(${full.length - offset - max} more chars — call again with offset=${offset + max})`
           : '';
-      return { content: [{ type: 'text', text: slice + tail }] };
+      return { content: [{ type: 'text', text: slice + tail + notes }] };
+    },
+  },
+  {
+    name: 'highlight_element',
+    description:
+      'Visually highlight an element on the live webpage with an animated glowing box and optional badge. ' +
+      'Useful to draw the user\'s attention or confirm element location.',
+    schema: {
+      type: 'object',
+      properties: {
+        ref: { type: 'string', description: 'Ref of element from read_page/find' },
+        label: { type: 'string', description: 'Optional badge text' },
+        duration_ms: { type: 'integer', description: 'Duration in milliseconds, default 2000, capped at 10000' },
+        tab_id: { type: 'integer' },
+      },
+      required: ['ref'],
+    },
+    needsTab: true,
+    async run(ctx, input) {
+      const ref = String(input.ref);
+      const label = input.label ? String(input.label) : undefined;
+      const duration = Math.min(10000, Math.max(500, Number(input.duration_ms ?? 2000)));
+      const r = await runInPage(ctx.tabId, 'highlight', { ref, label, duration });
+      return { content: [{ type: 'text', text: String(r?.text ?? `Highlighted element #${ref}`) }] };
     },
   },
   {
@@ -211,14 +271,16 @@ export const pageTools: ToolDef[] = [
     name: 'wait_for',
     description:
       'Wait until a condition holds, polling the page (across frames and shadow DOM) until satisfied or timeout. ' +
-      'condition "appear": an element matching query exists; "disappear": no element matches query (e.g. a spinner is gone); "text": the page text contains a string. ' +
+      'condition "appear": element matching query/selector exists; "disappear": element matching query/selector is gone; ' +
+      '"text": page text contains a string; "text_gone": page text no longer contains a string (e.g. "Loading..." gone). ' +
       'Use this after actions that trigger async loading instead of guessing with computer "wait". Returns a fresh screenshot when satisfied.',
     schema: {
       type: 'object',
       properties: {
-        condition: { type: 'string', enum: ['appear', 'disappear', 'text'], description: 'What to wait for' },
+        condition: { type: 'string', enum: ['appear', 'disappear', 'text', 'text_gone'], description: 'What to wait for' },
         query: { type: 'string', description: 'Element text/label to match (for appear/disappear)' },
-        text: { type: 'string', description: 'Substring to wait for in page text (for condition "text")' },
+        selector: { type: 'string', description: 'CSS selector to match (for appear/disappear)' },
+        text: { type: 'string', description: 'Substring to wait for in page text (for text/text_gone)' },
         timeout_ms: { type: 'integer', description: 'Max wait in ms, default 8000, capped at 30000' },
         tab_id: { type: 'integer' },
       },
@@ -227,11 +289,12 @@ export const pageTools: ToolDef[] = [
     needsTab: true,
     async run(ctx, input) {
       const condition = String(input.condition ?? '');
-      if (!['appear', 'disappear', 'text'].includes(condition)) throw new Error('wait_for: condition must be appear/disappear/text');
+      if (!['appear', 'disappear', 'text', 'text_gone'].includes(condition)) throw new Error('wait_for: condition must be appear/disappear/text/text_gone');
       const query = input.query ? String(input.query) : '';
+      const selector = input.selector ? String(input.selector) : '';
       const text = input.text ? String(input.text) : '';
-      if ((condition === 'appear' || condition === 'disappear') && !query) throw new Error(`wait_for "${condition}" requires "query"`);
-      if (condition === 'text' && !text) throw new Error('wait_for "text" requires "text"');
+      if ((condition === 'appear' || condition === 'disappear') && !query && !selector) throw new Error(`wait_for "${condition}" requires "query" or "selector"`);
+      if ((condition === 'text' || condition === 'text_gone') && !text) throw new Error(`wait_for "${condition}" requires "text"`);
 
       const timeout = Math.min(30000, Math.max(500, Number(input.timeout_ms ?? 8000)));
       const start = Date.now();
@@ -240,19 +303,19 @@ export const pageTools: ToolDef[] = [
         if (ctx.session.aborted) throw new Error('Cancelled by user.');
         let r: { matchCount?: number; textFound?: boolean } | null = null;
         try {
-          r = await runInPage(ctx.tabId, 'probe', { query, text });
+          r = await runInPage(ctx.tabId, 'probe', { query, text, selector });
         } catch {
           // 页面可能正处于导航跳转或脚本上下文重置中，允许单次探测失败并在下轮重试
         }
         polls++;
         if (r && conditionMet(condition, { matchCount: Number(r.matchCount ?? 0), textFound: !!r.textFound })) {
           const waited = ((Date.now() - start) / 1000).toFixed(1);
-          const what = condition === 'text' ? `text "${text}"` : `"${query}"`;
+          const what = condition.startsWith('text') ? `text "${text}"` : `"${query || selector}"`;
           return withAutoShot(ctx.session, ctx.tabId, `Condition met: ${condition} ${what} after ${waited}s.`);
         }
         await sleep(400);
       }
-      const what = condition === 'text' ? `text "${text}"` : `"${query}"`;
+      const what = condition.startsWith('text') ? `text "${text}"` : `"${query || selector}"`;
       return withAutoShot(
         ctx.session,
         ctx.tabId,

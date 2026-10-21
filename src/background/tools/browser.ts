@@ -1,4 +1,5 @@
 // 标签页 / 导航 / 窗口 工具
+import { getOpenDialog, handleDialog } from '../cdp';
 import { ensureSiteAllowed } from '../permissions';
 import { addToAgentGroup, getTab, listAllTabs, waitForLoad } from '../tabs';
 import { shotBlocks, withAutoShot, type ToolDef } from './registry';
@@ -157,6 +158,48 @@ export const browserTools: ToolDef[] = [
     needsTab: true,
     async run(ctx) {
       return { content: await shotBlocks(ctx.session, ctx.tabId) };
+    },
+  },
+  {
+    name: 'handle_dialog',
+    description:
+      'Handle an open native browser modal dialog (alert, confirm, prompt, beforeunload). ' +
+      'action: "accept" (click OK/Confirm), "dismiss" (click Cancel), or "status" (check if a dialog is open). ' +
+      'prompt_text: optional text to enter for prompt() dialogs.',
+    schema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['accept', 'dismiss', 'status'], description: 'Dialog action, default "accept"' },
+        prompt_text: { type: 'string', description: 'Text to enter for prompt dialogs' },
+        tab_id: { type: 'integer', description: 'Target tab id (defaults to the agent\'s current tab)' },
+      },
+    },
+    needsTab: true,
+    async run(ctx, input) {
+      const action = String(input.action ?? 'accept');
+      const dialog = getOpenDialog(ctx.tabId);
+      if (action === 'status') {
+        if (!dialog) return { content: [{ type: 'text', text: 'No native browser dialog is currently open.' }] };
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Open dialog: type="${dialog.type}", message="${dialog.message}"${dialog.defaultPrompt ? `, defaultPrompt="${dialog.defaultPrompt}"` : ''}`,
+            },
+          ],
+        };
+      }
+      if (!dialog) {
+        return { content: [{ type: 'text', text: 'No native dialog is currently open to handle.' }] };
+      }
+      const accept = action === 'accept';
+      const promptText = input.prompt_text ? String(input.prompt_text) : undefined;
+      await handleDialog(ctx.tabId, accept, promptText);
+      return withAutoShot(
+        ctx.session,
+        ctx.tabId,
+        `Handled native dialog (${dialog.type}): ${accept ? 'Accepted' : 'Dismissed'}. Message was: "${dialog.message}".`,
+      );
     },
   },
 ];

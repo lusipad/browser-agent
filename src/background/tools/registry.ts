@@ -2,6 +2,7 @@
 import type { ToolSpec } from '../../providers';
 import type { ImageBlock, TextBlock, ToolOutput, ToolUseBlock } from '../../shared/types';
 import { errText, truncate } from '../../shared/util';
+import { getOpenDialog } from '../cdp';
 import { runInPage } from '../inject';
 import type { RawMark } from '../marks';
 import { ensureSiteAllowed } from '../permissions';
@@ -51,7 +52,17 @@ export async function executeToolUse(session: Session, tu: ToolUseBlock): Promis
         await addToAgentGroup(tab.windowId, tabId);
       }
     }
-    return await def.run({ session, tabId }, input);
+    const out = await def.run({ session, tabId }, input);
+    if (tabId > 0 && tu.name !== 'handle_dialog') {
+      const openDialog = getOpenDialog(tabId);
+      if (openDialog) {
+        out.content.push({
+          type: 'text',
+          text: `\n\n[⚠️ Native Browser Dialog Opened: (${openDialog.type}) "${openDialog.message}" — call handle_dialog to accept or dismiss it]`,
+        });
+      }
+    }
+    return out;
   } catch (e) {
     return { content: [{ type: 'text', text: errText(e) }], isError: true };
   }

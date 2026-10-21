@@ -19,6 +19,13 @@ export interface NetworkEntry {
   finished: boolean;
 }
 
+export interface DialogInfo {
+  type: string; // 'alert' | 'confirm' | 'prompt' | 'beforeunload'
+  message: string;
+  defaultPrompt?: string;
+  ts: number;
+}
+
 interface TabDebugState {
   attached: boolean;
   console: ConsoleEntry[];
@@ -26,27 +33,43 @@ interface TabDebugState {
   netOrder: string[];
   inFlight: number;
   lastActivity: number;
+  openDialog?: DialogInfo | null;
+  idleTimer?: any;
 }
 
 const states = new Map<number, TabDebugState>();
 const CONSOLE_CAP = 600;
 const NETWORK_CAP = 600;
+const IDLE_DETACH_MS = 60000;
 
 function stateFor(tabId: number): TabDebugState {
   let s = states.get(tabId);
   if (!s) {
-    s = { attached: false, console: [], network: new Map(), netOrder: [], inFlight: 0, lastActivity: 0 };
+    s = { attached: false, console: [], network: new Map(), netOrder: [], inFlight: 0, lastActivity: 0, openDialog: null };
     states.set(tabId, s);
   }
   return s;
 }
 
+function touchActivity(s: TabDebugState, tabId: number): void {
+  s.lastActivity = Date.now();
+  if (s.idleTimer) clearTimeout(s.idleTimer);
+  s.idleTimer = setTimeout(() => {
+    if (s.attached && s.inFlight === 0 && !s.openDialog) {
+      void detachTab(tabId);
+    }
+  }, IDLE_DETACH_MS);
+}
+
 export function send(tabId: number, method: string, params?: Record<string, unknown>): Promise<any> {
+  const s = stateFor(tabId);
+  touchActivity(s, tabId);
   return chrome.debugger.sendCommand({ tabId }, method, params ?? {}) as Promise<any>;
 }
 
 export async function ensureAttached(tabId: number): Promise<void> {
   const s = stateFor(tabId);
+  touchActivity(s, tabId);
   if (s.attached) return;
   try {
     await chrome.debugger.attach({ tabId }, '1.3');
@@ -73,14 +96,35 @@ export async function ensureAttached(tabId: number): Promise<void> {
 
 export async function detachTab(tabId: number): Promise<void> {
   const s = states.get(tabId);
-  if (s?.attached) {
-    s.attached = false;
-    try {
-      await chrome.debugger.detach({ tabId });
-    } catch {
-      /* 已被关闭等情况 */
+  if (s) {
+    if (s.idleTimer) {
+      clearTimeout(s.idleTimer);
+      s.idleTimer = undefined;
+    }
+    if (s.attached) {
+      s.attached = false;
+      try {
+        await chrome.debugger.detach({ tabId });
+      } catch {
+        /* 已被关闭等情况 */
+      }
     }
   }
+}
+
+export function getOpenDialog(tabId: number): DialogInfo | null {
+  const s = states.get(tabId);
+  return s?.openDialog ?? null;
+}
+
+export async function handleDialog(tabId: number, accept: boolean, promptText?: string): Promise<void> {
+  await ensureAttached(tabId);
+  await send(tabId, 'Page.handleJavaScriptDialog', {
+    accept,
+    promptText: promptText ?? undefined,
+  });
+  const s = states.get(tabId);
+  if (s) s.openDialog = null;
 }
 
 export async function detachAll(): Promise<number> {
@@ -201,11 +245,26 @@ chrome.debugger.onEvent.addListener((source, method, params: any) => {
       break;
     }
     case 'Page.frameNavigated': {
-      // 顶层主 frame 导航跳转：重置在途请求计数，防止旧页面悬挂或未完成请求死锁
+      // 顶层主 frame 导航跳转：重置在途请求计数与弹窗状态，防止旧页面悬挂或未完成请求死锁
       if (!params.frame?.parentId) {
         s.inFlight = 0;
+        s.openDialog = null;
         s.lastActivity = Date.now();
       }
+      break;
+    }
+    case 'Page.javascriptDialogOpening': {
+      s.openDialog = {
+        type: String(params.type ?? 'alert'),
+        message: String(params.message ?? ''),
+        defaultPrompt: params.defaultPrompt ? String(params.defaultPrompt) : undefined,
+        ts: Date.now(),
+      };
+      pushConsole(s, 'warn', `[Native Dialog: ${s.openDialog.type}] ${s.openDialog.message}`);
+      break;
+    }
+    case 'Page.javascriptDialogClosed': {
+      s.openDialog = null;
       break;
     }
     case 'Network.requestWillBeSent': {

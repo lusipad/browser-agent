@@ -11,19 +11,61 @@
 //  - 可见性 / computed style 一律用元素自身的 defaultView，跨 frame 正确
 // ============================================================
 
-export function pageAgent(cmd: string, payload: any): any {
+export async function pageAgent(cmd: string, payload: any): Promise<any> {
   try {
+    interface RefMeta {
+      role: string;
+      name: string;
+      tag: string;
+      center: { x: number; y: number };
+      ts: number;
+    }
     const g = globalThis as any;
     if (!g.__ba || !(g.__ba.map instanceof Map)) {
-      g.__ba = { seq: 1, map: new Map(), rev: new WeakMap() };
+      g.__ba = { seq: 1, map: new Map(), rev: new WeakMap(), meta: new Map() };
     }
-    const reg = g.__ba as { seq: number; map: Map<string, Element>; rev: WeakMap<Element, string> };
+    const reg = g.__ba as {
+      seq: number;
+      map: Map<string, Element>;
+      rev: WeakMap<Element, string>;
+      meta: Map<string, RefMeta>;
+    };
     if (reg.map.size > 8000) {
       reg.map.clear();
       reg.rev = new WeakMap();
+      if (reg.meta) reg.meta.clear();
     }
     const topWin = window;
     const topDoc = document;
+
+    // ---------------- 结构化遍历 roots（穿透 open shadow + 同源 iframe） ----------------
+    function allRoots(): Array<Document | ShadowRoot> {
+      const roots: Array<Document | ShadowRoot> = [];
+      function visit(root: Document | ShadowRoot): void {
+        if (roots.length > 400) return;
+        roots.push(root);
+        let els: NodeListOf<Element>;
+        try {
+          els = root.querySelectorAll('*');
+        } catch {
+          return;
+        }
+        for (const el of Array.from(els)) {
+          const sr = (el as any).shadowRoot as ShadowRoot | null;
+          if (sr) visit(sr);
+          if (el.tagName === 'IFRAME' || el.tagName === 'FRAME') {
+            try {
+              const cd = (el as HTMLIFrameElement).contentDocument;
+              if (cd) visit(cd);
+            } catch {
+              /* 跨域 iframe 不可读 */
+            }
+          }
+        }
+      }
+      visit(topDoc);
+      return roots;
+    }
 
     // ---------------- 坐标：沿 frame 链换算到顶层文档 ----------------
     function topRect(el: Element): { left: number; top: number; width: number; height: number; right: number; bottom: number } {
@@ -74,7 +116,42 @@ export function pageAgent(cmd: string, payload: any): any {
       return true;
     }
 
-    // ---------------- ref 注册表 ----------------
+    // ---------------- ref 自愈与注册表 ----------------
+    function findHealingCandidate(meta: RefMeta): Element | null {
+      let bestEl: Element | null = null;
+      let minDistance = Infinity;
+
+      for (const root of allRoots()) {
+        let els: NodeListOf<Element>;
+        try {
+          els = root.querySelectorAll(meta.tag);
+        } catch {
+          continue;
+        }
+        for (const el of Array.from(els)) {
+          if (!el.isConnected || !isVisible(el)) continue;
+          const candidateRole = roleOf(el) || el.tagName.toLowerCase();
+          const candidateName = accName(el);
+
+          const nameMatches = meta.name ? candidateName === meta.name : true;
+          const roleMatches = candidateRole === meta.role;
+
+          if (nameMatches && roleMatches) {
+            const tr = topRect(el);
+            const c = centerOf(tr);
+            const dx = c.x - meta.center.x;
+            const dy = c.y - meta.center.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < minDistance) {
+              minDistance = dist;
+              bestEl = el;
+            }
+          }
+        }
+      }
+      return minDistance < 500 ? bestEl : null;
+    }
+
     function refFor(el: Element): string {
       let r = reg.rev.get(el);
       if (!r) {
@@ -82,16 +159,101 @@ export function pageAgent(cmd: string, payload: any): any {
         reg.rev.set(el, r);
         reg.map.set(r, el);
       }
+      try {
+        const tr = topRect(el);
+        if (!reg.meta) reg.meta = new Map();
+        reg.meta.set(r, {
+          role: roleOf(el) || el.tagName.toLowerCase(),
+          name: accName(el),
+          tag: el.tagName.toLowerCase(),
+          center: centerOf(tr),
+          ts: Date.now(),
+        });
+      } catch {}
       return r;
     }
     function getRef(ref: unknown): Element {
-      const el = reg.map.get(String(ref));
-      if (!el || !el.isConnected) {
-        throw new Error(
-          `ref "${ref}" not found or stale (the page changed or navigated — call read_page or find again for fresh refs)`,
-        );
+      const key = String(ref);
+      const el = reg.map.get(key);
+      if (el && el.isConnected) {
+        return el;
       }
-      return el;
+      // 自愈回退：在页面内寻找同结构同名节点自愈
+      const meta = reg.meta?.get(key);
+      if (meta) {
+        const candidate = findHealingCandidate(meta);
+        if (candidate) {
+          reg.map.set(key, candidate);
+          reg.rev.set(candidate, key);
+          try {
+            const tr = topRect(candidate);
+            meta.center = centerOf(tr);
+            meta.ts = Date.now();
+          } catch {}
+          return candidate;
+        }
+      }
+      throw new Error(
+        `ref "${ref}" not found or stale (the page changed or navigated — call read_page or find again for fresh refs)`,
+      );
+    }
+
+    // ---------------- 活体视觉高亮反馈 (__baVisuals) ----------------
+    function highlightElement(el: Element, label?: string, durationMs = 1200): void {
+      try {
+        const HOST_ID = '__ba_visuals_host';
+        let host = topDoc.getElementById(HOST_ID);
+        if (!host) {
+          host = topDoc.createElement('div');
+          host.id = HOST_ID;
+          host.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483646;overflow:hidden;';
+          (topDoc.body || topDoc.documentElement).appendChild(host);
+        }
+        const r = topRect(el);
+        if (r.width <= 0 || r.height <= 0) return;
+
+        const box = topDoc.createElement('div');
+        box.style.cssText = `
+          position: fixed;
+          left: ${Math.max(0, r.left - 2)}px;
+          top: ${Math.max(0, r.top - 2)}px;
+          width: ${r.width + 4}px;
+          height: ${r.height + 4}px;
+          border: 2px solid #3b82f6;
+          border-radius: 4px;
+          box-shadow: 0 0 12px rgba(59, 130, 246, 0.65), inset 0 0 6px rgba(59, 130, 246, 0.25);
+          pointer-events: none;
+          transition: opacity 0.3s ease-out;
+          opacity: 1;
+          box-sizing: border-box;
+          z-index: 2147483647;
+        `;
+        if (label) {
+          const badge = topDoc.createElement('div');
+          badge.textContent = label;
+          badge.style.cssText = `
+            position: absolute;
+            bottom: calc(100% + 4px);
+            left: 0;
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 11px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+            pointer-events: none;
+          `;
+          box.appendChild(badge);
+        }
+        host.appendChild(box);
+        setTimeout(() => {
+          box.style.opacity = '0';
+          setTimeout(() => box.remove(), 350);
+        }, Math.max(300, durationMs));
+      } catch {}
     }
 
     // ---------------- 语义信息 ----------------
@@ -409,11 +571,17 @@ export function pageAgent(cmd: string, payload: any): any {
     }
 
     // 轻量存在性探测（供 wait_for 轮询，避免每次全量 gather）
-    function probe(query: unknown, text: unknown): any {
+    function probe(query: unknown, text: unknown, selector?: unknown): any {
       let textFound = false;
       const bodyText = (topDoc.body?.innerText ?? '').toLowerCase();
       if (typeof text === 'string' && text.trim()) textFound = bodyText.includes(text.toLowerCase());
       let matchCount = 0;
+      const sel = typeof selector === 'string' ? selector.trim() : '';
+      if (sel) {
+        try {
+          matchCount += topDoc.querySelectorAll(sel).length;
+        } catch {}
+      }
       const q = typeof query === 'string' ? query.toLowerCase().trim() : '';
       if (q) {
         const toks = q.split(/\s+/).filter(Boolean);
@@ -473,6 +641,7 @@ export function pageAgent(cmd: string, payload: any): any {
     }
     function formInput(ref: unknown, value: unknown): any {
       const el = getRef(ref);
+      highlightElement(el, `input #${ref}`, 1200);
       scrollElIntoView(el);
       const v = String(value ?? '');
       if (el instanceof HTMLSelectElement) {
@@ -511,11 +680,11 @@ export function pageAgent(cmd: string, payload: any): any {
       }
       throw new Error(`ref is a <${el.tagName.toLowerCase()}>, not an editable form element`);
     }
-    function elementInfo(ref: unknown): any {
+    function elementInfo(ref: unknown, maxAncestors = 0): any {
       const el = getRef(ref);
       const tr = topRect(el);
       const c = centerOf(tr);
-      return {
+      const res: any = {
         x: c.x,
         y: c.y,
         inViewport: inTopViewport(tr),
@@ -525,9 +694,33 @@ export function pageAgent(cmd: string, payload: any): any {
         disabled: !!(el as HTMLInputElement).disabled,
         desc: descFor(el),
       };
+      const limit = Math.min(8, Math.max(0, Number(maxAncestors || 0)));
+      if (limit > 0) {
+        const ancestors: any[] = [];
+        let curr: Element | null = el.parentElement;
+        let count = 0;
+        while (curr && count++ < limit) {
+          const st = styleOf(curr);
+          const r = curr.getBoundingClientRect();
+          ancestors.push({
+            tag: curr.tagName.toLowerCase(),
+            role: roleOf(curr) || curr.getAttribute('role') || undefined,
+            id: curr.id || undefined,
+            className: typeof curr.className === 'string' ? curr.className.slice(0, 80) : undefined,
+            rect: { left: Math.round(r.left), top: Math.round(r.top), width: Math.round(r.width), height: Math.round(r.height) },
+            scrollable: curr.scrollHeight > curr.clientHeight + 10,
+            overflowY: st?.overflowY,
+            pointerEvents: st?.pointerEvents,
+          });
+          curr = curr.parentElement || ((curr.getRootNode() as ShadowRoot)?.host as Element | null);
+        }
+        res.ancestors = ancestors;
+      }
+      return res;
     }
     function scrollToRef(ref: unknown): any {
       const el = getRef(ref);
+      highlightElement(el, `scroll #${ref}`, 1200);
       scrollElIntoView(el);
       const c = centerOf(topRect(el));
       return { text: `Scrolled to ${descFor(el)}`, x: c.x, y: c.y };
@@ -579,33 +772,167 @@ export function pageAgent(cmd: string, payload: any): any {
       return { text: `Attached file "${file.name}" (${file.size} bytes) to ${descFor(input)}` };
     }
 
-    // ---------------- 结构化数据抽取（穿透 open shadow + 同源 iframe） ----------------
-    function allRoots(): Array<Document | ShadowRoot> {
-      const roots: Array<Document | ShadowRoot> = [];
-      function visit(root: Document | ShadowRoot): void {
-        if (roots.length > 400) return;
-        roots.push(root);
+    // ---------------- 主滚动容器探测与智能无感抽文 ----------------
+    function findMainScrollContainer(): Element {
+      const docEl = topDoc.scrollingElement || topDoc.documentElement || topDoc.body;
+      const winH = topWin.innerHeight || 800;
+      const winW = topWin.innerWidth || 1200;
+
+      let bestEl: Element | null = null;
+      let bestArea = 0;
+
+      for (const root of allRoots()) {
         let els: NodeListOf<Element>;
         try {
-          els = root.querySelectorAll('*');
+          els = root.querySelectorAll('div, section, main, article, ul, [role="feed"], [role="main"], [role="region"]');
         } catch {
-          return;
+          continue;
         }
         for (const el of Array.from(els)) {
-          const sr = (el as any).shadowRoot as ShadowRoot | null;
-          if (sr) visit(sr);
-          if (el.tagName === 'IFRAME' || el.tagName === 'FRAME') {
-            try {
-              const cd = (el as HTMLIFrameElement).contentDocument;
-              if (cd) visit(cd);
-            } catch {
-              /* 跨域 iframe 不可读 */
+          if (!el.isConnected) continue;
+          const r = el.getBoundingClientRect();
+          if (r.width < 200 || r.height < 150) continue;
+          if (el.scrollHeight <= el.clientHeight + 80) continue;
+          const st = styleOf(el);
+          if (!st) continue;
+          const oy = st.overflowY;
+          if (oy === 'auto' || oy === 'scroll' || oy === 'overlay') {
+            const area = r.width * r.height;
+            if (area > bestArea) {
+              bestArea = area;
+              bestEl = el;
             }
           }
         }
       }
-      visit(topDoc);
-      return roots;
+
+      if (bestEl && bestArea > winW * winH * 0.35) {
+        return bestEl;
+      }
+      return docEl;
+    }
+
+    async function smartScrollRead(maxScreens = 12, stepTimeoutMs = 250): Promise<any> {
+      const container = findMainScrollContainer() as HTMLElement;
+      const isDoc = container === topDoc.scrollingElement || container === topDoc.documentElement || container === topDoc.body;
+      const initialScrollTop = isDoc ? (topWin.scrollY || container.scrollTop || 0) : container.scrollTop;
+
+      const collectedLines = new Set<string>();
+      let screens = 0;
+      let stalled = false;
+      let renderFrozen = false;
+      let endlessFeed = false;
+      let lastTextLen = 0;
+      let freezeCount = 0;
+
+      function extractLines(rootEl: Element): string[] {
+        const raw = ((rootEl as HTMLElement).innerText ?? rootEl.textContent ?? '').trim();
+        return raw
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0);
+      }
+
+      try {
+        const targetReadEl = isDoc ? (topDoc.body || topDoc.documentElement) : container;
+        for (const l of extractLines(targetReadEl)) {
+          collectedLines.add(l);
+        }
+        screens = 1;
+        lastTextLen = Array.from(collectedLines).join('\n').length;
+
+        const max = Math.min(25, Math.max(1, Number(maxScreens ?? 12)));
+        const clientHeight = isDoc ? topWin.innerHeight : container.clientHeight;
+        const step = Math.max(200, Math.round(clientHeight * 0.85));
+
+        while (screens < max) {
+          const currentScrollTop = isDoc ? (topWin.scrollY || container.scrollTop || 0) : container.scrollTop;
+          const scrollHeight = isDoc ? (topDoc.documentElement.scrollHeight || topDoc.body?.scrollHeight || 0) : container.scrollHeight;
+
+          if (currentScrollTop + clientHeight >= scrollHeight - 15) {
+            break;
+          }
+
+          const targetScrollTop = currentScrollTop + step;
+          if (isDoc) {
+            topWin.scrollTo({ top: targetScrollTop, behavior: 'instant' as ScrollBehavior });
+          } else {
+            container.scrollTop = targetScrollTop;
+          }
+
+          const afterScrollTop = isDoc ? (topWin.scrollY || container.scrollTop || 0) : container.scrollTop;
+          if (Math.abs(afterScrollTop - currentScrollTop) < 2) {
+            stalled = true;
+            break;
+          }
+
+          const waitLimit = Math.min(600, Math.max(50, Number(stepTimeoutMs ?? 250)));
+          const pollStart = Date.now();
+          let grown = false;
+          while (Date.now() - pollStart < waitLimit) {
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            const freshLines = extractLines(targetReadEl);
+            let added = false;
+            for (const l of freshLines) {
+              if (!collectedLines.has(l)) {
+                collectedLines.add(l);
+                added = true;
+              }
+            }
+            if (added) {
+              grown = true;
+              break;
+            }
+          }
+
+          screens++;
+          const currentTotalLen = Array.from(collectedLines).join('\n').length;
+          if (!grown || currentTotalLen === lastTextLen) {
+            freezeCount++;
+            if (freezeCount >= 2) {
+              renderFrozen = true;
+              break;
+            }
+          } else {
+            freezeCount = 0;
+            lastTextLen = currentTotalLen;
+          }
+
+          if (screens >= 20 && scrollHeight > clientHeight * 10) {
+            endlessFeed = true;
+            break;
+          }
+        }
+      } finally {
+        try {
+          if (isDoc) {
+            topWin.scrollTo({ top: initialScrollTop, behavior: 'instant' as ScrollBehavior });
+          } else {
+            container.scrollTop = initialScrollTop;
+          }
+        } catch {}
+      }
+
+      const text = Array.from(collectedLines).join('\n');
+      return {
+        text,
+        screens,
+        totalChars: text.length,
+        scrollHeight: isDoc ? (topDoc.documentElement.scrollHeight || topDoc.body?.scrollHeight || 0) : container.scrollHeight,
+        backgroundTab: !!topDoc.hidden,
+        stalled,
+        renderFrozen,
+        endlessFeed,
+        containerTag: container.tagName.toLowerCase(),
+      };
+    }
+
+    function highlightCmd(ref: unknown, label?: unknown, duration?: unknown): any {
+      const el = getRef(ref);
+      const text = label ? String(label) : descFor(el);
+      const dur = duration ? Math.min(10000, Math.max(300, Number(duration))) : 1500;
+      highlightElement(el, text, dur);
+      return { text: `Highlighted ${descFor(el)} for ${dur}ms` };
     }
     function deepQueryAll(sel: string, cap: number): Element[] {
       const found: Element[] = [];
@@ -702,13 +1029,13 @@ export function pageAgent(cmd: string, payload: any): any {
       case 'collect':
         return collect();
       case 'probe':
-        return probe(payload?.query, payload?.text);
+        return probe(payload?.query, payload?.text, payload?.selector);
       case 'find':
         return findEls(payload?.query);
       case 'form_input':
         return formInput(payload?.ref, payload?.value);
       case 'element_info':
-        return elementInfo(payload?.ref);
+        return elementInfo(payload?.ref, payload?.max_ancestors);
       case 'scroll_to':
         return scrollToRef(payload?.ref);
       case 'focus':
@@ -717,6 +1044,10 @@ export function pageAgent(cmd: string, payload: any): any {
         return activeInfo();
       case 'upload':
         return upload(payload?.ref, payload?.b64, payload?.name, payload?.mime, payload?.mode ?? 'change');
+      case 'highlight':
+        return highlightCmd(payload?.ref, payload?.label, payload?.duration);
+      case 'smart_scroll_read':
+        return await smartScrollRead(payload?.max_screens, payload?.step_timeout_ms);
       default:
         throw new Error('pageAgent: unknown cmd ' + cmd);
     }

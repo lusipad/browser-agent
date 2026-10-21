@@ -139,6 +139,12 @@ async function resolvePoint(
       y = s.y;
       await sleep(150);
     }
+    // Live visual feedback: highlight the element on the webpage
+    void runInPage(ctx.tabId, 'highlight', {
+      ref: input.ref,
+      label: `${action} #${input.ref}`,
+      duration: 1500,
+    }).catch(() => {});
     return { x, y, note: ` on ${info.desc}` };
   }
   const c = input.coordinate;

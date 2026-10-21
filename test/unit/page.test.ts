@@ -17,6 +17,11 @@ test('conditionMet: text 依据文本命中', () => {
   assert.equal(conditionMet('text', { matchCount: 9, textFound: false }), false);
 });
 
+test('conditionMet: text_gone 依据文本消失', () => {
+  assert.equal(conditionMet('text_gone', { matchCount: 0, textFound: false }), true);
+  assert.equal(conditionMet('text_gone', { matchCount: 5, textFound: true }), false);
+});
+
 test('conditionMet: 未知条件为 false', () => {
   assert.equal(conditionMet('bogus', { matchCount: 9, textFound: true }), false);
 });

@@ -4,6 +4,50 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 0.8.0 — 2026-10-22
+
+### Added / 新增
+
+- **🧠 深度思考流式折叠面板与 SPA 动态稳定协议 (Deep Thinking Stream & SPA Page Settle Protocol)** —
+  - 针对带有 `reasoning_content` 的前沿推理模型（如 o1, o3, DeepSeek-R1 等），在侧边栏时间线中提供实时流式思考折叠面板（Thinking Accordion），既能清晰观察长链条思维推理过程，又避免冗长思考内容遮挡核心操作。
+  - 推出智能 SPA 页面动态稳定协议（`page_settle`）：基于 `MutationObserver` 结合网络静默期机制，自动侦测现代 React / Vue / Angular 单页应用的 DOM 动态结算与异步数据渲染，彻底消除传统固定等待带来的偶发竞态。
+- **📊 启发式卡片流抽取 & 人机协同焦点增强 & `/extract` 斜杠指令 (Auto Cards Extraction & Human Focus)** —
+  - 新增 `auto_cards` 启发式列表与卡片抽取引擎，自动聚合结构化卡片与流式条目，无需手动编写繁琐的 CSS 选择器。
+  - 人机协同增强：当触发人工介入（`request_human_intervention`）时，自动将目标 Tab 升顶并赋予焦点，并在目标网页浮现全屏 Human HUD 状态条；待用户完成人机验证或登录后，一键无缝恢复长程执行。
+  - 新增 `/extract` 快捷斜杠指令，支持在输入框快速发起任意数据结构提取。
+- **🎯 活体执行 HUD 与点击涟漪光波 & 本地 WebBridge MCP Daemon (Live Execution HUD & WebBridge MCP Daemon)** —
+  - 在受控网页动态注入实时活体执行 HUD 状态浮层与点击激光波纹（Pointer Ripple），物理操作路径与当前目标标签一目了然，提供极佳的掌控感与可视化体验。
+  - 新增本地 `webbridge-daemon` 守护进程与标准 MCP (Model Context Protocol) 服务端，支持外部 IDE、本地自动化脚本或 Claude Desktop 等客户端双向控制 Chrome 扩展。
+  - 引入 WebSkillCreator 元流转协议，自动将交互操作轨迹提炼为通用可复用技能。
+- **🎬 示教技能多层定位器与分级重放 (Multi-Layer Locators & Tiered Replay)** —
+  - 技能录制自动在独立 Chrome 标签页组（Tab Group）中隔离进行，不干扰日常浏览。
+  - 轨迹自动抽取包含 ID、CSS 选择器、XPath、文本与 ARIA Role 的多层定位复合定位器，支持 Level 0（精确执行）、Level 1（启发式自愈）与 Level 2（大模型语义重定位）分级重放。
+- **🌐 划选文本独立浮动胶囊与网络请求检查器 (In-Page Selection Capsule & Network Inspector)** —
+  - 用户在网页划选任意文本时，即时在独立 Shadow DOM 中弹出 AI 浮动快捷胶囊，支持一键解释、翻译、摘要与实体抽取。
+  - 集成 CDP 网络流监听器，实时捕获网络请求状态与耗时。
+  - 支持 `/compact`、`/clean`、`/help` 等快捷斜杠指令。
+- **🛡️ 智能多屏连续滚动与 DOM Ref 自动愈合 (Smart Scroll & Ref Healing)** —
+  - 新增 `smart_scroll_read` 智能探测可滚动容器并实现多屏滚动去重抽取，突破传统截屏视口限制。
+  - DOM 刷新后自动触发 Ref Healing 自愈机制，页面动态变化时不中断会话。
+  - CDP 原生 Dialog（Alert / Confirm / Prompt）事件监听与自动安全响应。
+- **⚡ System 1 (TypeSafe Jev 1.14+) 视觉坐标与多模态决策 (Vision Box Coordinates Execution)** —
+  - 接入 TypeSafe Danger Zone 图像传输协议，解析 Jev 视觉 Box 像素坐标并映射为物理鼠标精确点击。
+  - 决策引擎设置面板支持视觉决策（Vision Enabled）独立开关与中英双语国际化。
+
+### Fixed & Improved / 修复与优化
+
+- **🎨 侧边栏深色模式原生下拉列表样式修复 (Dark Mode Native Select Contrast)** —
+  - 修复原生 `<select>` 下拉菜单在特定系统深色主题下背景泛白与文字对比度不适的问题。
+- **🔄 WebBridge 实例冲突防护 (WebBridge 4409 Safe Handling)** —
+  - 发生端口或实例冲突时自动转为 conflict 安全重试与断线平滑重连。
+
+### Testing & Verification / 测试与验证
+
+- **170 项单元测试 100% 通过**（从 153 项增至 170 项）。
+- **17 项 Playwright 浏览器真实端到端集成测试全部通过**（覆盖 Phase 1～6、MCP 通信、HUD 渲染、提取算法与动态稳定结算）。
+
+---
+
 ## 0.7.2 — 2026-09-29
 
 ### Added / 新增

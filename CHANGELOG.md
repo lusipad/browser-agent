@@ -9,7 +9,7 @@ This project follows [Semantic Versioning](https://semver.org/).
 ### Added / 新增
 
 - **🧠 深度思考流式折叠面板与 SPA 动态稳定协议 (Deep Thinking Stream & SPA Page Settle Protocol)** —
-  - 针对带有 `reasoning_content` 的前沿推理模型（如 o1, o3, DeepSeek-R1 等），在侧边栏时间线中提供实时流式思考折叠面板（Thinking Accordion），既能清晰观察长链条思维推理过程，又避免冗长思考内容遮挡核心操作。
+  - 针对带有 `reasoning_content` / `reasoning` 的前沿深度思考模型（如 GPT-5.6 Sol / Terra、DeepSeek V4 Pro、DeepSeek Flash 等），在侧边栏时间线中提供实时流式思考折叠面板（Thinking Accordion），既能清晰观察长链条思维推理过程，又避免冗长思考内容遮挡核心操作。
   - 推出智能 SPA 页面动态稳定协议（`page_settle`）：基于 `MutationObserver` 结合网络静默期机制，自动侦测现代 React / Vue / Angular 单页应用的 DOM 动态结算与异步数据渲染，彻底消除传统固定等待带来的偶发竞态。
 - **📊 启发式卡片流抽取 & 人机协同焦点增强 & `/extract` 斜杠指令 (Auto Cards Extraction & Human Focus)** —
   - 新增 `auto_cards` 启发式列表与卡片抽取引擎，自动聚合结构化卡片与流式条目，无需手动编写繁琐的 CSS 选择器。

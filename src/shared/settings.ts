@@ -28,6 +28,11 @@ export const DEFAULT_CONFIG: AppConfig = {
     { id: 'ollama', name: 'Ollama 本地', baseUrl: 'http://localhost:11434/v1', apiKey: 'ollama' },
   ],
   models: [
+    { id: 'gpt-6-astra', label: 'GPT-6 Astra（旗舰推理）', vision: true, contextWindow: 922000 },
+    { id: 'gpt-6.1-sol', label: 'GPT-6.1 Sol（高性能）', vision: true, contextWindow: 922000 },
+    { id: 'anthropic/claude-sonnet-5-5', label: 'Claude Sonnet 5.5', vision: true, contextWindow: 1000000 },
+    { id: 'anthropic/claude-opus-5-5', label: 'Claude Opus 5.5', vision: true, contextWindow: 1000000 },
+    { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash（原生推理）', vision: true, contextWindow: 1000000 },
     { id: 'gpt-5.6-sol', label: 'GPT-5.6 Sol（高性能）', vision: true, contextWindow: 400000 },
     { id: 'gpt-5.6-terra', label: 'GPT-5.6 Terra（均衡）', vision: true, contextWindow: 400000 },
     { id: 'gpt-5.6-luna', label: 'GPT-5.6 Luna（快速）', vision: true, contextWindow: 400000 },
@@ -38,6 +43,11 @@ export const DEFAULT_CONFIG: AppConfig = {
     { id: 'qwen3-vl', label: 'Qwen3-VL', vision: true, contextWindow: 128000 },
   ],
   bindings: [
+    { id: 'openai/gpt-6-astra', modelId: 'gpt-6-astra', providerId: 'openai', apiModelName: 'gpt-6-astra', pricing: { input: 10, output: 50 }, enabled: true },
+    { id: 'openai/gpt-6.1-sol', modelId: 'gpt-6.1-sol', providerId: 'openai', apiModelName: 'gpt-6.1-sol', pricing: { input: 2, output: 10 }, enabled: true },
+    { id: 'openrouter/anthropic/claude-sonnet-5-5', modelId: 'anthropic/claude-sonnet-5-5', providerId: 'openrouter', apiModelName: 'anthropic/claude-sonnet-5-5', pricing: { input: 2, output: 10 }, enabled: true },
+    { id: 'openrouter/anthropic/claude-opus-5-5', modelId: 'anthropic/claude-opus-5-5', providerId: 'openrouter', apiModelName: 'anthropic/claude-opus-5-5', pricing: { input: 4, output: 20 }, enabled: true },
+    { id: 'deepseek/deepseek-v4-flash', modelId: 'deepseek-v4-flash', providerId: 'deepseek', apiModelName: 'deepseek-v4-flash', pricing: { input: 0.3, output: 1.2 }, enabled: true },
     { id: 'openai/gpt-5.6-sol', modelId: 'gpt-5.6-sol', providerId: 'openai', apiModelName: 'gpt-5.6-sol', pricing: { input: 1.25, output: 10 }, enabled: true },
     { id: 'openai/gpt-5.6-terra', modelId: 'gpt-5.6-terra', providerId: 'openai', apiModelName: 'gpt-5.6-terra', pricing: { input: 0.6, output: 4 }, enabled: true },
     { id: 'openai/gpt-5.6-luna', modelId: 'gpt-5.6-luna', providerId: 'openai', apiModelName: 'gpt-5.6-luna', pricing: { input: 0.15, output: 1.2 }, enabled: true },

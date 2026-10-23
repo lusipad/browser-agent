@@ -21,7 +21,7 @@ export interface StreamParams {
   retries: number;
   /** 文本增量回调（用于 UI 流式显示） */
   onText: (delta: string) => void;
-  /** 推理/思考内容增量回调（用于 GPT-5.6 / DeepSeek V4 Pro / Claude 等思考模型流式展示） */
+  /** 推理/思考内容增量回调（用于 GPT-6 / Claude 5.5 / DeepSeek V4.1 等前沿思考模型流式展示） */
   onReasoning?: (delta: string) => void;
 }
 

@@ -34,6 +34,10 @@ const PROVIDERS = {
 // Only these models are included. Label value is used as-is; null = auto.
 const CURATED = {
   openai: {
+    'gpt-6-astra':     'GPT-6 Astra（旗舰推理）',
+    'gpt-6.1-sol':     'GPT-6.1 Sol（高性能）',
+    'gpt-6-sol':       'GPT-6 Sol',
+    'gpt-6-luna':      'GPT-6 Luna（快速）',
     'gpt-5.6-sol':     'GPT-5.6 Sol（高性能）',
     'gpt-5.6-terra':   'GPT-5.6 Terra（均衡）',
     'gpt-5.6-luna':    'GPT-5.6 Luna（快速）',
@@ -46,6 +50,9 @@ const CURATED = {
     'gpt-4o-mini':     'GPT-4o Mini',
   },
   anthropic: {
+    'claude-opus-5-5':          'Claude Opus 5.5',
+    'claude-sonnet-5-5':        'Claude Sonnet 5.5',
+    'claude-fable-5-1':         'Claude Fable 5.1',
     'claude-opus-5':            'Claude Opus 5',
     'claude-sonnet-5':          'Claude Sonnet 5',
     'claude-opus-4-8':          'Claude Opus 4.8',
@@ -58,6 +65,8 @@ const CURATED = {
     'claude-fable-5':           'Claude Fable 5',
   },
   deepseek: {
+    'deepseek-v4.1-flash':  'DeepSeek V4.1 Flash',
+    'deepseek-v4-flash':    'DeepSeek V4 Flash',
     'deepseek-flash':       'DeepSeek Flash（原生视觉）',
     'deepseek-v4-pro':      'DeepSeek V4 Pro',
   },
@@ -161,6 +170,8 @@ const MANUAL_PROVIDERS = [
 ];
 
 const MANUAL_MODELS = [
+  { id: 'deepseek/deepseek-v4.1-flash', providerId: 'deepseek', model: 'deepseek-v4.1-flash', label: 'DeepSeek V4.1 Flash', vision: true, contextWindow: 1000000, pricing: { input: 0.3, output: 1.2 } },
+
   { id: 'siliconflow/deepseek-ai/DeepSeek-V3',             providerId: 'siliconflow', model: 'deepseek-ai/DeepSeek-V3',             label: 'DeepSeek V3（硅基流动）',            vision: false, contextWindow: 64000,  pricing: { input: 0.18, output: 0.37 } },
   { id: 'siliconflow/deepseek-ai/DeepSeek-R1',             providerId: 'siliconflow', model: 'deepseek-ai/DeepSeek-R1',             label: 'DeepSeek R1（硅基流动·推理）',        vision: false, contextWindow: 64000,  pricing: { input: 0.30, output: 1.50 } },
   { id: 'siliconflow/Qwen/Qwen2.5-VL-72B-Instruct',       providerId: 'siliconflow', model: 'Qwen/Qwen2.5-VL-72B-Instruct',       label: 'Qwen2.5-VL 72B（硅基流动·视觉）',    vision: true,  contextWindow: 32000,  pricing: { input: 0.56, output: 0.56 } },

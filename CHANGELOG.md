@@ -8,8 +8,11 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ### Added / 新增
 
+- **🤖 全面集成前沿旗舰模型清单 (Frontier Models Integration)** —
+  - 核心接入与预设覆盖新一代旗舰与自适应推理模型：OpenAI **GPT-6 Astra** / **GPT-6.1 Sol**、Anthropic **Claude Sonnet 5.5** / **Claude Opus 5.5**、**DeepSeek V4.1 / V4 Flash**。
+  - 同步更新模型价格表与百万级上下文窗口（1M tokens），全面支持实时思考流解析与计算机级深度操作。
 - **🧠 深度思考流式折叠面板与 SPA 动态稳定协议 (Deep Thinking Stream & SPA Page Settle Protocol)** —
-  - 针对带有 `reasoning_content` / `reasoning` 的前沿深度思考模型（如 GPT-5.6 Sol / Terra、DeepSeek V4 Pro、DeepSeek Flash 等），在侧边栏时间线中提供实时流式思考折叠面板（Thinking Accordion），既能清晰观察长链条思维推理过程，又避免冗长思考内容遮挡核心操作。
+  - 针对具备长程思考与推理能力的前沿深度模型（如 GPT-6 Astra / GPT-6.1 Sol、Claude Sonnet 5.5 / Opus 5.5、DeepSeek V4.1/V4 Flash 等），在侧边栏时间线中提供实时流式思考折叠面板（Thinking Accordion），既能清晰观察长链条思维推理过程，又避免冗长思考内容遮挡核心操作。
   - 推出智能 SPA 页面动态稳定协议（`page_settle`）：基于 `MutationObserver` 结合网络静默期机制，自动侦测现代 React / Vue / Angular 单页应用的 DOM 动态结算与异步数据渲染，彻底消除传统固定等待带来的偶发竞态。
 - **📊 启发式卡片流抽取 & 人机协同焦点增强 & `/extract` 斜杠指令 (Auto Cards Extraction & Human Focus)** —
   - 新增 `auto_cards` 启发式列表与卡片抽取引擎，自动聚合结构化卡片与流式条目，无需手动编写繁琐的 CSS 选择器。

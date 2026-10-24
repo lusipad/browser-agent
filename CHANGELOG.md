@@ -25,8 +25,7 @@ This project follows [Semantic Versioning](https://semver.org/).
 - **🎬 示教技能多层定位器与分级重放 (Multi-Layer Locators & Tiered Replay)** —
   - 技能录制自动在独立 Chrome 标签页组（Tab Group）中隔离进行，不干扰日常浏览。
   - 轨迹自动抽取包含 ID、CSS 选择器、XPath、文本与 ARIA Role 的多层定位复合定位器，支持 Level 0（精确执行）、Level 1（启发式自愈）与 Level 2（大模型语义重定位）分级重放。
-- **🌐 划选文本独立浮动胶囊与网络请求检查器 (In-Page Selection Capsule & Network Inspector)** —
-  - 用户在网页划选任意文本时，即时在独立 Shadow DOM 中弹出 AI 浮动快捷胶囊，支持一键解释、翻译、摘要与实体抽取。
+- **🌐 有状态网络请求检查器与快捷指令集 (Network Inspector & Slash Commands)** —
   - 集成 CDP 网络流监听器，实时捕获网络请求状态与耗时。
   - 支持 `/compact`、`/clean`、`/help` 等快捷斜杠指令。
 - **🛡️ 智能多屏连续滚动与 DOM Ref 自动愈合 (Smart Scroll & Ref Healing)** —
@@ -47,7 +46,7 @@ This project follows [Semantic Versioning](https://semver.org/).
 ### Testing & Verification / 测试与验证
 
 - **170 项单元测试 100% 通过**（从 153 项增至 170 项）。
-- **17 项 Playwright 浏览器真实端到端集成测试全部通过**（覆盖 Phase 1～6、MCP 通信、HUD 渲染、提取算法与动态稳定结算）。
+- **16 项 Playwright 浏览器真实端到端集成测试全部通过**（覆盖 Phase 1～6、MCP 通信、HUD 渲染、提取算法与动态稳定结算）。
 
 ---
 

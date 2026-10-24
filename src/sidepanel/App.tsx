@@ -158,18 +158,7 @@ export function App() {
           break;
         case 'region_select_canceled':
           break;
-        case 'selection_action_triggered': {
-          const action = (msg as any).action;
-          const text = (msg as any).text || '';
-          if (action === 'translate') {
-            port.post({ type: 'send', text: `请将以下选中的网页内容翻译为中文，并给出关键术语说明：\n\n> ${text}` });
-          } else if (action === 'extract') {
-            setDraftText(`请提取以下内容中的关键数据与结构化信息（如表格、条目清单）：\n\n> ${text}`);
-          } else {
-            setDraftText(`请帮我分析以下选中的网页内容：\n\n> ${text}\n\n`);
-          }
-          break;
-        }
+
       }
     });
     void port.connect();

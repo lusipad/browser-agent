@@ -97,27 +97,6 @@ async function main() {
   await page.screenshot({ path: hudPath });
   console.log(`Saved HUD & Ripple preview: ${hudPath}`);
 
-  // 2. 划选文本展示浮动胶囊
-  console.log('Triggering Selection Floating Capsule...');
-  await page.evaluate(() => {
-    window.__pageAgent('hud_update', { status: 'hidden' });
-    window.__inPageSelectionCapsule();
-    const p = document.getElementById('selectable-p');
-    if (!p || !p.firstChild) return;
-    const range = document.createRange();
-    range.setStart(p.firstChild, 0);
-    range.setEnd(p.firstChild, 25); // "Antigravity Browser Agent"
-    const sel = window.getSelection();
-    sel?.removeAllRanges();
-    sel?.addRange(range);
-    document.dispatchEvent(new Event('selectionchange'));
-  });
-  await page.waitForTimeout(250);
-
-  const capsulePath = path.join(ARTIFACT_DIR, 'selection_capsule_preview.png').replace(/\\/g, '/');
-  await page.screenshot({ path: capsulePath });
-  console.log(`Saved Selection Capsule preview: ${capsulePath}`);
-
   // 3. 执行 auto_cards 提取并输出结果
   console.log('Testing auto_cards extraction...');
   const extractRes = await page.evaluate(() => {

@@ -3,7 +3,6 @@
 // 2. 页面动态稳定探测 (page_settle)
 // 3. 实时活体执行 HUD 与点击激光波纹 (hud_update / pointer_ripple)
 // 4. 无选择器启发式卡片/列表流提取 (auto_cards)
-// 5. 划选文本轻量悬浮胶囊 (inPageSelectionCapsule)
 // 6. WebBridge 本地守候进程与 MCP 协议交互 (健康检查 / 客户端双向 RPC / 4409 实例冲突防重)
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -205,54 +204,6 @@ test('4. 无选择器启发式卡片/列表流自动提取 (auto_cards)', async 
   const screen = r.cards.find((c) => c.title?.includes('电竞显示器'));
   assert.ok(screen, '识别到电竞显示器');
   assert.equal(screen.price, '¥2399.00');
-});
-
-test('5. 划选文本独立 Shadow DOM 浮动胶囊 (inPageSelectionCapsule)', async () => {
-  // 初始化划词胶囊监听器
-  await page.evaluate(() => {
-    window.__inPageSelectionCapsule();
-  });
-
-  // 模拟用户在页面选中一段文本
-  await page.evaluate(() => {
-    const p = document.getElementById('selectable-p');
-    if (!p || !p.firstChild) return;
-    const range = document.createRange();
-    range.setStart(p.firstChild, 0);
-    range.setEnd(p.firstChild, 25); // "Antigravity Browser Agent" (25 chars)
-    const sel = window.getSelection();
-    sel?.removeAllRanges();
-    sel?.addRange(range);
-    document.dispatchEvent(new Event('selectionchange'));
-  });
-
-  // 等待划选防抖 150ms
-  await page.waitForTimeout(200);
-
-  // 验证 Shadow DOM 宿主存在并渲染 3 个胶囊按钮
-  const capsuleInfo = await page.evaluate(() => {
-    const host = document.getElementById('__ba_selection_capsule_host');
-    if (!host || !host.shadowRoot) return null;
-    const btns = Array.from(host.shadowRoot.querySelectorAll('button.ba-btn')).map((b) => b.textContent?.trim());
-    return { hasHost: true, btns };
-  });
-
-  assert.ok(capsuleInfo?.hasHost, '应创建 __ba_selection_capsule_host 节点');
-  assert.deepEqual(capsuleInfo?.btns, ['✨问 Agent', '🌐翻译', '📊结构化'], '胶囊应包含 3 个核心操作入口');
-
-  // 点击 "✨问 Agent"
-  await page.evaluate(() => {
-    const host = document.getElementById('__ba_selection_capsule_host');
-    const askBtn = host?.shadowRoot?.querySelectorAll('button.ba-btn')[0];
-    askBtn?.click();
-  });
-
-  const actionSent = await page.evaluate(() => {
-    const msgs = window.__sent_messages || [];
-    return msgs.find((m) => m.type === 'inpage_selection_action' && m.action === 'ask');
-  });
-  assert.ok(actionSent, '点击胶囊应派发 inpage_selection_action 消息');
-  assert.ok(actionSent.text.includes('Antigravity'), '消息携带划选文本内容');
 });
 
 test('6. WebBridge 本地 WebSocket 守候进程与 MCP RPC 交互', async () => {

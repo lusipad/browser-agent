@@ -122,7 +122,7 @@ export interface AdvancedSettings {
 // System 1 极速决策引擎配置 (Jev / Laya)
 // ============================================================
 
-export type System1ProviderType = 'typesafe' | 'laya-local' | 'custom';
+export type System1ProviderType = 'typesafe' | 'google-decision' | 'laya-local' | 'custom';
 
 export interface System1Config {
   /** 是否启用 System 1 快速决策接管 */

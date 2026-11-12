@@ -411,3 +411,127 @@ test('parseSystem1Response: 支持 Jev 多模态 Box / coordinate 视觉坐标�
   const parsed2 = parseSystem1Response(raw2, mockElements);
   assert.deepEqual(parsed2.coordinate, [100, 200]);
 });
+
+test('parseSystem1Response: 解析 Google Decisions API 格式 (answers, choice, probabilities, confidence: high)', () => {
+  const raw = {
+    answers: {
+      action: {
+        type: 'choice',
+        choice: 'CLICK',
+        confidence: 'high',
+        probabilities: { CLICK: 0.96, SCROLL_DOWN: 0.04 },
+      },
+      target: {
+        type: 'choice',
+        choice: '1',
+        confidence: 'high',
+        probabilities: { '1': 0.94, '2': 0.06 },
+      },
+    },
+  };
+  const parsed = parseSystem1Response(raw, mockElements);
+  assert.equal(parsed.action, 'CLICK');
+  assert.equal(parsed.targetRef, '1');
+  assert.equal(parsed.confidence, 0.94);
+});
+
+test('executeSystem1Decision: 请求 Google Gemini Decisions 端点并携带 x-goog-api-key 与 query param', async () => {
+  let capturedUrl = '';
+  let capturedHeaders: Record<string, string> = {};
+  let capturedBody: any;
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+    capturedUrl = String(url);
+    capturedHeaders = (init?.headers as Record<string, string>) || {};
+    capturedBody = JSON.parse(String(init?.body || '{}'));
+    return new Response(
+      JSON.stringify({
+        answers: {
+          action: { choice: 'CLICK', confidence: 'high', probabilities: { CLICK: 0.95 } },
+          target: { choice: '1', confidence: 'high', probabilities: { '1': 0.92 } },
+        },
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    );
+  }) as any;
+
+  try {
+    const res = await executeSystem1Decision(
+      {
+        enabled: true,
+        provider: 'google-decision',
+        baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+        apiKey: 'AIzaSyFakeKey',
+        model: 'gemini-decision-1',
+        minConfidence: 0.6,
+        maxConsecutiveFastSteps: 8,
+      },
+      {
+        goal: 'Click Submit',
+        elements: mockElements,
+        pageUrl: 'https://example.com',
+      },
+    );
+
+    assert.ok(capturedUrl.startsWith('https://generativelanguage.googleapis.com/v1beta/decisions'));
+    assert.ok(capturedUrl.includes('key=AIzaSyFakeKey'));
+    assert.equal(capturedHeaders['x-goog-api-key'], 'AIzaSyFakeKey');
+    assert.equal(capturedBody.model, 'gemini-decision-1');
+    assert.ok(capturedBody.questions.action);
+    assert.ok(capturedBody.questions.target);
+    assert.equal(typeof capturedBody.input, 'string');
+    assert.equal(res.action, 'CLICK');
+    assert.equal(res.targetRef, '1');
+    assert.equal(res.confidence, 0.92);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('executeSystem1Decision: Google Decisions 模式携带截图时使用 inline_data 传输', async () => {
+  let capturedBody: any;
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+    capturedBody = JSON.parse(String(init?.body || '{}'));
+    return new Response(
+      JSON.stringify({
+        answers: {
+          action: { choice: 'CLICK', confidence: 'high' },
+          target: { choice: '1', confidence: 'high' },
+        },
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    );
+  }) as any;
+
+  try {
+    const res = await executeSystem1Decision(
+      {
+        enabled: true,
+        provider: 'google-decision',
+        baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+        apiKey: 'AIzaSyFakeKey',
+        model: 'gemini-decision-1',
+        visionEnabled: true,
+        minConfidence: 0.6,
+        maxConsecutiveFastSteps: 8,
+      },
+      {
+        goal: 'Click Submit',
+        elements: mockElements,
+        screenshot: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      },
+    );
+
+    assert.ok(Array.isArray(capturedBody.input));
+    assert.equal(capturedBody.input.length, 2);
+    assert.equal(typeof capturedBody.input[0], 'string');
+    assert.equal(capturedBody.input[1].inline_data.mime_type, 'image/png');
+    assert.ok(capturedBody.input[1].inline_data.data.startsWith('iVBORw0K'));
+    assert.equal(res.action, 'CLICK');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

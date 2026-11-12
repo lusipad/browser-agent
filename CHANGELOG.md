@@ -4,6 +4,22 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 0.8.2 — 2026-11-12
+
+### Added / 新增
+
+- **⚡ Google Gemini Decisions API 支持 (gemini-decision-1)** —
+  - 接入 Google 最新发布的专用极速决策模型与 REST 端点，作为快决策（System 1）的核心引擎之一。
+  - 支持多模态 `inline_data` 视口截图传输与 DOM 元素索引结构化映射（`action` / `target` choice 问题）。
+  - 解析 `answers` 结构与 `probabilities` 分布，完成精准置信度校准与阈值自动放行控制。
+  - 侧边栏顶部徽章与设置面板全面适配。
+
+### Testing & Verification / 测试与验证
+
+- **176 项单元测试 100% 通过**（新增 Google Decisions 专用协议校验）。
+- **16 项端到端真实浏览器自动化测试全部通过**。
+- TypeScript 严格类型检查 0 错误。
+
 ## 0.8.1 — 2026-11-12
 
 ### Fixed & Improved / 修复与优化

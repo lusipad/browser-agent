@@ -50,12 +50,12 @@ export function App() {
     void loadConfig().then((c) => {
       setLang(resolveLang(c.uiLang));
       setSystem1Enabled(!!c.system1?.enabled);
-      setSystem1Model(c.system1?.model || (c.system1?.provider === 'laya-local' ? 'laya-modernbert-large' : 'jev-latest'));
+      setSystem1Model(c.system1?.model || (c.system1?.provider === 'google-decision' ? 'gemini-decision-1' : c.system1?.provider === 'laya-local' ? 'laya-modernbert-large' : 'jev-latest'));
     });
     onConfigChange((c) => {
       setLang(resolveLang(c.uiLang));
       setSystem1Enabled(!!c.system1?.enabled);
-      setSystem1Model(c.system1?.model || (c.system1?.provider === 'laya-local' ? 'laya-modernbert-large' : 'jev-latest'));
+      setSystem1Model(c.system1?.model || (c.system1?.provider === 'google-decision' ? 'gemini-decision-1' : c.system1?.provider === 'laya-local' ? 'laya-modernbert-large' : 'jev-latest'));
     });
   }, []);
 

@@ -84,18 +84,40 @@ export function parseSystem1Response(raw: any, elements: System1Element[]): Syst
   let box: { x: number; y: number; w: number; h: number } | undefined;
   let confidence: number = 0.5;
 
-  // 格式 1: TypeSafe Jev 标准 questions/decisions 或 answers 结构
+  // 格式 1: TypeSafe Jev / Google Decisions 标准 questions/decisions 或 answers 结构
   const answers = raw.answers && typeof raw.answers === 'object' ? raw.answers : raw.decisions && typeof raw.decisions === 'object' ? raw.decisions : null;
   if (answers) {
     const act = answers.action;
     const tgt = answers.target;
     if (act) {
       actionStr = String(act.choice ?? act.value ?? act.action ?? '');
-      const s1 = typeof act.confidence === 'number' ? act.confidence : typeof act.score === 'number' ? act.score : 0.8;
-      const s2 = tgt && typeof tgt.confidence === 'number' ? tgt.confidence : typeof tgt?.score === 'number' ? tgt.score : 0.8;
+      let s1 = 0.8;
+      if (typeof act.confidence === 'number') s1 = act.confidence;
+      else if (typeof act.score === 'number') s1 = act.score;
+      else if (act.confidence === 'high') s1 = 0.95;
+      else if (act.confidence === 'medium') s1 = 0.75;
+      else if (act.confidence === 'low') s1 = 0.5;
+
+      if (act.probabilities && typeof act.probabilities[actionStr] === 'number') {
+        s1 = act.probabilities[actionStr];
+      }
+
+      let s2 = 0.8;
+      if (tgt) {
+        targetRef = String(tgt.choice ?? tgt.value ?? tgt.ref ?? '');
+        if (typeof tgt.confidence === 'number') s2 = tgt.confidence;
+        else if (typeof tgt.score === 'number') s2 = tgt.score;
+        else if (tgt.confidence === 'high') s2 = 0.95;
+        else if (tgt.confidence === 'medium') s2 = 0.75;
+        else if (tgt.confidence === 'low') s2 = 0.5;
+
+        if (tgt.probabilities && typeof tgt.probabilities[targetRef] === 'number') {
+          s2 = tgt.probabilities[targetRef];
+        }
+      }
       confidence = Math.min(s1, s2);
     }
-    if (tgt) {
+    if (tgt && !targetRef) {
       targetRef = String(tgt.choice ?? tgt.value ?? tgt.ref ?? '');
     }
     const boxRaw = answers.box ?? answers.target_box ?? answers.location ?? answers.coordinate;
@@ -168,7 +190,11 @@ export async function executeSystem1Decision(
   let base = cfg.baseUrl.trim().replace(/\/+$/, '');
   let endpoint = base;
 
-  if (cfg.provider === 'typesafe') {
+  if (cfg.provider === 'google-decision') {
+    if (!endpoint.endsWith('/decisions')) {
+      endpoint = `${endpoint}/decisions`;
+    }
+  } else if (cfg.provider === 'typesafe') {
     if (!endpoint.endsWith('/systemone')) {
       endpoint = `${endpoint}/systemone`;
     }
@@ -204,7 +230,43 @@ export async function executeSystem1Decision(
   }
 
   let payload: Record<string, any>;
-  if (cfg.provider === 'typesafe') {
+  if (cfg.provider === 'google-decision') {
+    const modelName = (cfg.model || '').trim() || 'gemini-decision-1';
+    let inputData: any;
+    if (req.screenshot && cfg.visionEnabled !== false) {
+      const base64Data = req.screenshot.replace(/^data:image\/[a-z]+;base64,/, '');
+      const mimeMatch = req.screenshot.match(/^data:(image\/[a-z]+);base64,/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      inputData = [
+        stateText,
+        {
+          inline_data: {
+            mime_type: mimeType,
+            data: base64Data,
+          },
+        },
+      ];
+    } else {
+      inputData = stateText;
+    }
+
+    payload = {
+      model: modelName,
+      input: inputData,
+      questions: {
+        action: {
+          type: 'choice',
+          instructions: 'Which browser action should be taken next to achieve the user goal?',
+          criteria: actionCriteria,
+        },
+        target: {
+          type: 'choice',
+          instructions: 'Which candidate element ref is the most appropriate target for this action?',
+          criteria: targetCriteria,
+        },
+      },
+    };
+  } else if (cfg.provider === 'typesafe') {
     let modelName = (cfg.model || '').trim();
     if (!modelName || modelName.toLowerCase() === 'jev') {
       modelName = 'jev-latest';
@@ -263,11 +325,20 @@ export async function executeSystem1Decision(
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  if (cfg.apiKey && cfg.apiKey.trim()) {
-    headers['Authorization'] = `Bearer ${cfg.apiKey.trim()}`;
-  }
-  if (req.screenshot || cfg.visionEnabled) {
-    headers['TypeSafe-Danger-Zone-Images'] = 'true';
+  if (cfg.provider === 'google-decision') {
+    if (cfg.apiKey && cfg.apiKey.trim()) {
+      headers['x-goog-api-key'] = cfg.apiKey.trim();
+      if (!endpoint.includes('key=')) {
+        endpoint = `${endpoint}?key=${encodeURIComponent(cfg.apiKey.trim())}`;
+      }
+    }
+  } else {
+    if (cfg.apiKey && cfg.apiKey.trim()) {
+      headers['Authorization'] = `Bearer ${cfg.apiKey.trim()}`;
+    }
+    if (req.screenshot || cfg.visionEnabled) {
+      headers['TypeSafe-Danger-Zone-Images'] = 'true';
+    }
   }
 
   let timeoutId: any;

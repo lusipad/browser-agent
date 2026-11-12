@@ -117,6 +117,13 @@ export function DecisionPanel({ cfg, onChange }: PanelProps) {
                       baseUrl: 'https://api.typesafe.ai/v1',
                       model: 'jev-latest',
                     });
+                  } else if (p === 'google-decision') {
+                    patchSys1({
+                      provider: p,
+                      baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+                      model: 'gemini-decision-1',
+                      visionEnabled: true,
+                    });
                   } else if (p === 'laya-local') {
                     patchSys1({
                       provider: p,
@@ -129,6 +136,7 @@ export function DecisionPanel({ cfg, onChange }: PanelProps) {
                 }}
               >
                 <option value="typesafe">{t('opt.system1.provider.typesafe')}</option>
+                <option value="google-decision">{t('opt.system1.provider.google')}</option>
                 <option value="laya-local">{t('opt.system1.provider.laya')}</option>
                 <option value="custom">{t('opt.system1.provider.custom')}</option>
               </select>
@@ -139,7 +147,13 @@ export function DecisionPanel({ cfg, onChange }: PanelProps) {
                 <input
                   type="text"
                   value={sys1.baseUrl}
-                  placeholder={sys1.provider === 'laya-local' ? 'http://localhost:8000/v1' : 'https://api.typesafe.ai/v1'}
+                  placeholder={
+                    sys1.provider === 'google-decision'
+                      ? 'https://generativelanguage.googleapis.com/v1beta'
+                      : sys1.provider === 'laya-local'
+                      ? 'http://localhost:8000/v1'
+                      : 'https://api.typesafe.ai/v1'
+                  }
                   onChange={(e) => patchSys1({ baseUrl: e.target.value })}
                 />
               </Field>
@@ -147,7 +161,13 @@ export function DecisionPanel({ cfg, onChange }: PanelProps) {
                 <input
                   type="password"
                   value={sys1.apiKey}
-                  placeholder={sys1.provider === 'laya-local' ? '本地通常无需 Key (可选)' : 'ts-***'}
+                  placeholder={
+                    sys1.provider === 'google-decision'
+                      ? 'AIzaSy... (Gemini API Key)'
+                      : sys1.provider === 'laya-local'
+                      ? '本地通常无需 Key (可选)'
+                      : 'ts-***'
+                  }
                   onChange={(e) => patchSys1({ apiKey: e.target.value })}
                 />
               </Field>
@@ -158,7 +178,13 @@ export function DecisionPanel({ cfg, onChange }: PanelProps) {
                 <input
                   type="text"
                   value={sys1.model}
-                  placeholder={sys1.provider === 'laya-local' ? 'laya-modernbert-large' : 'jev-latest'}
+                  placeholder={
+                    sys1.provider === 'google-decision'
+                      ? 'gemini-decision-1'
+                      : sys1.provider === 'laya-local'
+                      ? 'laya-modernbert-large'
+                      : 'jev-latest'
+                  }
                   onChange={(e) => patchSys1({ model: e.target.value })}
                 />
               </Field>

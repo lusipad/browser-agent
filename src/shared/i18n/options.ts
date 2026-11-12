@@ -284,6 +284,7 @@ export const optionsDict = {
   },
   'opt.system1.provider': { zh: '决策引擎提供商', en: 'Decision Engine Provider' },
   'opt.system1.provider.typesafe': { zh: 'TypeSafe AI (Jev - 云端专用决策模型)', en: 'TypeSafe AI (Jev - Cloud decision model)' },
+  'opt.system1.provider.google': { zh: 'Google Gemini (gemini-decision-1 极速决策 API)', en: 'Google Gemini (gemini-decision-1 Decisions API)' },
   'opt.system1.provider.laya': { zh: 'Laya (Convai ModernBERT - 本地极速与隐私)', en: 'Laya (Convai ModernBERT - Local ultra-fast & private)' },
   'opt.system1.provider.custom': { zh: '自定义 (Custom REST / System 1 端点)', en: 'Custom (REST / System 1 endpoint)' },
   'opt.system1.baseUrl': { zh: 'API Base URL', en: 'API Base URL' },

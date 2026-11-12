@@ -20,6 +20,7 @@ import './intervention.test';
 import './recorder.test';
 import './region.test';
 import './system1.test';
+import './agent-retry.test';
 import './phase1_enhancements.test';
 import './phase3_enhancements.test';
 import './phase4_enhancements.test';

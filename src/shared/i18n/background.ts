@@ -23,6 +23,14 @@ export const backgroundDict = {
     zh: '模型「{0}」返回空响应（无文本、无工具调用）。最常见原因是当前服务商不提供该模型，或模型不支持 Chat Completions / function calling。请到设置页点击“测试连接”；若提示模型不可用，请改用接口返回的模型。',
     en: 'Model "{0}" returned an empty response (no text or tool calls). The provider may not offer this model, or the model may not support Chat Completions / function calling. Click "Test connection" in Settings; if the model is unavailable, choose one returned by the endpoint.',
   },
+  'bg.emptyRetry': {
+    zh: '模型「{0}」返回空响应，正在重试（第 {1}/{2} 次）...',
+    en: 'Model "{0}" returned an empty response. Retrying ({1}/{2})...',
+  },
+  'bg.errorRetry': {
+    zh: '模型「{0}」调用异常（{1}），正在重试（第 {2}/{3} 次）...',
+    en: 'Model "{0}" call failed ({1}). Retrying ({2}/{3})...',
+  },
   'bg.detach': { zh: '已释放浏览器控制（断开 {0} 个标签页的调试连接，撤销 {1} 个标签的 Agent 分组）。', en: 'Released browser control (detached debugger from {0} tab(s), ungrouped {1} tab(s) from the Agent group).' },
   // 授权卡片
   'bg.siteAllowTitle': { zh: '允许在 {0} 上操作？', en: 'Allow operating on {0}?' },

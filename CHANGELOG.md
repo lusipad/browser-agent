@@ -4,6 +4,24 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 0.8.1 — 2026-11-12
+
+### Fixed & Improved / 修复与优化
+
+- **🔁 大模型空响应与瞬时流异常指数退避重试 (Model Empty Response & Transient Stream Retry)** —
+  - 针对使用特定大模型（如 DeepSeek-V4.1-Flash）或第三方代理服务时偶发出现空响应（无文本、无工具调用）或流传输中途网络抖动报错的问题，增加智能指数退避重试机制（默认最多重试 2 次，支持在高级设置中配置）。
+  - 重试时自动重置流式状态，清理助手卡片，并在时间线提示重试状态；避免将 `(empty)` 脏消息污染至对话历史，保障主循环、规划器（Planner）与自检校验器（Validator）长程任务顺利完成。（Fixes #16）
+- **🧹 净化网页原生交互体验 (Zero-Distraction Web Experience)** —
+  - 彻底移除网页内划选文本时自动弹出的快捷悬浮胶囊，消灭跨插件 UI 遮挡与按键冲突，让 Browser Agent 保持纯粹的侧边栏与自动化体验。
+- **🛡️ 工具分片解析防御 (Safe Tool Calls)** —
+  - 在 SSE 流式解析中过滤空白函数名，防止偶发畸形分片生成无效工具调用。
+
+### Testing & Verification / 测试与验证
+
+- **173 项单元测试 100% 通过**（新增 `agent-retry.test.ts` 空响应与流异常重试专项套件）。
+- **16 项 Playwright 浏览器真实端到端集成测试全部通过**。
+- TypeScript strict 类型检查与生产打包全部通过。
+
 ## 0.8.0 — 2026-10-22
 
 ### Added / 新增

@@ -101,12 +101,12 @@ export function isRetryableStatus(status: number): boolean {
 }
 
 /** 用户主动取消或请求超时——不重试，直接向上传播 */
-function isAbortLike(e: unknown): boolean {
+export function isAbortLike(e: unknown): boolean {
   return e instanceof DOMException && (e.name === 'AbortError' || e.name === 'TimeoutError');
 }
 
 /** 可被 signal 中断的延时 */
-function abortableDelay(ms: number, signal: AbortSignal): Promise<void> {
+export function abortableDelay(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal.aborted) return reject(new DOMException('Aborted', 'AbortError'));
     const onAbort = () => {
@@ -122,7 +122,7 @@ function abortableDelay(ms: number, signal: AbortSignal): Promise<void> {
 }
 
 /** 指数退避 + 抖动，上限 8s */
-function backoffMs(attempt: number): number {
+export function backoffMs(attempt: number): number {
   const base = Math.min(8000, 500 * 2 ** attempt);
   return Math.round(base * (0.7 + Math.random() * 0.6));
 }

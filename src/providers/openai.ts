@@ -138,13 +138,15 @@ export const openaiStream: ProviderImpl = async (p) => {
   const blocks: ContentBlock[] = [];
   if (text) blocks.push({ type: 'text', text });
   for (const [, c] of [...calls.entries()].sort((a, b) => a[0] - b[0])) {
+    const name = c.name.trim();
+    if (!name) continue;
     let input: Record<string, unknown> = {};
     try {
       input = c.args ? JSON.parse(c.args) : {};
     } catch {
       input = { __malformed_arguments: c.args.slice(0, 1000) };
     }
-    blocks.push({ type: 'tool_use', id: c.id || uid('call'), name: c.name, input });
+    blocks.push({ type: 'tool_use', id: c.id || uid('call'), name, input });
   }
   return { blocks, stopReason: finish, usage, reasoningText: reasoningText || undefined };
 };

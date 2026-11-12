@@ -1,5 +1,5 @@
 // 智能体主循环：Planner（规划）→ Navigator（模型流式输出→执行工具→迭代）→ Validator（自检）
-import { openaiStream } from '../providers';
+import { openaiStream, HttpError, isRetryableStatus, abortableDelay, backoffMs } from '../providers';
 import { classifyProviderError } from '../providers/types';
 import { buildSystemPrompt } from '../shared/prompts';
 import { loadConfig } from '../shared/settings';
@@ -245,26 +245,74 @@ export async function runTurn(
         maxInputTokens: budget,
       });
 
-      const result = await streamOnce(
-        session,
-        provider,
-        model,
-        binding,
-        sysBase,
-        governed.messages,
-        activeToolSpecs(session),
-        (delta) => {
-          streamed += delta;
-          session.emit({ type: 'text_delta', id: asstId, delta });
-        },
-        (reasoningDelta) => {
-          session.emit({ type: 'text_delta', id: asstId, delta: '', reasoningDelta });
-        },
-      );
+      const maxRetries = Math.max(0, adv.maxRetries ?? 2);
+      let result: Awaited<ReturnType<typeof streamOnce>> | null = null;
+      let finalText = '';
+      let toolUses: ToolUseBlock[] = [];
+      let success = false;
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        if (session.aborted) break;
+
+        if (attempt > 0) {
+          streamed = '';
+          session.upsert({ kind: 'assistant', id: asstId, text: '', reasoning: undefined, done: false });
+          if (session.controller) {
+            await abortableDelay(backoffMs(attempt - 1), session.controller.signal);
+          }
+        }
+
+        try {
+          result = await streamOnce(
+            session,
+            provider,
+            model,
+            binding,
+            sysBase,
+            governed.messages,
+            activeToolSpecs(session),
+            (delta) => {
+              streamed += delta;
+              session.emit({ type: 'text_delta', id: asstId, delta });
+            },
+            (reasoningDelta) => {
+              session.emit({ type: 'text_delta', id: asstId, delta: '', reasoningDelta });
+            },
+          );
+        } catch (e) {
+          if (session.aborted || (e instanceof DOMException && (e.name === 'AbortError' || e.name === 'TimeoutError'))) {
+            throw e;
+          }
+          const isRetryable = (e instanceof HttpError && isRetryableStatus(e.status)) || (e instanceof TypeError);
+          if (isRetryable && attempt < maxRetries) {
+            session.info(session.t('bg.errorRetry', [binding.apiModelName, truncate(errText(e), 50), attempt + 1, maxRetries]));
+            continue;
+          }
+          throw e;
+        }
+
+        finalText = textOfBlocks(result.blocks) || streamed;
+        toolUses = result.blocks.filter((b): b is ToolUseBlock => b.type === 'tool_use');
+
+        if (!toolUses.length && !finalText.trim()) {
+          if (attempt < maxRetries) {
+            session.info(session.t('bg.emptyRetry', [binding.apiModelName, attempt + 1, maxRetries]));
+            continue;
+          }
+          session.error(session.t('bg.emptyResponse', [binding.apiModelName]));
+          break;
+        }
+
+        success = true;
+        break;
+      }
+
+      if (!success || !result) {
+        break;
+      }
 
       accrueUsage(session, result.usage, binding.pricing);
       emitUsage(session, { tokens: governed.estInputTokens, budget });
-      const finalText = textOfBlocks(result.blocks) || streamed;
       session.upsert({
         kind: 'assistant',
         id: asstId,
@@ -278,13 +326,7 @@ export async function runTurn(
         reasoning_content: result.reasoningText || undefined,
       });
 
-      const toolUses = result.blocks.filter((b): b is ToolUseBlock => b.type === 'tool_use');
-
       if (!toolUses.length) {
-        if (!finalText.trim()) {
-          session.error(session.t('bg.emptyResponse', [binding.apiModelName]));
-          break;
-        }
         // 模型认为完成 → Validator 自检
         if (adv.planning && validatorRounds < VALIDATOR_CAP && !session.aborted) {
           const verdict = await runValidator(session, provider, model, binding, sysBase, userText, successCriteria);
@@ -459,29 +501,56 @@ async function runPlanner(
   session.upsert({ kind: 'assistant', id, text: '', done: false });
   let text = '';
   let reasoningText: string | undefined;
-  try {
-    const res = await streamOnce(session, provider, model, binding, sys, [{ role: 'user', content: [{ type: 'text', text: task }] }], [], (d) => {
-      text += d;
-      session.emit({ type: 'text_delta', id, delta: d });
-    });
-    reasoningText = res.reasoningText;
-    accrueUsage(session, res.usage, binding.pricing);
-    emitUsage(session);
-    text = textOfBlocks(res.blocks) || text;
-    if (!text.trim()) {
-      session.upsert({
-        kind: 'assistant',
-        id,
-        text: session.t('bg.planSkipped', [session.t('bg.emptyStageResponse', [binding.apiModelName])]),
-        done: true,
+  const maxRetries = Math.max(0, session.cfg.advanced.maxRetries ?? 2);
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    if (session.aborted) return null;
+    if (attempt > 0) {
+      text = '';
+      session.upsert({ kind: 'assistant', id, text: '', reasoning: undefined, done: false });
+      if (session.controller) {
+        try {
+          await abortableDelay(backoffMs(attempt - 1), session.controller.signal);
+        } catch {
+          return null;
+        }
+      }
+    }
+    try {
+      const res = await streamOnce(session, provider, model, binding, sys, [{ role: 'user', content: [{ type: 'text', text: task }] }], [], (d) => {
+        text += d;
+        session.emit({ type: 'text_delta', id, delta: d });
       });
+      reasoningText = res.reasoningText;
+      accrueUsage(session, res.usage, binding.pricing);
+      emitUsage(session);
+      text = textOfBlocks(res.blocks) || text;
+      if (!text.trim()) {
+        if (attempt < maxRetries) {
+          session.info(session.t('bg.emptyRetry', [binding.apiModelName, attempt + 1, maxRetries]));
+          continue;
+        }
+        session.upsert({
+          kind: 'assistant',
+          id,
+          text: session.t('bg.planSkipped', [session.t('bg.emptyStageResponse', [binding.apiModelName])]),
+          done: true,
+        });
+        return null;
+      }
+      break;
+    } catch (e) {
+      if (session.aborted || (e instanceof DOMException && e.name === 'AbortError')) return null;
+      const isRetryable = (e instanceof HttpError && isRetryableStatus(e.status)) || (e instanceof TypeError);
+      if (isRetryable && attempt < maxRetries) {
+        session.info(session.t('bg.errorRetry', [binding.apiModelName, truncate(errText(e), 50), attempt + 1, maxRetries]));
+        continue;
+      }
+      // 规划失败不致命：直接进入执行
+      session.upsert({ kind: 'assistant', id, text: text || '', done: true });
+      session.info(session.t('bg.planSkipped', [truncate(errText(e), 120)]));
       return null;
     }
-  } catch (e) {
-    // 规划失败不致命：直接进入执行
-    session.upsert({ kind: 'assistant', id, text: text || '', done: true });
-    session.info(session.t('bg.planSkipped', [truncate(errText(e), 120)]));
-    return null;
   }
   session.upsert({ kind: 'assistant', id, text: text || '(无计划输出)', done: true });
   // 计划也进入历史，让 navigator 看到自己的计划
@@ -506,32 +575,54 @@ async function runValidator(
   task: string,
   criteria: string,
 ): Promise<Verdict> {
-  try {
-    const state = await currentStateBlocks(session);
-    const sys =
-      sysBase +
-      '\n\n## Current role: VALIDATOR\n' +
-      'Judge whether the task is COMPLETE based ONLY on the current page state provided. Be strict but fair. ' +
-      'Reply with ONLY a JSON object, no prose: {"done": boolean, "reason": string, "next": string}. ' +
-      '"next" = the single most useful next action if not done.';
-    const user: Array<TextBlock | ImageBlock> = [
-      { type: 'text', text: `Task: ${task}\nSuccess criterion: ${criteria}\n\nCurrent page state:` },
-      ...state,
-    ];
-    const res = await streamOnce(session, provider, model, binding, sys, [{ role: 'user', content: user }], [], () => {});
-    accrueUsage(session, res.usage, binding.pricing);
-    emitUsage(session);
-    const text = textOfBlocks(res.blocks).trim();
-    if (!text) {
-      session.info(session.t('bg.validateSkipped', [session.t('bg.emptyStageResponse', [binding.apiModelName])]));
+  const maxRetries = Math.max(0, session.cfg.advanced.maxRetries ?? 2);
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    if (session.aborted) return { done: true, reason: '', next: '' };
+    if (attempt > 0 && session.controller) {
+      try {
+        await abortableDelay(backoffMs(attempt - 1), session.controller.signal);
+      } catch {
+        return { done: true, reason: '', next: '' };
+      }
+    }
+    try {
+      const state = await currentStateBlocks(session);
+      const sys =
+        sysBase +
+        '\n\n## Current role: VALIDATOR\n' +
+        'Judge whether the task is COMPLETE based ONLY on the current page state provided. Be strict but fair. ' +
+        'Reply with ONLY a JSON object, no prose: {"done": boolean, "reason": string, "next": string}. ' +
+        '"next" = the single most useful next action if not done.';
+      const user: Array<TextBlock | ImageBlock> = [
+        { type: 'text', text: `Task: ${task}\nSuccess criterion: ${criteria}\n\nCurrent page state:` },
+        ...state,
+      ];
+      const res = await streamOnce(session, provider, model, binding, sys, [{ role: 'user', content: user }], [], () => {});
+      accrueUsage(session, res.usage, binding.pricing);
+      emitUsage(session);
+      const text = textOfBlocks(res.blocks).trim();
+      if (!text) {
+        if (attempt < maxRetries) {
+          session.info(session.t('bg.emptyRetry', [binding.apiModelName, attempt + 1, maxRetries]));
+          continue;
+        }
+        session.info(session.t('bg.validateSkipped', [session.t('bg.emptyStageResponse', [binding.apiModelName])]));
+        return { done: true, reason: '', next: '' };
+      }
+      return parseVerdict(text);
+    } catch (e) {
+      if (session.aborted || (e instanceof DOMException && e.name === 'AbortError')) return { done: true, reason: '', next: '' };
+      const isRetryable = (e instanceof HttpError && isRetryableStatus(e.status)) || (e instanceof TypeError);
+      if (isRetryable && attempt < maxRetries) {
+        session.info(session.t('bg.errorRetry', [binding.apiModelName, truncate(errText(e), 50), attempt + 1, maxRetries]));
+        continue;
+      }
+      // 校验失败时不阻塞收尾，视为完成
+      session.info(session.t('bg.validateSkipped', [truncate(errText(e), 120)]));
       return { done: true, reason: '', next: '' };
     }
-    return parseVerdict(text);
-  } catch (e) {
-    // 校验失败时不阻塞收尾，视为完成
-    session.info(session.t('bg.validateSkipped', [truncate(errText(e), 120)]));
-    return { done: true, reason: '', next: '' };
   }
+  return { done: true, reason: '', next: '' };
 }
 
 async function currentStateBlocks(session: Session): Promise<Array<TextBlock | ImageBlock>> {

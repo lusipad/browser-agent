@@ -1,6 +1,6 @@
 {
-  "version": 75,
-  "updatedAt": "2026-11-18",
+  "version": 76,
+  "updatedAt": "2026-11-19",
   "providers": [
     {
       "id": "openai",
@@ -374,7 +374,7 @@
       "model": "mistral-large-latest",
       "label": "Mistral Large",
       "vision": true,
-      "contextWindow": 262144
+      "contextWindow": 1048576
     },
     {
       "id": "mistral-medium-latest",
@@ -1186,8 +1186,8 @@
       "providerId": "mistral",
       "apiModelName": "mistral-large-latest",
       "pricing": {
-        "input": 0.5,
-        "output": 1.5
+        "input": 0.7,
+        "output": 2.1
       }
     },
     {

@@ -1,6 +1,6 @@
 {
-  "version": 77,
-  "updatedAt": "2026-11-20",
+  "version": 78,
+  "updatedAt": "2026-11-21",
   "providers": [
     {
       "id": "openai",
